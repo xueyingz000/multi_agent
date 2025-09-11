@@ -1,0 +1,135 @@
+# Semantic Alignment Agent Configuration
+
+# OpenAI LLM Configuration
+llm:
+  provider: "openai"
+  model: "gpt-4o-mini"
+  temperature: 0.2
+  max_tokens: 4000
+  timeout: 60
+  
+  # LLM enhancement settings
+  enhancement:
+    enable_geometry_analysis: true
+    enable_function_inference: true
+    enable_confidence_assessment: true
+    enable_boundary_case_handling: true
+    
+    # Confidence thresholds for LLM enhancement
+    llm_enhancement_threshold: 0.6  # Use LLM when traditional confidence < 0.6
+    min_traditional_confidence: 0.3  # Minimum confidence to consider traditional results
+    
+  # Retry and fallback settings
+  retry:
+    max_attempts: 3
+    backoff_factor: 2
+    enable_fallback: true
+    
+  # Prompt configuration
+  prompts:
+    geometry_analyzer:
+      max_input_length: 3000
+      include_context: true
+      output_format: "json"
+      
+    element_classifier:
+      max_input_length: 2500
+      include_geometric_features: true
+      include_spatial_context: true
+      
+    confidence_assessor:
+      max_input_length: 2000
+      include_reasoning_path: true
+
+# IFC Processing Configuration
+ifc_processing:
+  # IFC entity types to extract for area calculation
+  target_entities:
+    - "IfcSlab"
+    - "IfcSpace"
+    - "IfcOpeningElement"
+    - "IfcVoid"
+    - "IfcShaft"
+    - "IfcBuildingElementProxy"
+  
+  # Geometric analysis parameters
+  geometry:
+    thickness_thresholds:
+      decoration_max: 0.1  # m
+      equipment_max: 0.15  # m
+    position_tolerance: 0.2  # m for vertical alignment
+    cross_section_consistency_ratio: 0.7
+    min_floors_for_vertical_space: 2
+
+# Semantic Alignment Configuration
+semantic_alignment:
+  # Confidence thresholds
+  confidence:
+    high_threshold: 0.8
+    medium_threshold: 0.5
+    review_threshold: 0.5
+  
+  # Category A: Functional semantic alignment
+  category_a:
+    # A1: Equipment vs Structural Components
+    slab_classification:
+      thickness_indicators:
+        decoration_platform: "<0.1m"
+        equipment_slab: "0.1m-0.15m"
+        structural_slab: ">=0.15m"
+      
+      regulation_mapping:
+        decoration_platform:
+          category: "exclude"
+          coefficient: 0.0
+        equipment_platform:
+          category: "include_partial"
+          coefficient: 0.5
+        structural_slab:
+          category: "include_full"
+          coefficient: 1.0
+    
+    # A2: Space function classification
+    space_classification:
+      regulation_mapping:
+        auxiliary_construction:
+          category: "exclude"
+          coefficient: 0.0
+        mechanical_room:
+          category: "include_partial"
+          coefficient: 0.5
+        habitable_office:
+          category: "include_full"
+          coefficient: 1.0
+
+  # Category B: Geometric-regulation alignment
+  category_b:
+    # B1: Multi-story opening identification
+    vertical_openings:
+      deduction_rules:
+        atrium: "deduct_per_floor"
+        shaft: "no_deduction"
+        stairwell: "no_deduction"
+    
+    # B2: Vertical space classification
+    vertical_spaces:
+      predefined_types:
+        - "SHAFT"
+        - "ATRIUM"
+        - "STAIRCASE"
+        - "USERDEFINED"
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}:{function}:{line} - {message}"
+  file: "logs/semantic_alignment.log"
+
+# Output Configuration
+output:
+  include_confidence: true
+  include_reasoning_path: true
+  include_geometric_features: true
+  export_formats:
+    - "json"
+    - "markdown"

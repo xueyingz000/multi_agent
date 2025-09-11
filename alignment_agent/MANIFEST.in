@@ -1,0 +1,106 @@
+# Include the README and license files
+include README.md
+include LICENSE
+include CHANGELOG.md
+
+# Include configuration files
+include config/*.yaml
+include config/*.yml
+include config/*.json
+
+# Include data files
+include data/*.json
+include data/*.yaml
+include data/*.txt
+recursive-include data/ontologies *.json *.yaml *.owl *.rdf
+recursive-include data/patterns *.json *.yaml *.txt
+recursive-include data/mappings *.json *.yaml *.csv
+
+# Include model files (but exclude large binary files)
+include models/*.json
+include models/*.yaml
+include models/config/*.json
+include models/config/*.yaml
+
+# Include requirements and setup files
+include requirements.txt
+include requirements-dev.txt
+include pyproject.toml
+include setup.cfg
+include Makefile
+
+# Include Docker files
+include Dockerfile
+include docker-compose.yml
+include .dockerignore
+
+# Include CI/CD files
+include .github/workflows/*.yml
+include .github/workflows/*.yaml
+
+# Include documentation source
+recursive-include docs *.rst *.md *.py *.bat *.txt
+recursive-include docs/source *.rst *.md *.py
+recursive-include docs/_static *
+recursive-include docs/_templates *
+
+# Include example files
+recursive-include examples *.py *.json *.yaml *.md
+recursive-include examples/data *.ifc *.json *.txt
+
+# Include test data (but not test results)
+recursive-include tests/data *.json *.yaml *.txt *.ifc
+include tests/conftest.py
+
+# Include scripts
+include scripts/*.py
+include scripts/*.sh
+include run_agent.py
+
+# Include monitoring configuration
+recursive-include monitoring *.yml *.yaml *.json
+
+# Exclude unwanted files
+exclude .gitignore
+exclude .pre-commit-config.yaml
+exclude tox.ini
+exclude .coverage
+exclude .env*
+
+# Exclude build artifacts
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude *.pyd
+global-exclude __pycache__
+global-exclude .git*
+global-exclude .DS_Store
+global-exclude *.so
+global-exclude .tox
+global-exclude .pytest_cache
+global-exclude .mypy_cache
+global-exclude htmlcov
+global-exclude .coverage*
+global-exclude *.egg-info
+global-exclude build
+global-exclude dist
+
+# Exclude large model files and cache
+global-exclude *.pkl
+global-exclude *.joblib
+global-exclude *.bin
+global-exclude *.pt
+global-exclude *.pth
+global-exclude *.h5
+global-exclude *.hdf5
+global-exclude cache/*
+global-exclude logs/*
+global-exclude output/*
+global-exclude tmp/*
+global-exclude temp/*
+
+# Exclude database files
+global-exclude *.db
+global-exclude *.sqlite*
+global-exclude chroma_db/*
+global-exclude faiss_index/*
+global-exclude neo4j_data/*

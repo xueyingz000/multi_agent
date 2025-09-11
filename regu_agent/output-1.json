@@ -1,0 +1,686 @@
+{
+  "per_region": {
+    "CN": {
+      "region": "CN",
+      "source_name": "china-area-calculation",
+      "source_path": null,
+      "text_length": 129,
+      "height_rules": [
+        {
+          "label": "full",
+          "comparator": ">=",
+          "threshold_min_m": 2.2,
+          "threshold_max_m": null,
+          "unit_normalized": "m",
+          "evidence": [
+            {
+              "text": "当层高≥2.20m计入建筑面积",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        },
+        {
+          "label": "half",
+          "comparator": "between",
+          "threshold_min_m": 1.2,
+          "threshold_max_m": 2.2,
+          "unit_normalized": "m",
+          "evidence": [
+            {
+              "text": "层高介于1.20m至2.20m按一半计入",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        },
+        {
+          "label": "excluded",
+          "comparator": "<",
+          "threshold_min_m": null,
+          "threshold_max_m": 1.2,
+          "unit_normalized": "m",
+          "evidence": [
+            {
+              "text": "层高小于1.20m不计入",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        }
+      ],
+      "cover_enclosure_rules": [
+        {
+          "feature_key": "阳台",
+          "label": "full",
+          "notes": "有围护结构",
+          "evidence": [
+            {
+              "text": "阳台有围护结构计入建筑面积",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        },
+        {
+          "feature_key": "挑阳台",
+          "label": "half",
+          "notes": "",
+          "evidence": [
+            {
+              "text": "挑阳台按一半计入",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        },
+        {
+          "feature_key": "雨篷",
+          "label": "excluded",
+          "notes": "",
+          "evidence": [
+            {
+              "text": "雨篷不计入",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        },
+        {
+          "feature_key": "屋顶平台",
+          "label": "excluded",
+          "notes": "无围护",
+          "evidence": [
+            {
+              "text": "屋顶平台无围护不计入",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        },
+        {
+          "feature_key": "电梯井",
+          "label": "full",
+          "notes": "",
+          "evidence": [
+            {
+              "text": "电梯井和楼梯间计入",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        },
+        {
+          "feature_key": "楼梯间",
+          "label": "full",
+          "notes": "",
+          "evidence": [
+            {
+              "text": "电梯井和楼梯间计入",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        }
+      ],
+      "special_use_rules": [
+        {
+          "feature_key": "地下室",
+          "label": "half",
+          "notes": "用于停车的面积",
+          "evidence": [
+            {
+              "text": "地下室用于停车的面积按一半计入",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        },
+        {
+          "feature_key": "设备用房",
+          "label": "full",
+          "notes": "",
+          "evidence": [
+            {
+              "text": "设备用房计入",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        },
+        {
+          "feature_key": "垃圾房",
+          "label": "full",
+          "notes": "",
+          "evidence": [
+            {
+              "text": "垃圾房计入",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        }
+      ]
+    },
+    "HK": {
+      "region": "HK",
+      "source_name": "示例-香港GFA规则片段",
+      "source_path": null,
+      "text_length": 395,
+      "height_rules": [
+        {
+          "label": "excluded",
+          "comparator": "<",
+          "threshold_min_m": null,
+          "threshold_max_m": 1.5,
+          "unit_normalized": "m",
+          "evidence": [
+            {
+              "text": "For storey height less than 1.5 m, not included.",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        },
+        {
+          "label": "half",
+          "comparator": "between",
+          "threshold_min_m": 1.5,
+          "threshold_max_m": 2.2,
+          "unit_normalized": "m",
+          "evidence": [
+            {
+              "text": "between 1.5 m and 2.2 m counted as 50%.",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        },
+        {
+          "label": "full",
+          "comparator": ">=",
+          "threshold_min_m": 2.2,
+          "threshold_max_m": null,
+          "unit_normalized": "m",
+          "evidence": [
+            {
+              "text": "2.2 m or above included in GFA.",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        }
+      ],
+      "cover_enclosure_rules": [
+        {
+          "feature_key": "balcony",
+          "label": "conditional",
+          "notes": "may be excluded from GFA subject to conditions",
+          "evidence": [
+            {
+              "text": "Balconies may be excluded from GFA subject to conditions.",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        },
+        {
+          "feature_key": "roof terrace",
+          "label": "excluded",
+          "notes": "without enclosure",
+          "evidence": [
+            {
+              "text": "roof terrace without enclosure excluded.",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        },
+        {
+          "feature_key": "lift shaft",
+          "label": "full",
+          "notes": "",
+          "evidence": [
+            {
+              "text": "lift shafts included.",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        },
+        {
+          "feature_key": "staircase",
+          "label": "full",
+          "notes": "",
+          "evidence": [
+            {
+              "text": "staircases included.",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        },
+        {
+          "feature_key": "utility canopy",
+          "label": "excluded",
+          "notes": "",
+          "evidence": [
+            {
+              "text": "Utility canopy excluded.",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        }
+      ],
+      "special_use_rules": [
+        {
+          "feature_key": "car park",
+          "label": "excluded",
+          "notes": "generally excluded from GFA under PNAP",
+          "evidence": [
+            {
+              "text": "Car parks generally excluded from GFA under PNAP.",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        },
+        {
+          "feature_key": "basement",
+          "label": "full",
+          "notes": "for plant rooms",
+          "evidence": [
+            {
+              "text": "basements for plant rooms included.",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        },
+        {
+          "feature_key": "refuse room",
+          "label": "full",
+          "notes": "",
+          "evidence": [
+            {
+              "text": "refuse room included.",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        }
+      ]
+    },
+    "US": {
+      "region": "US",
+      "source_name": "示例-美国GFA/分区片段",
+      "source_path": null,
+      "text_length": 379,
+      "height_rules": [
+        {
+          "label": "full",
+          "comparator": ">=",
+          "threshold_min_m": 2.1336,
+          "threshold_max_m": null,
+          "unit_normalized": "m",
+          "evidence": [
+            {
+              "text": "Floor area includes spaces with ceiling height >= 7 ft",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        },
+        {
+          "label": "half",
+          "comparator": "between",
+          "threshold_min_m": 1.524,
+          "threshold_max_m": 2.1336,
+          "unit_normalized": "m",
+          "evidence": [
+            {
+              "text": "spaces with height between 5 ft and 7 ft count as 50%",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        },
+        {
+          "label": "excluded",
+          "comparator": "<",
+          "threshold_min_m": 1.524,
+          "threshold_max_m": null,
+          "unit_normalized": "m",
+          "evidence": [
+            {
+              "text": "below 5 ft excluded",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        }
+      ],
+      "cover_enclosure_rules": [
+        {
+          "feature_key": "balcony",
+          "label": "excluded",
+          "notes": "",
+          "evidence": [
+            {
+              "text": "Exterior balconies excluded",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        },
+        {
+          "feature_key": "canopy",
+          "label": "excluded",
+          "notes": "",
+          "evidence": [
+            {
+              "text": "canopies excluded",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        },
+        {
+          "feature_key": "roof deck",
+          "label": "excluded",
+          "notes": "without walls",
+          "evidence": [
+            {
+              "text": "roof deck without walls excluded",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        },
+        {
+          "feature_key": "elevator shaft",
+          "label": "full",
+          "notes": "",
+          "evidence": [
+            {
+              "text": "elevator shafts included",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        },
+        {
+          "feature_key": "stairwell",
+          "label": "full",
+          "notes": "",
+          "evidence": [
+            {
+              "text": "stairwell included",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        }
+      ],
+      "special_use_rules": [
+        {
+          "feature_key": "parking garage",
+          "label": "excluded",
+          "notes": "may be excluded per zoning",
+          "evidence": []
+        },
+        {
+          "feature_key": "basement",
+          "label": "excluded",
+          "notes": "if height < 7 ft",
+          "evidence": []
+        },
+        {
+          "feature_key": "plant room",
+          "label": "full",
+          "notes": "",
+          "evidence": [
+            {
+              "text": "plant rooms included",
+              "start": -1,
+              "end": -1
+            }
+          ]
+        }
+      ]
+    },
+    "EU": {
+      "region": "EU",
+      "source_name": "示例-欧洲成员国指引片段",
+      "source_path": null,
+      "text_length": 96,
+      "height_rules": [
+        {
+          "label": "full",
+          "comparator": ">=",
+          "threshold_min_m": 2.5,
+          "threshold_max_m": null,
+          "unit_normalized": "m",
+          "evidence": []
+        },
+        {
+          "label": "half",
+          "comparator": "between",
+          "threshold_min_m": 1.5,
+          "threshold_max_m": 2.5,
+          "unit_normalized": "m",
+          "evidence": []
+        },
+        {
+          "label": "excluded",
+          "comparator": "<",
+          "threshold_min_m": null,
+          "threshold_max_m": 1.5,
+          "unit_normalized": "m",
+          "evidence": []
+        }
+      ],
+      "cover_enclosure_rules": [
+        {
+          "feature_key": "外廊",
+          "label": "full",
+          "notes": "带封闭围护的外廊计入",
+          "evidence": []
+        },
+        {
+          "feature_key": "外廊",
+          "label": "excluded",
+          "notes": "开放外廊不计",
+          "evidence": []
+        },
+        {
+          "feature_key": "屋顶露台",
+          "label": "excluded",
+          "notes": "屋顶露台不计",
+          "evidence": []
+        },
+        {
+          "feature_key": "楼梯井",
+          "label": "full",
+          "notes": "楼梯井计入",
+          "evidence": []
+        },
+        {
+          "feature_key": "电梯井",
+          "label": "full",
+          "notes": "电梯井计入",
+          "evidence": []
+        }
+      ],
+      "special_use_rules": [
+        {
+          "feature_key": "地下室",
+          "label": "excluded",
+          "notes": "地下室用于停车不计",
+          "evidence": []
+        },
+        {
+          "feature_key": "设备用房",
+          "label": "full",
+          "notes": "设备用房计入",
+          "evidence": []
+        },
+        {
+          "feature_key": "垃圾房",
+          "label": "full",
+          "notes": "垃圾房计入",
+          "evidence": []
+        }
+      ]
+    }
+  },
+  "comparison": {
+    "height_rules": {
+      "CN": {
+        "full": [
+          {
+            "comparator": ">=",
+            "min_m": 2.2,
+            "max_m": null
+          }
+        ],
+        "half": [
+          {
+            "comparator": "between",
+            "min_m": 1.2,
+            "max_m": 2.2
+          }
+        ],
+        "excluded": [
+          {
+            "comparator": "<",
+            "min_m": null,
+            "max_m": 1.2
+          }
+        ]
+      },
+      "HK": {
+        "excluded": [
+          {
+            "comparator": "<",
+            "min_m": null,
+            "max_m": 1.5
+          }
+        ],
+        "half": [
+          {
+            "comparator": "between",
+            "min_m": 1.5,
+            "max_m": 2.2
+          }
+        ],
+        "full": [
+          {
+            "comparator": ">=",
+            "min_m": 2.2,
+            "max_m": null
+          }
+        ]
+      },
+      "US": {
+        "full": [
+          {
+            "comparator": ">=",
+            "min_m": 2.1336,
+            "max_m": null
+          }
+        ],
+        "half": [
+          {
+            "comparator": "between",
+            "min_m": 1.524,
+            "max_m": 2.1336
+          }
+        ],
+        "excluded": [
+          {
+            "comparator": "<",
+            "min_m": 1.524,
+            "max_m": null
+          }
+        ]
+      },
+      "EU": {
+        "full": [
+          {
+            "comparator": ">=",
+            "min_m": 2.5,
+            "max_m": null
+          }
+        ],
+        "half": [
+          {
+            "comparator": "between",
+            "min_m": 1.5,
+            "max_m": 2.5
+          }
+        ],
+        "excluded": [
+          {
+            "comparator": "<",
+            "min_m": null,
+            "max_m": 1.5
+          }
+        ]
+      }
+    },
+    "cover_enclosure": {
+      "CN": {
+        "阳台": "full",
+        "挑阳台": "half",
+        "雨篷": "excluded",
+        "屋顶平台": "excluded",
+        "电梯井": "full",
+        "楼梯间": "full"
+      },
+      "HK": {
+        "balcony": "conditional",
+        "roof terrace": "excluded",
+        "lift shaft": "full",
+        "staircase": "full",
+        "utility canopy": "excluded"
+      },
+      "US": {
+        "balcony": "excluded",
+        "canopy": "excluded",
+        "roof deck": "excluded",
+        "elevator shaft": "full",
+        "stairwell": "full"
+      },
+      "EU": {
+        "外廊": "excluded",
+        "屋顶露台": "excluded",
+        "楼梯井": "full",
+        "电梯井": "full"
+      }
+    },
+    "special_use": {
+      "CN": {
+        "地下室": "half",
+        "设备用房": "full",
+        "垃圾房": "full"
+      },
+      "HK": {
+        "car park": "excluded",
+        "basement": "full",
+        "refuse room": "full"
+      },
+      "US": {
+        "parking garage": "excluded",
+        "basement": "excluded",
+        "plant room": "full"
+      },
+      "EU": {
+        "地下室": "excluded",
+        "设备用房": "full",
+        "垃圾房": "full"
+      }
+    }
+  }
+}

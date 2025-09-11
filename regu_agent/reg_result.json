@@ -1,0 +1,309 @@
+{
+  "per_region": {
+    "CN": {
+      "region": "CN",
+      "source_name": "示例-中国大陆GFA规则片段",
+      "source_path": null,
+      "text_length": 129,
+      "height_rules": [],
+      "cover_enclosure_rules": [],
+      "special_use_rules": []
+    },
+    "HK": {
+      "region": "HK",
+      "source_name": "示例-香港GFA规则片段",
+      "source_path": null,
+      "text_length": 395,
+      "height_rules": [
+        {
+          "label": "unknown",
+          "comparator": null,
+          "threshold_min_m": null,
+          "threshold_max_m": null,
+          "unit_normalized": "m",
+          "evidence": [
+            {
+              "text": "For storey height less than 1.",
+              "start": 0,
+              "end": 30
+            }
+          ]
+        }
+      ],
+      "cover_enclosure_rules": [
+        {
+          "feature_key": "balcony",
+          "label": "excluded",
+          "notes": "",
+          "evidence": [
+            {
+              "text": "roof terrace without enclosure excluded;",
+              "start": 178,
+              "end": 219
+            }
+          ]
+        },
+        {
+          "feature_key": "canopy",
+          "label": "excluded",
+          "notes": "",
+          "evidence": [
+            {
+              "text": "Utility canopy excluded.",
+              "start": 262,
+              "end": 287
+            }
+          ]
+        },
+        {
+          "feature_key": "roof",
+          "label": "excluded",
+          "notes": "",
+          "evidence": [
+            {
+              "text": "roof terrace without enclosure excluded;",
+              "start": 178,
+              "end": 219
+            }
+          ]
+        },
+        {
+          "feature_key": "lift",
+          "label": "full",
+          "notes": "",
+          "evidence": [
+            {
+              "text": "lift shafts included;",
+              "start": 219,
+              "end": 241
+            }
+          ]
+        },
+        {
+          "feature_key": "stair",
+          "label": "full",
+          "notes": "",
+          "evidence": [
+            {
+              "text": "staircases included.",
+              "start": 241,
+              "end": 262
+            }
+          ]
+        }
+      ],
+      "special_use_rules": [
+        {
+          "feature_key": "parking",
+          "label": "excluded",
+          "notes": "",
+          "evidence": [
+            {
+              "text": "Car parks generally excluded from GFA under PNAP;",
+              "start": 287,
+              "end": 337
+            }
+          ]
+        },
+        {
+          "feature_key": "basement",
+          "label": "full",
+          "notes": "",
+          "evidence": [
+            {
+              "text": "basements for plant rooms included;",
+              "start": 337,
+              "end": 373
+            }
+          ]
+        },
+        {
+          "feature_key": "equipment",
+          "label": "full",
+          "notes": "",
+          "evidence": [
+            {
+              "text": "basements for plant rooms included;",
+              "start": 337,
+              "end": 373
+            }
+          ]
+        },
+        {
+          "feature_key": "refuse",
+          "label": "full",
+          "notes": "",
+          "evidence": [
+            {
+              "text": "refuse room included.",
+              "start": 373,
+              "end": 395
+            }
+          ]
+        }
+      ]
+    },
+    "US": {
+      "region": "US",
+      "source_name": "示例-美国GFA/分区片段",
+      "source_path": null,
+      "text_length": 379,
+      "height_rules": [
+        {
+          "label": "unknown",
+          "comparator": ">=",
+          "threshold_min_m": 2.1336,
+          "threshold_max_m": null,
+          "unit_normalized": "m",
+          "evidence": [
+            {
+              "text": "Floor area includes spaces with ceiling height >= 7 ft;",
+              "start": 0,
+              "end": 55
+            }
+          ]
+        }
+      ],
+      "cover_enclosure_rules": [
+        {
+          "feature_key": "roof",
+          "label": "excluded",
+          "notes": "",
+          "evidence": [
+            {
+              "text": "roof deck without walls excluded;",
+              "start": 179,
+              "end": 213
+            }
+          ]
+        },
+        {
+          "feature_key": "lift",
+          "label": "full",
+          "notes": "",
+          "evidence": [
+            {
+              "text": "elevator shafts included;",
+              "start": 213,
+              "end": 239
+            }
+          ]
+        },
+        {
+          "feature_key": "stair",
+          "label": "full",
+          "notes": "",
+          "evidence": [
+            {
+              "text": "stairwell included.",
+              "start": 239,
+              "end": 259
+            }
+          ]
+        }
+      ],
+      "special_use_rules": [
+        {
+          "feature_key": "parking",
+          "label": "excluded",
+          "notes": "",
+          "evidence": [
+            {
+              "text": "Parking garages may be excluded per zoning;",
+              "start": 259,
+              "end": 303
+            }
+          ]
+        },
+        {
+          "feature_key": "basement",
+          "label": "excluded",
+          "notes": "",
+          "evidence": [
+            {
+              "text": "basements used for storage excluded if height < 7 ft;",
+              "start": 303,
+              "end": 357
+            }
+          ]
+        },
+        {
+          "feature_key": "equipment",
+          "label": "full",
+          "notes": "",
+          "evidence": [
+            {
+              "text": "plant rooms included.",
+              "start": 357,
+              "end": 379
+            }
+          ]
+        }
+      ]
+    },
+    "EU": {
+      "region": "EU",
+      "source_name": "示例-欧洲成员国指引片段",
+      "source_path": null,
+      "text_length": 96,
+      "height_rules": [],
+      "cover_enclosure_rules": [],
+      "special_use_rules": []
+    }
+  },
+  "comparison": {
+    "height_rules": {
+      "CN": {},
+      "HK": {
+        "unknown": [
+          {
+            "comparator": null,
+            "min_m": null,
+            "max_m": null
+          }
+        ]
+      },
+      "US": {
+        "unknown": [
+          {
+            "comparator": ">=",
+            "min_m": 2.1336,
+            "max_m": null
+          }
+        ]
+      },
+      "EU": {}
+    },
+    "cover_enclosure": {
+      "CN": {},
+      "HK": {
+        "balcony": "excluded",
+        "canopy": "excluded",
+        "roof": "excluded",
+        "lift": "full",
+        "stair": "full"
+      },
+      "US": {
+        "roof": "excluded",
+        "lift": "full",
+        "stair": "full"
+      },
+      "EU": {}
+    },
+    "special_use": {
+      "CN": {},
+      "HK": {
+        "parking": "excluded",
+        "basement": "full",
+        "equipment": "full",
+        "refuse": "full"
+      },
+      "US": {
+        "parking": "excluded",
+        "basement": "excluded",
+        "equipment": "full"
+      },
+      "EU": {}
+    }
+  }
+}
