@@ -8,7 +8,7 @@
 主要功能：
 1. 处理A类功能语义对齐问题（设备设施vs结构构件，空间功能分类）
 2. 处理B类几何规范对齐问题（多层开口识别，垂直空间分类）
-3. 生成面积计算结果和对齐决策
+3. 生成语义对齐决策和分类结果
 """
 
 import sys
@@ -237,7 +237,7 @@ class SemanticAlignmentPipeline:
             "alignment_result": {
                 "alignment_type": result.alignment_type.value,
                 "regulation_category": result.regulation_category.value,
-                "area_coefficient": result.area_coefficient,
+
                 "confidence": result.confidence,
                 "confidence_level": result.confidence_level.value,
                 "requires_review": result.requires_review,

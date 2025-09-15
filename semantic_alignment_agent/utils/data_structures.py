@@ -8,6 +8,7 @@ from enum import Enum
 
 class RegulationCategory(Enum):
     """法规分类枚举"""
+
     EXCLUDE = "exclude"
     INCLUDE_PARTIAL = "include_partial"
     INCLUDE_FULL = "include_full"
@@ -17,6 +18,7 @@ class RegulationCategory(Enum):
 
 class IfcElementType(Enum):
     """IFC元素类型枚举"""
+
     SLAB = "IfcSlab"
     SPACE = "IfcSpace"
     OPENING_ELEMENT = "IfcOpeningElement"
@@ -27,6 +29,7 @@ class IfcElementType(Enum):
 
 class FunctionType(Enum):
     """功能类型枚举"""
+
     STRUCTURAL_SLAB = "structural_slab"
     EQUIPMENT_PLATFORM = "equipment_platform"
     DECORATION_PLATFORM = "decoration_platform"
@@ -41,6 +44,7 @@ class FunctionType(Enum):
 
 class VerticalSpaceType(Enum):
     """垂直空间类型枚举"""
+
     ATRIUM = "atrium"
     SHAFT = "shaft"
     STAIRCASE = "staircase"
@@ -52,6 +56,7 @@ class VerticalSpaceType(Enum):
 @dataclass
 class Point3D:
     """三维点"""
+
     x: float
     y: float
     z: float
@@ -60,33 +65,35 @@ class Point3D:
 @dataclass
 class BoundingBox:
     """边界框"""
+
     min_point: Point3D
     max_point: Point3D
-    
+
     @property
     def width(self) -> float:
         return self.max_point.x - self.min_point.x
-    
+
     @property
     def depth(self) -> float:
         return self.max_point.y - self.min_point.y
-    
+
     @property
     def height(self) -> float:
         return self.max_point.z - self.min_point.z
-    
+
     @property
     def center(self) -> Point3D:
         return Point3D(
             (self.min_point.x + self.max_point.x) / 2,
             (self.min_point.y + self.max_point.y) / 2,
-            (self.min_point.z + self.max_point.z) / 2
+            (self.min_point.z + self.max_point.z) / 2,
         )
 
 
 @dataclass
 class GeometricFeatures:
     """几何特征"""
+
     bounding_box: BoundingBox
     area: float
     volume: float
@@ -101,6 +108,7 @@ class GeometricFeatures:
 @dataclass
 class Evidence:
     """证据信息"""
+
     text: str
     source: str
     confidence: float = 1.0
@@ -111,6 +119,7 @@ class Evidence:
 @dataclass
 class FunctionalInference:
     """功能推断结果"""
+
     primary_function: FunctionType
     confidence: float
     evidence: List[Evidence] = field(default_factory=list)
@@ -121,6 +130,7 @@ class FunctionalInference:
 @dataclass
 class IfcElementInfo:
     """IFC元素信息"""
+
     guid: str
     ifc_type: IfcElementType
     name: Optional[str] = None
@@ -137,6 +147,7 @@ class IfcElementInfo:
 @dataclass
 class VerticalSpaceInfo:
     """垂直空间信息"""
+
     space_id: str
     space_type: VerticalSpaceType
     floors_penetrated: List[str]
@@ -150,6 +161,7 @@ class VerticalSpaceInfo:
 @dataclass
 class AlignmentDecision:
     """对齐决策"""
+
     element_id: str
     regulation_category: RegulationCategory
     coefficient: float
@@ -161,24 +173,9 @@ class AlignmentDecision:
 
 
 @dataclass
-class AreaCalculationResult:
-    """面积计算结果"""
-    element_id: str
-    ifc_type: str
-    original_area: float
-    calculated_area: float
-    coefficient: float
-    regulation_category: RegulationCategory
-    confidence: float
-    reasoning_path: str
-    geometric_features: Optional[GeometricFeatures] = None
-    functional_inference: Optional[FunctionalInference] = None
-
-
-@dataclass
 class SemanticAlignmentResult:
     """语义对齐结果"""
-    area_calculation_results: List[AreaCalculationResult]
+
     alignment_decisions: List[AlignmentDecision]
     vertical_spaces: List[VerticalSpaceInfo]
     confidence_assessment: Dict[str, float]
@@ -190,6 +187,7 @@ class SemanticAlignmentResult:
 @dataclass
 class RegulationRule:
     """法规规则（从regulation analysis agent输出解析）"""
+
     region: str
     rule_type: str  # "height", "cover_enclosure", "special_use"
     feature_key: str
@@ -202,6 +200,7 @@ class RegulationRule:
 @dataclass
 class ProcessingContext:
     """处理上下文"""
+
     ifc_file_path: str
     regulation_rules: List[RegulationRule]
     target_region: str
@@ -213,6 +212,7 @@ class ProcessingContext:
 @dataclass
 class AlignmentResult:
     """Result of semantic alignment analysis."""
+
     element_guid: str
     element_type: str
     function_classification: str
@@ -225,6 +225,7 @@ class AlignmentResult:
 @dataclass
 class ClassificationResult:
     """Result of LLM-based element classification."""
+
     element_guid: str
     element_type: str
     primary_function: str
@@ -240,6 +241,7 @@ class ClassificationResult:
 @dataclass
 class LLMAnalysisResult:
     """Result of LLM analysis with confidence metrics."""
+
     analysis: str
     conclusion: str
     confidence_score: float
@@ -252,6 +254,7 @@ class LLMAnalysisResult:
 @dataclass
 class GeometricAnalysisResult:
     """Enhanced geometric analysis result from LLM."""
+
     element_identification: Dict[str, Any]
     dimensional_characteristics: Dict[str, Any]
     geometric_form: Dict[str, Any]

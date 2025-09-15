@@ -72,16 +72,26 @@ def create_openai_client() -> OpenAI:
         raise RuntimeError(
             "openai package is not installed. Please `pip install openai>=1.0.0` first."
         )
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        raise EnvironmentError("Missing OPENAI_API_KEY environment variable")
-    base_url = os.getenv("OPENAI_BASE_URL")  # allow custom proxy/gateway
+
+    # 默认配置，可以通过环境变量覆盖
+    default_api_key = "sk-Dppz8ZLK62lWyZc7G3w3LtkJx7sNgmjdF65kzR7hKtQlnQDL"
+    default_base_url = "https://yunwu.zeabur.app/v1"
+
+    api_key = os.getenv("OPENAI_API_KEY", default_api_key)
+    if not api_key or api_key == "your_openai_api_key_here":
+        raise EnvironmentError(
+            "Please set OPENAI_API_KEY environment variable or modify the default_api_key in the code"
+        )
+
+    base_url = os.getenv("OPENAI_BASE_URL", default_base_url)
+    # 使用配置的base_url
     if base_url:
         return OpenAI(api_key=api_key, base_url=base_url)
-    return OpenAI(api_key=api_key)
+    else:
+        return OpenAI(api_key=api_key)
 
 
-LLM_DEFAULT_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+LLM_DEFAULT_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
 
 
 def chunk_text(text: str, max_len: int = 6000) -> List[str]:
@@ -186,6 +196,8 @@ def call_openai_json(client: OpenAI, model: str, text: str) -> Dict[str, Any]:
         },
     ]
 
+    content = "{}"
+    
     # Prefer JSON mode; if not supported, fall back to plain text and attempt to parse
     try:
         resp = client.chat.completions.create(
@@ -194,14 +206,21 @@ def call_openai_json(client: OpenAI, model: str, text: str) -> Dict[str, Any]:
             response_format={"type": "json_object"},
             temperature=0.2,
         )
-        content = resp.choices[0].message.content or "{}"
-    except Exception:
-        resp = client.chat.completions.create(
-            model=model,
-            messages=messages,
-            temperature=0.2,
-        )
-        content = resp.choices[0].message.content or "{}"
+        if resp and resp.choices and len(resp.choices) > 0:
+            content = resp.choices[0].message.content or "{}"
+    except Exception as e:
+        print(f"JSON mode failed: {e}. Trying plain text mode...")
+        try:
+            resp = client.chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=0.2,
+            )
+            if resp and resp.choices and len(resp.choices) > 0:
+                content = resp.choices[0].message.content or "{}"
+        except Exception as e2:
+            print(f"Plain text mode also failed: {e2}. Using default empty response.")
+            content = "{}"
 
     # Try parsing JSON
     try:

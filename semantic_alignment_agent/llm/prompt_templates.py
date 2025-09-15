@@ -7,14 +7,15 @@ for various LLM-powered analysis tasks.
 from typing import Dict, Any, Optional
 from datetime import datetime
 
+
 class PromptTemplates:
     """Collection of prompt templates for semantic alignment tasks."""
-    
+
     @staticmethod
     def geometry_analyzer_prompt() -> str:
         """Prompt template for geometry analysis."""
         return """
-You are a Geometry Analyzer Agent specialized in extracting pure geometric and spatial characteristics from IFC building data. Your role is to analyze and describe geometric features WITHOUT making any functional inferences or semantic interpretations.
+Analyze and extract pure geometric and spatial characteristics from IFC building data. Focus on describing geometric features WITHOUT making any functional inferences or semantic interpretations.
 
 ## Input Data:
 - IFC Element Type: {ifc_type}
@@ -31,8 +32,6 @@ You are a Geometry Analyzer Agent specialized in extracting pure geometric and s
 Extract and categorize all dimensional characteristics:
 - Primary dimensions: Length={length}m, Width={width}m, Height/Thickness={height}m
 - Dimensional ratios: L/W ratio, H/Area ratio
-- Volume and area calculations: Total volume={volume}m³, Floor area={area}m²
-- Dimensional categories: [tiny: <2m², small: 2-10m², medium: 10-50m², large: 50-200m², very_large: >200m²]
 
 ### 2. SHAPE AND FORM ANALYSIS
 Describe geometric form characteristics:
@@ -98,13 +97,6 @@ Provide a structured analysis in JSON format with the following structure:
       "width": float,
       "height": float
     }},
-    "calculated_metrics": {{
-      "area": float,
-      "volume": float,
-      "aspect_ratio": float
-    }},
-    "size_category": "string"
-  }},
   "geometric_form": {{
     "basic_shape": "string",
     "shape_complexity": "string",
@@ -143,12 +135,12 @@ Provide a structured analysis in JSON format with the following structure:
   }}
 }}
 """
-    
+
     @staticmethod
     def element_classifier_prompt() -> str:
         """Prompt template for element classification."""
         return """
-You are an Element Classifier Agent specialized in inferring functional semantics from comprehensive building element data. Your role is to combine geometric analysis, IFC properties, and contextual information to determine the functional classification and usage characteristics of building elements.
+Infer functional semantics from comprehensive building element data by combining geometric analysis, IFC properties, and contextual information to determine the functional classification and usage characteristics of building elements.
 
 ## Input Data:
 - IFC Element Type: {ifc_type}
@@ -273,7 +265,7 @@ Provide classification results in JSON format:
   ]
 }}
 """
-    
+
     @staticmethod
     def semantic_alignment_prompt() -> str:
         """Prompt template for semantic alignment."""
@@ -298,7 +290,7 @@ Think step by step:
 
 Provide reasoning and final mapping decision.
 """
-    
+
     @staticmethod
     def confidence_assessment_prompt() -> str:
         """Prompt template for confidence assessment."""
@@ -356,15 +348,15 @@ Provide detailed confidence assessment in JSON format:
   ]
 }}
 """
-    
+
     @staticmethod
     def format_prompt(template: str, **kwargs) -> str:
         """Format a prompt template with provided arguments.
-        
+
         Args:
             template: Prompt template string
             **kwargs: Template variables
-            
+
         Returns:
             Formatted prompt string
         """
@@ -375,22 +367,22 @@ Provide detailed confidence assessment in JSON format:
             missing_var = str(e).strip("'")
             kwargs[missing_var] = f"[{missing_var}_not_provided]"
             return template.format(**kwargs)
-    
+
     @classmethod
     def get_geometry_analysis_prompt(cls, **context) -> str:
         """Get formatted geometry analysis prompt."""
         return cls.format_prompt(cls.geometry_analyzer_prompt(), **context)
-    
+
     @classmethod
     def get_element_classification_prompt(cls, **context) -> str:
         """Get formatted element classification prompt."""
         return cls.format_prompt(cls.element_classifier_prompt(), **context)
-    
+
     @classmethod
     def get_semantic_alignment_prompt(cls, **context) -> str:
         """Get formatted semantic alignment prompt."""
         return cls.format_prompt(cls.semantic_alignment_prompt(), **context)
-    
+
     @classmethod
     def get_confidence_assessment_prompt(cls, **context) -> str:
         """Get formatted confidence assessment prompt."""

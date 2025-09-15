@@ -13,7 +13,7 @@ from .data_structures import (
     IfcElementInfo,
     VerticalSpaceInfo,
     AlignmentDecision,
-    AreaCalculationResult,
+
     SemanticAlignmentResult,
     RegulationRule,
     ProcessingContext
@@ -25,6 +25,6 @@ __all__ = [
     'RegulationCategory', 'IfcElementType', 'FunctionType', 'VerticalSpaceType',
     'Point3D', 'BoundingBox', 'GeometricFeatures', 'Evidence',
     'FunctionalInference', 'IfcElementInfo', 'VerticalSpaceInfo',
-    'AlignmentDecision', 'AreaCalculationResult', 'SemanticAlignmentResult',
+    'AlignmentDecision', 'SemanticAlignmentResult',
     'RegulationRule', 'ProcessingContext'
 ]

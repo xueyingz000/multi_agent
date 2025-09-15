@@ -129,15 +129,13 @@ function_result = engine.infer_function_enhanced(
 
 ```json
 {
-  "area_calculation_results": {
+  "semantic_alignment_results": {
     "elements": [
       {
         "element_id": "guid",
         "ifc_type": "IfcSlab",
+        "function_classification": "structural_floor",
         "regulation_category": "include_partial",
-        "coefficient": 0.5,
-        "area": 100.0,
-        "calculated_area": 50.0,
         "confidence": 0.85,
         "reasoning_path": "..."
       }

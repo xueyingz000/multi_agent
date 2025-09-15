@@ -241,9 +241,9 @@ def example_integration_workflow():
    
 2. Semantic Alignment Agent (当前Agent)
    输入: IFC文件 + 法规规则JSON
-   输出: 语义对齐结果 + 面积计算
+   输出: 语义对齐结果和分类决策
    
-3. 下一个Agent (待开发)
+3. Area Calculation Agent (第三个Agent)
    输入: 语义对齐结果
    输出: 最终面积计算报告
 
@@ -265,7 +265,7 @@ def example_integration_workflow():
 └── 结果生成
     ├── 对齐决策
     ├── 置信度评估
-    └── 面积计算
+    └── 分类结果
 """)
 
 
