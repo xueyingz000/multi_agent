@@ -74,7 +74,7 @@ class AlignmentResult:
 class SemanticAlignmentAgent:
     """核心语义对齐代理
 
-    统一处理A类功能语义对齐和B类几何规范对齐问题
+    统一处理A类功能语义对齐和B类几何开洞规范对齐问题
     集成LLM智能分析，提高边界情况处理和置信度评估能力
     """
 
@@ -212,7 +212,7 @@ class SemanticAlignmentAgent:
         regulation_data: Dict[str, Any],
         context: AlignmentContext,
     ) -> AlignmentResult:
-        """增强的B类几何规范对齐处理"""
+        """增强的B类几何开洞规范对齐处理"""
         self.alignment_stats["total_processed"] += 1
 
         # 首先尝试传统规则方法
@@ -758,7 +758,7 @@ class SemanticAlignmentAgent:
         regulation_data: Dict[str, Any],
         context: AlignmentContext,
     ) -> AlignmentResult:
-        """处理B类几何规范对齐问题"""
+        """处理B类几何开洞规范对齐问题"""
 
         if space.space_type in [
             VerticalSpaceType.ATRIUM,
