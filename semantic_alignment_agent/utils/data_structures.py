@@ -168,8 +168,8 @@ class AlignmentDecision:
     coefficient: float
     confidence: float
     reasoning_path: str
-    evidence: List[Evidence] = field(default_factory=list)
     category_type: str  # "A1", "A2", "B1", "B2"
+    evidence: List[Evidence] = field(default_factory=list)
     requires_review: bool = False
 
 

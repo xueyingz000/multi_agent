@@ -18,32 +18,64 @@
     )
 """
 
-from .main import SemanticAlignmentPipeline
-from .core import (
-    SemanticAlignmentAgent,
-    AlignmentType,
-    ConfidenceLevel,
-    AlignmentContext,
-    AlignmentResult,
-    FunctionInferenceEngine,
-    VerticalSpaceDetector
-)
-from .utils import (
-    RegulationCategory,
-    IFCElementType,
-    FunctionType,
-    VerticalSpaceType,
-    config,
-    logger
-)
-from .data_processing import (
-    IfcExtractor,
-    RegulationParser
-)
-from .geometry import (
-    GeometryAnalyzer,
-    SpatialContext
-)
+try:
+    from .main import SemanticAlignmentPipeline
+except Exception:
+    SemanticAlignmentPipeline = None
+
+try:
+    from .core import (
+        SemanticAlignmentAgent,
+        AlignmentType,
+        ConfidenceLevel,
+        AlignmentContext,
+        AlignmentResult,
+        FunctionInferenceEngine,
+        VerticalSpaceDetector
+    )
+except Exception:
+    SemanticAlignmentAgent = None
+    AlignmentType = None
+    ConfidenceLevel = None
+    AlignmentContext = None
+    AlignmentResult = None
+    FunctionInferenceEngine = None
+    VerticalSpaceDetector = None
+
+try:
+    from .utils import (
+        RegulationCategory,
+        IFCElementType,
+        FunctionType,
+        VerticalSpaceType,
+        config,
+        logger
+    )
+except Exception:
+    RegulationCategory = None
+    IFCElementType = None
+    FunctionType = None
+    VerticalSpaceType = None
+    config = None
+    logger = None
+
+try:
+    from .data_processing import (
+        IfcExtractor,
+        RegulationParser
+    )
+except Exception:
+    IfcExtractor = None
+    RegulationParser = None
+
+try:
+    from .geometry import (
+        GeometryAnalyzer,
+        SpatialContext
+    )
+except Exception:
+    GeometryAnalyzer = None
+    SpatialContext = None
 
 __version__ = "1.0.0"
 __author__ = "Semantic Alignment Agent Team"

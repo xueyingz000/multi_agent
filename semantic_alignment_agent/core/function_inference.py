@@ -9,7 +9,7 @@ from ..utils import (
     log,
     GeometricFeatures,
     IfcElementInfo,
-    FunctionInference,
+    FunctionalInference as FunctionInference,
     FunctionType,
     Evidence,
 )
@@ -102,7 +102,7 @@ class FunctionInferenceEngine:
                     "thickness_max": 0.1,
                     "support_function": ["supports_equipment", "unknown"],
                 },
-                function_type=FunctionType.DECORATIVE_PLATFORM,
+                function_type=FunctionType.DECORATION_PLATFORM,
                 confidence_base=0.7,
                 evidence_keywords=["decoration", "decorative", "thin", "canopy"],
                 priority=3,
@@ -244,7 +244,7 @@ class FunctionInferenceEngine:
                 ),  # 限制在0.1-0.95之间
                 evidence=evidence,
                 alternatives=alternatives,
-                reasoning_path=self._generate_reasoning_path(
+                reasoning=self._generate_reasoning_path(
                     best_rule, element_info, geometric_features
                 ),
             )
@@ -463,7 +463,7 @@ class FunctionInferenceEngine:
                 "rooftop",
                 "hvac",
             ],
-            FunctionType.DECORATIVE_PLATFORM: [
+            FunctionType.DECORATION_PLATFORM: [
                 "decorative",
                 "decoration",
                 "thin",
@@ -680,7 +680,7 @@ class FunctionInferenceEngine:
         elif rule.function_type == FunctionType.EQUIPMENT_PLATFORM:
             if 0.1 <= geometric_features.thickness < 0.15:
                 consistency_score += 0.5
-        elif rule.function_type == FunctionType.DECORATIVE_PLATFORM:
+        elif rule.function_type == FunctionType.DECORATION_PLATFORM:
             if geometric_features.thickness < 0.1:
                 consistency_score += 0.5
 
@@ -893,7 +893,7 @@ class FunctionInferenceEngine:
                 )
             ],
             alternatives=[],
-            reasoning_path=f"默认推断: {element_info.ifc_type} → {default_function.value}",
+            reasoning=f"默认推断: {element_info.ifc_type} → {default_function.value}",
         )
 
     def batch_infer_functions(
