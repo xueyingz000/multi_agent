@@ -30,11 +30,15 @@ class IfcElementType(Enum):
 class FunctionType(Enum):
     """功能类型枚举"""
 
+    STRUCTURAL_FLOOR = "structural_floor"
     STRUCTURAL_SLAB = "structural_slab"
     EQUIPMENT_PLATFORM = "equipment_platform"
     DECORATION_PLATFORM = "decoration_platform"
+    DECORATIVE_PLATFORM = "decorative_platform"
     HABITABLE_OFFICE = "habitable_office"
+    GENERAL_USE_SPACE = "general_use_space"
     MECHANICAL_ROOM = "mechanical_room"
+    AUXILIARY_ROOM = "auxiliary_room"
     AUXILIARY_CONSTRUCTION = "auxiliary_construction"
     ATRIUM = "atrium"
     SHAFT = "shaft"

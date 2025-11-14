@@ -98,7 +98,7 @@ semantic_alignment:
         mechanical_room:
           category: "include_partial"
           coefficient: 0.5
-        habitable_office:
+        general_use_space:
           category: "include_full"
           coefficient: 1.0
 
