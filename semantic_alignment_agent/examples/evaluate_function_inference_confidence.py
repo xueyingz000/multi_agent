@@ -7,14 +7,29 @@ import pandas as pd
 import numpy as np
 from scipy.stats import spearmanr
 
-from semantic_alignment_agent.core.function_inference import FunctionInferenceEngine
-from semantic_alignment_agent.utils import (
-    GeometricFeatures,
-    BoundingBox,
-    Point3D,
-    IfcElementInfo,
-    FunctionType,
-)
+try:
+    from semantic_alignment_agent.core.function_inference import FunctionInferenceEngine
+    from semantic_alignment_agent.utils import (
+        GeometricFeatures,
+        BoundingBox,
+        Point3D,
+        IfcElementInfo,
+        FunctionType,
+    )
+except ModuleNotFoundError:
+    import sys as _sys
+    import os as _os
+    # Add project root (parent of the package directory) to sys.path
+    _PROJECT_ROOT = _os.path.abspath(_os.path.join(_os.path.dirname(__file__), "..", ".."))
+    _sys.path.insert(0, _PROJECT_ROOT)
+    from semantic_alignment_agent.core.function_inference import FunctionInferenceEngine
+    from semantic_alignment_agent.utils import (
+        GeometricFeatures,
+        BoundingBox,
+        Point3D,
+        IfcElementInfo,
+        FunctionType,
+    )
 
 
 DATASET_DIR = os.path.join(
@@ -100,8 +115,6 @@ def eval_group_a(engine: FunctionInferenceEngine) -> Tuple[int, int, List[Tuple[
         is_external = str(row.get("IsExternal", "")).strip().upper() == "TRUE"
 
         expected = _label_to_function_type(direct)
-        if expected == FunctionType.UNKNOWN:
-            continue
 
         # synthetic geometry based on type
         if ifc_type == "IfcSpace":
@@ -132,17 +145,23 @@ def eval_group_a(engine: FunctionInferenceEngine) -> Tuple[int, int, List[Tuple[
         )
 
         inf = _infer(engine, info, gf)
-        is_correct = int(inf.primary_function == expected)
-        total += 1
-        correct += is_correct
-        results.append((inf.confidence, is_correct))
+        is_evaluable = expected != FunctionType.UNKNOWN
+        if is_evaluable:
+            is_correct = int(inf.primary_function == expected)
+            total += 1
+            correct += is_correct
+            results.append((inf.confidence, is_correct))
+        else:
+            is_correct = None
         details.append({
             "guid": info.guid,
             "ifc_type": ifc_type,
             "expected": expected.value,
             "predicted": inf.primary_function.value,
             "confidence": float(inf.confidence),
-            "correct": bool(is_correct)
+            "correct": is_correct,
+            "evaluable": is_evaluable,
+            "expected_raw": direct
         })
 
     return correct, total, results, details
@@ -162,8 +181,6 @@ def eval_group_b(engine: FunctionInferenceEngine) -> Tuple[int, int, List[Tuple[
         feats = str(row.get("Key Geometry Features", "")).lower()
         label = str(row.get("Actual Function", "")).strip()
         expected = _label_to_function_type(label)
-        if expected == FunctionType.UNKNOWN:
-            continue
 
         # parse geometry hints
         h = 10.0
@@ -201,17 +218,23 @@ def eval_group_b(engine: FunctionInferenceEngine) -> Tuple[int, int, List[Tuple[
         )
 
         inf = _infer(engine, info, gf)
-        is_correct = int(inf.primary_function == expected)
-        total += 1
-        correct += is_correct
-        results.append((inf.confidence, is_correct))
+        is_evaluable = expected != FunctionType.UNKNOWN
+        if is_evaluable:
+            is_correct = int(inf.primary_function == expected)
+            total += 1
+            correct += is_correct
+            results.append((inf.confidence, is_correct))
+        else:
+            is_correct = None
         details.append({
             "guid": info.guid,
             "ifc_type": ifc,
             "expected": expected.value,
             "predicted": inf.primary_function.value,
             "confidence": float(inf.confidence),
-            "correct": bool(is_correct)
+            "correct": is_correct,
+            "evaluable": is_evaluable,
+            "expected_raw": label
         })
 
     return correct, total, results, details
@@ -232,8 +255,6 @@ def eval_group_c(engine: FunctionInferenceEngine) -> Tuple[int, int, List[Tuple[
         f3 = str(row.get("Geometry Feature 3", "")).lower()
         label = str(row.get("Actual Function", "")).strip()
         expected = _label_to_function_type(label)
-        if expected == FunctionType.UNKNOWN:
-            continue
 
         h = 12.0
         w = 3.0
@@ -268,17 +289,23 @@ def eval_group_c(engine: FunctionInferenceEngine) -> Tuple[int, int, List[Tuple[
             properties={},
         )
         inf = _infer(engine, info, gf)
-        is_correct = int(inf.primary_function == expected)
-        total += 1
-        correct += is_correct
-        results.append((inf.confidence, is_correct))
+        is_evaluable = expected != FunctionType.UNKNOWN
+        if is_evaluable:
+            is_correct = int(inf.primary_function == expected)
+            total += 1
+            correct += is_correct
+            results.append((inf.confidence, is_correct))
+        else:
+            is_correct = None
         details.append({
             "guid": info.guid,
             "ifc_type": ifc,
             "expected": expected.value,
             "predicted": inf.primary_function.value,
             "confidence": float(inf.confidence),
-            "correct": bool(is_correct)
+            "correct": is_correct,
+            "evaluable": is_evaluable,
+            "expected_raw": label
         })
 
     return correct, total, results, details
@@ -296,8 +323,6 @@ def eval_group_d(engine: FunctionInferenceEngine) -> Tuple[int, int, List[Tuple[
         label = str(row.get("Function", "")).strip()
         discr = str(row.get("Geometry Discriminator", "")).lower()
         expected = _label_to_function_type(label)
-        if expected == FunctionType.UNKNOWN:
-            continue
 
         # choose IFC type by label
         if "opening" in discr or "well" in label:
@@ -321,17 +346,23 @@ def eval_group_d(engine: FunctionInferenceEngine) -> Tuple[int, int, List[Tuple[
 
         info = IfcElementInfo(guid=f"D_{row.get('No.', 'N')}", ifc_type=ifc, properties={})
         inf = _infer(engine, info, gf)
-        is_correct = int(inf.primary_function == expected)
-        total += 1
-        correct += is_correct
-        results.append((inf.confidence, is_correct))
+        is_evaluable = expected != FunctionType.UNKNOWN
+        if is_evaluable:
+            is_correct = int(inf.primary_function == expected)
+            total += 1
+            correct += is_correct
+            results.append((inf.confidence, is_correct))
+        else:
+            is_correct = None
         details.append({
             "guid": info.guid,
             "ifc_type": ifc,
             "expected": expected.value,
             "predicted": inf.primary_function.value,
             "confidence": float(inf.confidence),
-            "correct": bool(is_correct)
+            "correct": is_correct,
+            "evaluable": is_evaluable,
+            "expected_raw": label
         })
 
     return correct, total, results, details
