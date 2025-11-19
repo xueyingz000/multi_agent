@@ -28,7 +28,13 @@ class LLMClient:
         Args:
             config_path: Path to configuration file
         """
-        self.config = ConfigLoader(config_path).get_config()
+        # Load configuration safely
+        try:
+            loader = ConfigLoader(config_path)
+            self.config = loader.load()
+        except Exception:
+            logger.warning("Configuration not found; LLM will rely on environment variables.")
+            self.config = {}
         self.llm_config = self.config.get('llm', {})
         
         # Initialize OpenAI client if available
@@ -39,13 +45,20 @@ class LLMClient:
     def _init_openai_client(self):
         """Initialize OpenAI client."""
         api_key = self.llm_config.get('api_key') or os.getenv('OPENAI_API_KEY')
+        # support custom base URL for OpenAI-compatible endpoints
+        base_url = self.llm_config.get('baseurl') or os.getenv('OPENAI_BASE_URL')
         if not api_key:
             logger.warning("OpenAI API key not found. LLM features will be disabled.")
             return
         
         try:
-            self.openai_client = openai.OpenAI(api_key=api_key)
-            logger.info("OpenAI client initialized successfully")
+            # Pass base_url if provided (for compatible gateways)
+            if base_url:
+                self.openai_client = openai.OpenAI(api_key=api_key, base_url=base_url)
+                logger.info(f"OpenAI client initialized successfully (base_url={base_url})")
+            else:
+                self.openai_client = openai.OpenAI(api_key=api_key)
+                logger.info("OpenAI client initialized successfully")
         except Exception as e:
             logger.error(f"Failed to initialize OpenAI client: {e}")
     
@@ -144,7 +157,8 @@ class LLMClient:
         self,
         prompt: str,
         context: Dict[str, Any],
-        model: Optional[str] = None
+        model: Optional[str] = None,
+        temperature: float = 0.2,
     ) -> Dict[str, Any]:
         """Analyze input with confidence scoring.
         
@@ -152,6 +166,7 @@ class LLMClient:
             prompt: Analysis prompt
             context: Context information
             model: Model name
+            temperature: Sampling temperature for generation
             
         Returns:
             Analysis result with confidence score
@@ -188,7 +203,11 @@ Confidence score should be between 0.0 and 1.0, where:
 - 0.0-0.3: Very low confidence
 """
         
-        result = self.generate_json_completion(enhanced_prompt, model=model)
+        result = self.generate_json_completion(
+            enhanced_prompt,
+            model=model,
+            temperature=temperature,
+        )
         
         if not result:
             return {

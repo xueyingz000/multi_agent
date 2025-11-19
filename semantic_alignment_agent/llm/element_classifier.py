@@ -111,6 +111,16 @@ class LLMElementClassifier:
         llm_result = self.llm_client.analyze_with_confidence(
             prompt, context, temperature=0.1
         )
+        # Log key outputs from LLM for observability
+        try:
+            if isinstance(llm_result, dict):
+                logger.info(
+                    f"LLM conclusion={llm_result.get('conclusion')}, conf={llm_result.get('confidence_score')}"
+                )
+            else:
+                logger.info("LLM returned non-dict result in classification")
+        except Exception:
+            logger.info("Failed to log LLM classification summary")
         
         # Parse LLM response
         return self._parse_llm_classification_result(llm_result, ifc_element)

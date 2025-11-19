@@ -1,0 +1,14 @@
+{
+  "Group A Accuracy": 37.5,
+  "Group B Accuracy": 0.0,
+  "Group C Accuracy": 0.0,
+  "Group D Accuracy": 44.44444444444444,
+  "Overall Accuracy": 20.408163265306122,
+  "Confidence-Accuracy by Bin": {
+    "low": 0.0,
+    "medium": 0.0,
+    "high": 35.714285714285715
+  },
+  "Spearman(confidence, correctness)": 0.4279364459324679,
+  "Spearman p-value": 0.0021603761990971015
+}

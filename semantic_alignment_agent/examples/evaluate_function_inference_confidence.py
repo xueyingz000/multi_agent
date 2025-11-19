@@ -19,9 +19,11 @@ try:
 except ModuleNotFoundError:
     import sys as _sys
     import os as _os
-    # Add project root (parent of the package directory) to sys.path
-    _PROJECT_ROOT = _os.path.abspath(_os.path.join(_os.path.dirname(__file__), "..", ".."))
-    _sys.path.insert(0, _PROJECT_ROOT)
+    # Add both the package directory and its parent (for module resolution) to sys.path
+    _PACKAGE_DIR = _os.path.abspath(_os.path.join(_os.path.dirname(__file__), ".."))
+    _PROJECT_PARENT = _os.path.abspath(_os.path.join(_PACKAGE_DIR, ".."))
+    _sys.path.insert(0, _PROJECT_PARENT)
+    _sys.path.insert(0, _PACKAGE_DIR)
     from semantic_alignment_agent.core.function_inference import FunctionInferenceEngine
     from semantic_alignment_agent.utils import (
         GeometricFeatures,
@@ -97,7 +99,17 @@ def _label_to_function_type(label: str) -> FunctionType:
 
 def _infer(engine: FunctionInferenceEngine, info: IfcElementInfo, gf: GeometricFeatures):
     info.geometric_features = gf
-    return engine.infer_function(info, gf, spatial_context=None)
+    # 使用增强版推断：当置信度低或证据不足时自动触发LLM融合
+    try:
+        return engine.infer_function_enhanced(
+            info,
+            gf,
+            spatial_context=None,
+            building_context=None,
+        )
+    except Exception:
+        # 回退到纯规则推断，保证评估流程稳定
+        return engine.infer_function(info, gf, spatial_context=None)
 
 
 def eval_group_a(engine: FunctionInferenceEngine) -> Tuple[int, int, List[Tuple[float, int]], List[Dict[str, Any]]]:
@@ -145,6 +157,12 @@ def eval_group_a(engine: FunctionInferenceEngine) -> Tuple[int, int, List[Tuple[
         )
 
         inf = _infer(engine, info, gf)
+        used_llm = any(getattr(ev, "source", "").startswith("llm_") for ev in getattr(inf, "evidence", []))
+        llm_conf = None
+        try:
+            llm_conf = max(ev.confidence for ev in inf.evidence if getattr(ev, "source", "").startswith("llm_")) if inf.evidence else None
+        except Exception:
+            llm_conf = None
         is_evaluable = expected != FunctionType.UNKNOWN
         if is_evaluable:
             is_correct = int(inf.primary_function == expected)
@@ -160,6 +178,9 @@ def eval_group_a(engine: FunctionInferenceEngine) -> Tuple[int, int, List[Tuple[
             "predicted": inf.primary_function.value,
             "confidence": float(inf.confidence),
             "correct": is_correct,
+            "inference_method": "llm_enhanced" if used_llm else "rule_based",
+            "used_llm": bool(used_llm),
+            "llm_confidence": float(llm_conf) if llm_conf is not None else None,
             "evaluable": is_evaluable,
             "expected_raw": direct
         })
@@ -218,6 +239,12 @@ def eval_group_b(engine: FunctionInferenceEngine) -> Tuple[int, int, List[Tuple[
         )
 
         inf = _infer(engine, info, gf)
+        used_llm = any(getattr(ev, "source", "").startswith("llm_") for ev in getattr(inf, "evidence", []))
+        llm_conf = None
+        try:
+            llm_conf = max(ev.confidence for ev in inf.evidence if getattr(ev, "source", "").startswith("llm_")) if inf.evidence else None
+        except Exception:
+            llm_conf = None
         is_evaluable = expected != FunctionType.UNKNOWN
         if is_evaluable:
             is_correct = int(inf.primary_function == expected)
@@ -233,6 +260,9 @@ def eval_group_b(engine: FunctionInferenceEngine) -> Tuple[int, int, List[Tuple[
             "predicted": inf.primary_function.value,
             "confidence": float(inf.confidence),
             "correct": is_correct,
+            "inference_method": "llm_enhanced" if used_llm else "rule_based",
+            "used_llm": bool(used_llm),
+            "llm_confidence": float(llm_conf) if llm_conf is not None else None,
             "evaluable": is_evaluable,
             "expected_raw": label
         })
@@ -289,6 +319,12 @@ def eval_group_c(engine: FunctionInferenceEngine) -> Tuple[int, int, List[Tuple[
             properties={},
         )
         inf = _infer(engine, info, gf)
+        used_llm = any(getattr(ev, "source", "").startswith("llm_") for ev in getattr(inf, "evidence", []))
+        llm_conf = None
+        try:
+            llm_conf = max(ev.confidence for ev in inf.evidence if getattr(ev, "source", "").startswith("llm_")) if inf.evidence else None
+        except Exception:
+            llm_conf = None
         is_evaluable = expected != FunctionType.UNKNOWN
         if is_evaluable:
             is_correct = int(inf.primary_function == expected)
@@ -304,6 +340,9 @@ def eval_group_c(engine: FunctionInferenceEngine) -> Tuple[int, int, List[Tuple[
             "predicted": inf.primary_function.value,
             "confidence": float(inf.confidence),
             "correct": is_correct,
+            "inference_method": "llm_enhanced" if used_llm else "rule_based",
+            "used_llm": bool(used_llm),
+            "llm_confidence": float(llm_conf) if llm_conf is not None else None,
             "evaluable": is_evaluable,
             "expected_raw": label
         })
@@ -346,6 +385,12 @@ def eval_group_d(engine: FunctionInferenceEngine) -> Tuple[int, int, List[Tuple[
 
         info = IfcElementInfo(guid=f"D_{row.get('No.', 'N')}", ifc_type=ifc, properties={})
         inf = _infer(engine, info, gf)
+        used_llm = any(getattr(ev, "source", "").startswith("llm_") for ev in getattr(inf, "evidence", []))
+        llm_conf = None
+        try:
+            llm_conf = max(ev.confidence for ev in inf.evidence if getattr(ev, "source", "").startswith("llm_")) if inf.evidence else None
+        except Exception:
+            llm_conf = None
         is_evaluable = expected != FunctionType.UNKNOWN
         if is_evaluable:
             is_correct = int(inf.primary_function == expected)
@@ -361,6 +406,9 @@ def eval_group_d(engine: FunctionInferenceEngine) -> Tuple[int, int, List[Tuple[
             "predicted": inf.primary_function.value,
             "confidence": float(inf.confidence),
             "correct": is_correct,
+            "inference_method": "llm_enhanced" if used_llm else "rule_based",
+            "used_llm": bool(used_llm),
+            "llm_confidence": float(llm_conf) if llm_conf is not None else None,
             "evaluable": is_evaluable,
             "expected_raw": label
         })
@@ -405,7 +453,8 @@ def summarize(results: List[Tuple[int, int, List[Tuple[float, int]], List[Dict[s
 
 
 def main():
-    engine = FunctionInferenceEngine(enable_llm=False)
+    # 打开 LLM 增强：当规则推断置信度较低时，自动调用 LLM 提升分类和置信度
+    engine = FunctionInferenceEngine(enable_llm=True)
     a = eval_group_a(engine)
     b = eval_group_b(engine)
     c = eval_group_c(engine)

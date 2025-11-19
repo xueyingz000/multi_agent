@@ -16,6 +16,7 @@ from ..utils import (
 from ..geometry import SpatialContext
 from ..llm.llm_client import LLMClient
 from ..llm.prompt_templates import PromptTemplates
+from ..utils.config_loader import ConfigLoader
 
 
 @dataclass
@@ -65,6 +66,15 @@ class FunctionInferenceEngine:
 
         # 初始化LLM客户端
         self.llm_client = None
+        # 从配置加载语义相关设置（如 LLM 触发阈值和强制开关）
+        try:
+            _loader = ConfigLoader()
+            semantic_cfg = _loader.get_semantic_config()
+        except Exception:
+            semantic_cfg = {}
+        self.llm_confidence_threshold = float(semantic_cfg.get("llm_confidence_threshold", 0.6))
+        self.force_llm = bool(semantic_cfg.get("force_llm", False))
+
         if enable_llm:
             try:
                 self.llm_client = LLMClient(config_path)
@@ -317,8 +327,10 @@ class FunctionInferenceEngine:
         2. 有多个可能的功能选项
         3. 存在不确定性因素
         """
+        if self.force_llm:
+            return True
         return (
-            rule_based_result.confidence < 0.6  # 置信度阈值
+            rule_based_result.confidence < self.llm_confidence_threshold  # 配置化置信度阈值
             or len(rule_based_result.alternatives) > 1
             or len(rule_based_result.evidence) < 2
         )
@@ -417,7 +429,7 @@ class FunctionInferenceEngine:
                             rule_based_result.confidence,
                         )
                     ],
-                    reasoning_path=f"Enhanced with LLM: {rule_based_result.reasoning_path} → LLM analysis suggests {predicted_function.value}",
+                    reasoning=f"Enhanced with LLM: {rule_based_result.reasoning} → LLM analysis suggests {predicted_function.value}",
                 )
             else:
                 # 使用规则推断结果，但增加LLM的见解
@@ -436,7 +448,7 @@ class FunctionInferenceEngine:
                     ),  # 轻微提升置信度
                     evidence=enhanced_evidence,
                     alternatives=rule_based_result.alternatives,
-                    reasoning_path=f"{rule_based_result.reasoning_path} (Enhanced with LLM insights)",
+                    reasoning=f"{rule_based_result.reasoning} (Enhanced with LLM insights)",
                 )
 
         except Exception as e:

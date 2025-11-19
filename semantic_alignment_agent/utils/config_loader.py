@@ -54,6 +54,8 @@ class ConfigLoader:
         # 从环境变量覆盖配置
         if os.getenv('OPENAI_MODEL'):
             llm_config['model'] = os.getenv('OPENAI_MODEL')
+        if os.getenv('OPENAI_BASE_URL'):
+            llm_config['baseurl'] = os.getenv('OPENAI_BASE_URL')
         
         return llm_config
     
