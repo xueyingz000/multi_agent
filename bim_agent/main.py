@@ -5,10 +5,11 @@ import ifcopenshell.geom
 import ifcopenshell.util.element
 import json
 import os
+import math
 
 
 # ===========================
-# 模块 1: 几何与属性分析器
+# 模块 1: 几何与空间关系分析器 (针对 Shaft/Atrium 增强)
 # ===========================
 class GeometryAnalyzer:
     def __init__(self, ifc_file_path):
@@ -18,51 +19,120 @@ class GeometryAnalyzer:
         self.settings.set(self.settings.USE_WORLD_COORDS, True)
 
     def get_element_features(self, element):
-        """提取用于分类的关键特征"""
         psets = ifcopenshell.util.element.get_psets(element)
-
-        # 1. 提取 IsExternal
-        is_external = "UNKNOWN"
-        for pset_name, props in psets.items():
-            if "Common" in pset_name and "IsExternal" in props:
-                val = props["IsExternal"]
-                is_external = str(val).upper()
-                break
-
-        # 2. 提取几何尺寸
         geo_data = self._get_geometry(element)
 
-        # 3. 组装特征
+        # --- 新增：高级空间分析 ---
+        spatial_data = self._analyze_spatial_context(element, geo_data)
+
         features = {
             "guid": element.GlobalId,
             "ifc_type": element.is_a(),
             "predefined_type": ifcopenshell.util.element.get_predefined_type(element),
             "name": element.Name if element.Name else "",
-            "is_external": is_external,
+            "is_external": str(
+                psets.get("Pset_SpaceCommon", {}).get("IsExternal", "UNKNOWN")
+            ),
             "dimensions": geo_data,
+            "spatial_context": spatial_data,  # <--- 关键的新增特征
             "psets_raw": psets,
         }
         return features
 
     def _get_geometry(self, element):
-        data = {"height": 0.0, "thickness": 0.0, "area": 0.0, "volume": 0.0}
+        data = {
+            "height": 0.0,
+            "width": 0.0,
+            "depth": 0.0,
+            "area": 0.0,
+            "aspect_ratio": 1.0,
+        }
         try:
             shape = ifcopenshell.geom.create_shape(self.settings, element)
             verts = shape.geometry.verts
             xs, ys, zs = verts[0::3], verts[1::3], verts[2::3]
             dx, dy, dz = max(xs) - min(xs), max(ys) - min(ys), max(zs) - min(zs)
 
-            data["bbox_dims"] = [round(dx, 2), round(dy, 2), round(dz, 2)]
+            data["height"] = round(dz, 2)
+            # 计算长宽（平面投影）
+            dims_xy = sorted([dx, dy])
+            width, depth = dims_xy[0], dims_xy[1]  # width 是短边，depth 是长边
+
+            data["width"] = round(width, 2)
+            data["depth"] = round(depth, 2)
+
+            # 长宽比 (Aspect Ratio)
+            if width > 0.1:
+                data["aspect_ratio"] = round(depth / width, 1)
+            else:
+                data["aspect_ratio"] = 99.9
+
             if element.is_a("IfcSpace"):
-                data["height"] = round(dz, 2)
+                data["area"] = round(dx * dy, 2)  # 简化投影面积
+            elif element.is_a("IfcOpeningElement"):
                 data["area"] = round(dx * dy, 2)
-            elif element.is_a("IfcSlab"):
-                data["thickness"] = round(dz, 2)
-            elif element.is_a("IfcWall"):
-                data["thickness"] = round(min(dx, dy), 2)
+
         except:
-            data["note"] = "No Geometry Representation"
+            data["note"] = "No Geometry"
         return data
+
+    def _analyze_spatial_context(self, element, geo_data):
+        """
+        专门用于区分 Atrium 和 Functional Shaft 的逻辑
+        """
+        context = {
+            "contains_transport": False,  # 是否包含电梯/扶梯
+            "contains_stair": False,  # 是否包含楼梯
+            "contains_mep": False,  # 是否包含机电管线
+            "boundary_material": "UNKNOWN",  # 围护结构类型 (WALL / RAILING)
+            "floor_span_est": 1.0,  # 预估贯通层数
+        }
+
+        # 1. 估算层数 (Step 1: Spans >= 2 floors?)
+        # 假设层高 3.5m (可以根据项目调整)
+        if geo_data["height"] > 0:
+            context["floor_span_est"] = round(geo_data["height"] / 3.5, 1)
+
+        # 2. 内容物检查 (Step 3: Internal Content Check)
+        # 检查空间内部包含了什么 (IfcRelContainedInSpatialStructure)
+        if element.is_a("IfcSpace"):
+            for rel in element.ContainsElements:
+                for related_elem in rel.RelatedElements:
+                    etype = related_elem.is_a()
+                    if etype in ["IfcStair", "IfcRamp"]:
+                        context["contains_stair"] = True
+                    elif etype in ["IfcTransportElement", "IfcElevator"]:
+                        context["contains_transport"] = True
+                    elif etype in [
+                        "IfcFlowSegment",
+                        "IfcFlowFitting",
+                        "IfcDistributionControlElement",
+                    ]:
+                        context["contains_mep"] = True
+
+        # 3. 边界检查 (Step 4: Edge Enclosure Check)
+        # 检查由什么构件定义了空间的边界 (IfcRelSpaceBoundary)
+        # 注意：这步计算量较大，简化逻辑只看前几个边界
+        if element.is_a("IfcSpace"):
+            walls_count = 0
+            railings_count = 0
+            # hasattr check because Openings don't have BoundedBy usually
+            if hasattr(element, "BoundedBy"):
+                for rel in element.BoundedBy:
+                    if not rel.RelatedBuildingElement:
+                        continue
+                    b_elem = rel.RelatedBuildingElement
+                    if b_elem.is_a("IfcWall") or b_elem.is_a("IfcWallStandardCase"):
+                        walls_count += 1
+                    elif b_elem.is_a("IfcRailing"):
+                        railings_count += 1
+
+            if walls_count > railings_count:
+                context["boundary_material"] = "WALL"
+            elif railings_count > 0 and railings_count >= walls_count:
+                context["boundary_material"] = "RAILING"
+
+        return context
 
 
 # ===========================
@@ -71,39 +141,50 @@ class GeometryAnalyzer:
 class IntelligentClassifier:
     def __init__(self, api_key, model_name="gpt-4o", base_url=None):
         self.llm = ChatOpenAI(
-            model=model_name,
-            temperature=0,
-            api_key=api_key,
-            base_url=base_url,
+            model=model_name, temperature=0, api_key=api_key, base_url=base_url
         )
 
+        # 升级 Prompt：植入你的 5 步逻辑
         self.prompt = PromptTemplate.from_template(
             """
-            You are a BIM Data Governance Expert. Map the IFC element to a Functional Category.
-            
-            [Element Data]
-            - IFC Class: {ifc_type}
-            - PredefinedType: {predefined_type}
-            - IsExternal: {is_external}
+            You are a BIM Code Expert. Distinguish between 'FUNCTIONAL_SHAFT' and 'ATRIUM' based on the rules below.
+
+            [Input Data]
+            - Type: {ifc_type}
             - Name: {name}
-            - Dimensions: {dimensions}
-            - Psets Snippet: {psets_snippet}
-            
+            - Dimensions: H={height}m, Area={area}m2, AspectRatio={aspect_ratio}
+            - Floor Span: ~{floor_span} floors
+            - Contents: Stair={has_stair}, Elevator={has_transport}, MEP={has_mep}
+            - Enclosure: {boundary_type} (Bounded by Wall or Railing?)
+
+            [Decision Logic for Vertical Spaces]
+            1. **Multi-floor Check**: If Floor Span < 1.5, likely 'GENERAL_ROOM' or 'CORRIDOR', not a shaft/atrium.
+            2. **Content Check**: 
+               - If contains Stair/Ramp -> 'STAIRWELL' (a type of Shaft).
+               - If contains Elevator -> 'ELEVATOR_SHAFT'.
+               - If contains MEP -> 'MEP_SHAFT'.
+            3. **Enclosure Check (Crucial)**:
+               - If enclosed by **RAILING** -> Likely 'ATRIUM' (Open void).
+               - If enclosed by **WALL** -> Likely 'FUNCTIONAL_SHAFT'.
+            4. **Size & Shape Check**:
+               - If Area > 50m2 AND AspectRatio < 2.0 (Square/Large) -> 'ATRIUM'.
+               - If Area < 15m2 OR AspectRatio > 3.0 (Narrow/Small) -> 'FUNCTIONAL_SHAFT'.
+
             [Allowed Categories]
             {valid_candidates}
-            
-            [Output Requirement]
+
+            [Task]
+            Classify the element based on the logic above.
             Return JSON ONLY:
             {{
                 "category": "CATEGORY_NAME",
                 "confidence": 0.0-1.0,
-                "reasoning": "Brief explanation"
+                "reasoning": "Step-by-step check: 1. Span=... 2. Content=... 3. Shape=... therefore..."
             }}
             """
         )
 
     def classify(self, features, all_categories):
-        # 1. 筛选候选集
         relevant_candidates = [
             c["name"]
             for c in all_categories
@@ -112,22 +193,23 @@ class IntelligentClassifier:
         if not relevant_candidates:
             relevant_candidates = ["GENERIC_ELEMENT"]
 
-        # 2. 准备 Prompt
-        psets_str = str(features["psets_raw"])
-        if len(psets_str) > 1000:
-            psets_str = psets_str[:1000] + "..."
+        geo = features["dimensions"]
+        spatial = features["spatial_context"]
 
         input_vars = {
             "ifc_type": features["ifc_type"],
-            "predefined_type": features["predefined_type"],
-            "is_external": features["is_external"],
             "name": features["name"],
-            "dimensions": json.dumps(features["dimensions"]),
-            "psets_snippet": psets_str,
+            "height": geo["height"],
+            "area": geo["area"],
+            "aspect_ratio": geo["aspect_ratio"],
+            "floor_span": spatial["floor_span_est"],
+            "has_stair": str(spatial["contains_stair"]),
+            "has_transport": str(spatial["contains_transport"]),
+            "has_mep": str(spatial["contains_mep"]),
+            "boundary_type": spatial["boundary_material"],
             "valid_candidates": json.dumps(relevant_candidates),
         }
 
-        # 3. LLM 推理
         try:
             chain = self.prompt | self.llm
             response = chain.invoke(input_vars)
@@ -136,125 +218,216 @@ class IntelligentClassifier:
         except Exception as e:
             return {"category": "ERROR", "confidence": 0.0, "reasoning": str(e)}
 
-        # 4. [关键步骤] 混合置信度校准
-        final_confidence = self._calibrate_confidence(features, result)
-        result["confidence"] = final_confidence
-
+        result["confidence"] = self._calibrate_confidence(features, result)
         return result
 
+    # def _calibrate_confidence(self, features, llm_result):
+    #     # 保持你之前那个优秀的“积分制”逻辑
+    #     # 这里特别增加针对 Shaft/Atrium 的加分项
+
+    #     base_score = float(llm_result.get("confidence", 0.5))
+    #     score = 0.5 + (base_score - 0.5) * 0.5
+
+    #     cat = llm_result.get("category", "")
+    #     spatial = features.get("spatial_context", {})
+
+    #     # 强逻辑加分：如果有实物证据 (楼梯/电梯)，直接置信度拉满
+    #     if cat in ["STAIRWELL", "ELEVATOR_SHAFT"]:
+    #         if spatial.get("contains_stair") or spatial.get("contains_transport"):
+    #             score += 0.3
+
+    #     # 边界加分：如果判定为 Atrium 且探测到了 Railing
+    #     if cat == "ATRIUM" and spatial.get("boundary_material") == "RAILING":
+    #         score += 0.25
+
+    #     # ... (保留原有的 PredefinedType 加分逻辑) ...
+    #     if features.get("predefined_type") not in ["NOTDEFINED", "None", "USERDEFINED"]:
+    #         score += 0.15
+
+    #     return round(max(0.1, min(score, 0.99)), 2)
     def _calibrate_confidence(self, features, llm_result):
         """
-        [优化版] 混合置信度计算逻辑：积分制
-        使分数呈现 0.4 ~ 0.99 的渐进分布，体现数据质量的差异
+        [优化版 V4] 混合置信度计算：修复“排除法”导致的虚高置信度
+        核心目标：解决 "Opening" 被高分归类为 "GENERAL_ROOM" 的问题
         """
-        # 1. 设定基准分 (Base Score)
-        # 我们稍微抑制一下 LLM 的原始自信，把它压缩到 0.5 ~ 0.7 之间作为起跑线
-        # 这样留出空间给后续的规则去加分
-        raw_llm_score = float(llm_result.get("confidence", 0.5))
-        score = 0.5 + (raw_llm_score - 0.5) * 0.5  # 映射到 0.5-0.75 区间
+        # 1. 初始分：获取 LLM 原始分
+        score = float(llm_result.get("confidence", 0.5))
 
-        # 获取关键数据
-        p_type = features.get("predefined_type", "")
-        is_ext = features.get("is_external", "UNKNOWN")
-        cat_name = llm_result.get("category", "")
-        elem_name = features.get("name", "").upper()
+        # 提取特征
+        cat_name = llm_result.get("category", "").upper()
+        elem_name = features.get("name", "").lower()
         dims = features.get("dimensions", {})
+        area = dims.get("area", 0.0)
+        spatial = features.get("spatial_context", {})
 
-        # ===========================
-        # 2. 加分项 (Bonuses)
-        # ===========================
+        # 定义“兜底分类” (Fallback Categories)
+        # 这些分类通常是 LLM 在没找到更好匹配时选的
+        is_fallback_cat = cat_name in ["GENERAL_ROOM", "GENERIC_ELEMENT", "UNKNOWN"]
 
-        # [A] 类型明确度加分 (权重最大)
-        # 如果 IFC 类型非常明确 (如 ROOF, BEAM)，而不是 USERDEFINED，加分
-        strong_types = ["ROOF", "BEAM", "COLUMN", "FLOOR", "BASESLAB", "STAIR", "RAMP"]
-        if p_type and p_type not in ["NOTDEFINED", "USERDEFINED", "None"]:
-            if p_type in strong_types:
-                score += 0.20  # 强类型，大幅加分
-            else:
-                score += 0.10  # 普通类型 (如 LANDING)，小幅加分
+        # =========================================
+        # [Step 1] 兜底分类的严格审查 (The "Not A Room" Check)
+        # =========================================
+        if is_fallback_cat:
+            # 1.1 语义冲突：名字叫“洞”，却分类为“房”
+            void_keywords = ["opening", "void", "hole", "penetration", "recess"]
+            if any(kw in elem_name for kw in void_keywords):
+                print(
+                    f"    [冲突] {features['guid']} 名字含Opening/Void，却被归类为 {cat_name}，重罚。"
+                )
+                score -= 0.45  # 直接扣到不及格
 
-        # [B] 属性完整度加分
-        # 如果 IsExternal 被明确定义了 (TRUE/FALSE)，说明数据质量好
-        if is_ext in ["TRUE", "FALSE"]:
-            score += 0.08
+            # 1.2 尺寸冲突：面积太小，不可能是普通房间
+            # 1.0m2 的东西叫 GENERAL_ROOM 是不合理的
+            elif area < 2.5:
+                print(
+                    f"    [疑点] {features['guid']} 面积({area}m2)过小，不像 {cat_name}，扣分。"
+                )
+                score -= 0.3
 
-        # [C] 语义一致性加分
-        # 如果 LLM 选出的分类词，直接出现在了构件名字里
-        # 例如 名字叫 "Mech Room"，分类是 "MECHANICAL_ROOM"
-        # 简单的字符串包含检查
+            # 1.3 强制封顶：排除法得出的结论，置信度不能太高
+            # 除非名字里真的有 "Room" (比如 "Storage Room")
+            if "room" not in elem_name and "office" not in elem_name:
+                if score > 0.7:
+                    score = 0.7  # 强制压低上限
+
+        # =========================================
+        # [Step 2] 常规冲突检测 (Shaft/Atrium)
+        # =========================================
+        # Atrium 必须大
+        if cat_name == "ATRIUM" and area < 15.0:
+            score -= 0.5
+
+        # Shaft 必须有围护或内容，否则如果是纯几何推断，降分
+        if "SHAFT" in cat_name:
+            has_strong_evidence = (
+                spatial.get("contains_stair")
+                or spatial.get("contains_transport")
+                or spatial.get("boundary_material") == "WALL"
+                or "shaft" in elem_name
+            )
+            if not has_strong_evidence:
+                score -= 0.25
+                if score > 0.65:
+                    score = 0.65
+
+        # =========================================
+        # [Step 3] 加分项 (Bonuses)
+        # =========================================
+        # 只有非冲突、非兜底的情况，或者兜底但名字匹配的情况，才加分
+
+        # 3.1 名字与分类完美匹配 (e.g. Name="Mech Room", Cat="MECHANICAL_ROOM")
+        # 移除下划线和空格进行模糊比对
         clean_cat = cat_name.replace("_", "").replace(" ", "")
-        if clean_cat in elem_name.replace(" ", "") or elem_name in cat_name:
-            score += 0.12
+        clean_name = elem_name.replace(" ", "").replace("-", "").upper()
+        if clean_cat in clean_name:
+            score += 0.15
 
-        # [D] 几何数据存在加分
-        if dims.get("area", 0) > 0.1 or dims.get("volume", 0) > 0.1:
-            score += 0.05
+        # 3.2 强证据匹配
+        if cat_name == "STAIRWELL" and spatial.get("contains_stair"):
+            score += 0.25
+        elif cat_name == "ATRIUM" and spatial.get("boundary_material") == "RAILING":
+            score += 0.2
 
-        # ===========================
-        # 3. 扣分项 (Penalties)
-        # ===========================
-
-        # [X] 泛型惩罚 (最重要)
-        # 如果分类结果是 GENERIC_ELEMENT，说明没识别出来，上限不能太高
-        if cat_name == "GENERIC_ELEMENT":
-            score -= 0.15
-            # 设个软上限，通用构件再怎么好，通常也不建议超过 0.75
-            if score > 0.75:
-                score = 0.75
-
-        # [Y] 几何缺失惩罚
-        if dims.get("area", 0) == 0 and dims.get("volume", 0) == 0:
-            score -= 0.30  # 没几何信息，严重扣分
-
-        # [Z] 命名模糊惩罚
-        # 如果名字太短或没有名字
-        if len(elem_name) < 3:
-            score -= 0.05
-
-        # ===========================
-        # 4. 边界处理 (Clamping)
-        # ===========================
-        # 确保分数在 0.1 ~ 0.99 之间
-        final_score = max(0.1, min(score, 0.99))
-
-        # 保留两位小数
-        return round(final_score, 2)
+        # =========================================
+        # [Step 4] 最终边界
+        # =========================================
+        return round(max(0.2, min(score, 0.99)), 2)
 
     # def _calibrate_confidence(self, features, llm_result):
     #     """
-    #     混合置信度计算逻辑：
-    #     Python 规则 (Hard Rules) + LLM 语义判断 (Soft Logic)
+    #     [优化版 V2] 混合置信度计算逻辑：引入冲突惩罚机制 (Conflict Penalties)
     #     """
-    #     # 获取 LLM 原始打分 (如果没有则默认 0.5)，并限制在 [0, 1]
+    #     # 1. 初始分：直接使用 LLM 的原始置信度，不再人为抬高基准线
+    #     # 如果 LLM 觉得只有 0.6，我们就从 0.6 开始算，而不是强行拉到 0.8
     #     score = float(llm_result.get("confidence", 0.5))
-    #     score = max(0.0, min(1.0, score))
 
-    #     # --- 规则 1: PredefinedType 权威性加成（渐进式靠拢高锚点）---
-    #     # 强信号存在时，不直接跳到 0.95，而是以一定比例靠近 0.95
-    #     p_type = features.get("predefined_type", "")
-    #     if p_type and p_type not in ["NOTDEFINED", "USERDEFINED", "None"]:
-    #         # 向 0.95 靠拢（60% 的幅度），避免一刀切 0.95
-    #         score = score + 0.6 * (0.95 - score)
-
-    #     # --- 规则 2: IsExternal 明确性加成（小幅加成）---
-    #     if features.get("is_external") in ["TRUE", "FALSE"]:
-    #         # 轻微向 1.0 靠拢，力度较温和，避免上限过快
-    #         score = score + 0.08 * (1.0 - score)
-
-    #     # --- 规则 3: 几何缺失惩罚（渐进式靠拢低锚点）---
+    #     # 提取关键信息
+    #     cat_name = llm_result.get("category", "").upper()
+    #     elem_name = features.get("name", "").lower()
     #     dims = features.get("dimensions", {})
-    #     if dims.get("area", 0) == 0 and dims.get("volume", 0) == 0:
-    #         # 向低锚点 0.35 靠拢（50% 的幅度），避免强制卡在 0.4
-    #         score = score + 0.5 * (0.35 - score)
+    #     area = dims.get("area", 0.0)
+    #     aspect = dims.get("aspect_ratio", 1.0)
+    #     p_type = features.get("predefined_type", "")
+    #     spatial = features.get("spatial_context", {})
 
-    #     # --- 规则 4: 关键词匹配加成（温和加成）---
-    #     if llm_result.get("category", "").lower() in features.get("name", "").lower():
-    #         # 温和地向 0.95 靠拢（5% 的幅度），让文本匹配产生细腻影响
-    #         score = score + 0.05 * (0.95 - score)
+    #     # ===========================
+    #     # 2. 冲突惩罚 (Conflict Penalties) - 这是一个扣分系统
+    #     # ===========================
 
-    #     # 最终边界控制，避免过度偏向两端，并保留两位小数
-    #     score = max(0.05, min(0.98, score))
-    #     return round(score, 2)
+    #     # [逻辑矛盾 A] 尺寸 vs 功能
+    #     # Atrium 必须是大空间。如果是小洞口被归类为 Atrium，大概率错了
+    #     if cat_name == "ATRIUM" and area < 20.0:
+    #         score -= 0.45  # 重罚！变成 < 0.5
+
+    #     # Functional Shaft 通常比较窄。如果很大的方正空间被归类为 Shaft，可能有误
+    #     if cat_name == "FUNCTIONAL_SHAFT" and area > 50.0 and aspect < 1.5:
+    #         score -= 0.2
+
+    #     # [逻辑矛盾 B] 名字 vs 分类 (Semantic Mismatch)
+    #     # 如果名字里明确写了 Stair/Elevator，却被分到了 General Room，说明 LLM 没对上号
+    #     critical_keywords = {
+    #         "stair": ["STAIR", "SHAFT", "CIRCULATION"],
+    #         "elevator": ["ELEVATOR", "SHAFT", "TRANSPORT"],
+    #         "lift": ["ELEVATOR", "SHAFT", "TRANSPORT"],
+    #         "plumbing": ["MEP", "SHAFT", "PIPING"],
+    #         "hvac": ["MEP", "SHAFT", "DUCT"],
+    #     }
+    #     for kw, valid_cats in critical_keywords.items():
+    #         if kw in elem_name:
+    #             # 检查当前分类是否在允许的列表里
+    #             is_match = any(vc in cat_name for vc in valid_cats)
+    #             if not is_match:
+    #                 score -= 0.25  # 名字叫电梯却没分到电梯类，扣分
+
+    #     # [逻辑矛盾 C] 模拟辅助构件降权
+    #     # 你的数据集中有很多 Boundary_for_xxx，这些是辅助体，不是真实构件，置信度不应太高
+    #     if "boundary_" in elem_name or "content_" in elem_name:
+    #         score -= 0.15
+
+    #     # ===========================
+    #     # 3. 兜底分类封顶 (Cap for Fallbacks)
+    #     # ===========================
+    #     # 如果分类是“普通房间”或“通用构件”，说明没有识别出特殊性
+    #     # 这时置信度不应该很高，除非面积真的很大且规整
+    #     if cat_name in ["GENERAL_ROOM", "GENERIC_ELEMENT"]:
+    #         # 基础封顶 0.8
+    #         if score > 0.8:
+    #             score = 0.8
+
+    #         # 如果面积还很小 (比如 < 2m2 的洞口被归类为普通房间)，说明甚至可能是漏判的管井
+    #         if area < 3.0:
+    #             score -= 0.25  # 极小面积的 General Room 非常可疑
+
+    #     # ===========================
+    #     # 4. 加分项 (Bonuses) - 只有完全匹配才加分
+    #     # ===========================
+
+    #     # [加分 A] 强类型匹配
+    #     # IFC 类型明确且匹配
+    #     if p_type and p_type not in [
+    #         "NOTDEFINED",
+    #         "USERDEFINED",
+    #         "None",
+    #         "PROVISIONFORVOID",
+    #     ]:
+    #         score += 0.15
+
+    #     # [加分 B] 空间线索完美匹配
+    #     # 比如：分类是 STAIRWELL，且确实探测到了楼梯
+    #     if cat_name == "STAIRWELL" and spatial.get("contains_stair"):
+    #         score += 0.25
+    #     elif cat_name == "ELEVATOR_SHAFT" and spatial.get("contains_transport"):
+    #         score += 0.25
+    #     elif cat_name == "ATRIUM" and spatial.get("boundary_material") == "RAILING":
+    #         score += 0.25
+    #     elif "SHAFT" in cat_name and spatial.get("boundary_material") == "WALL":
+    #         score += 0.1
+
+    #     # ===========================
+    #     # 5. 边界归一化
+    #     # ===========================
+    #     final_score = max(0.2, min(score, 0.99))
+    #     return round(final_score, 2)
 
 
 # ===========================
@@ -294,6 +467,17 @@ def main():
         {"name": "GENERAL_ROOM", "valid_ifc_types": ["IfcSpace"]},
         {"name": "CORRIDOR", "valid_ifc_types": ["IfcSpace"]},
         {"name": "INDOOR_PARKING", "valid_ifc_types": ["IfcSpace"]},
+        {"name": "ATRIUM", "valid_ifc_types": ["IfcSpace", "IfcOpeningElement"]},
+        {
+            "name": "ELEVATOR_SHAFT",
+            "valid_ifc_types": ["IfcSpace", "IfcOpeningElement"],
+        },
+        {"name": "STAIRWELL", "valid_ifc_types": ["IfcSpace", "IfcOpeningElement"]},
+        {"name": "MEP_SHAFT", "valid_ifc_types": ["IfcSpace", "IfcOpeningElement"]},
+        {
+            "name": "FUNCTIONAL_SHAFT",
+            "valid_ifc_types": ["IfcSpace", "IfcOpeningElement"],
+        },  # 通用管井
     ]
 
     # --- 初始化 ---

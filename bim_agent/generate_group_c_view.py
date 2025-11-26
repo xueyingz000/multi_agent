@@ -9,7 +9,8 @@ import ifcopenshell.api.aggregate
 import ifcopenshell.api.type
 import ifcopenshell.api.pset
 
-# --- 1. Group C 数据集 (No. 66 - 90) ---
+# --- 1. Group C 数据集 ---
+# [修改点 1] 将所有的 "IfcOpeningElement" 替换为 "IfcBuildingElementProxy"
 dataset = [
     (
         66,
@@ -36,135 +37,133 @@ dataset = [
         "Electrical shaft",
     ),
     (70, "IfcSpace", {"F1": "H>12m", "F2": "W>8m", "F3": "floor_count>=2"}, "Atrium"),
+    # 下面全是 Proxy (原 Opening)
     (
         71,
-        "IfcOpeningElement",
+        "IfcBuildingElementProxy",
         {"F1": "H>12m", "F2": "W>8m", "F3": "Penetrates multiple floors"},
         "Atrium void",
     ),
     (
         72,
-        "IfcOpeningElement",
+        "IfcBuildingElementProxy",
         {"F1": "H>15m", "F2": "W<3m", "F3": "Contains elevator"},
         "Elevator shaft opening",
     ),
     (
         73,
-        "IfcOpeningElement",
+        "IfcBuildingElementProxy",
         {"F1": "H>15m", "F2": "W<2m", "F3": "Contains stair"},
         "Stairwell opening",
     ),
     (
         74,
-        "IfcOpeningElement",
+        "IfcBuildingElementProxy",
         {"F1": "H>12m", "F2": "aspect>10", "F3": "Vertical ductwork"},
         "HVAC shaft opening",
     ),
     (
         75,
-        "IfcOpeningElement",
+        "IfcBuildingElementProxy",
         {"F1": "H>12m", "F2": "aspect>12", "F3": "Vertical piping"},
         "Plumbing shaft opening",
     ),
     (
         76,
-        "IfcOpeningElement",
+        "IfcBuildingElementProxy",
         {"F1": "H>10m", "F2": "aspect>15", "F3": "Cable vertical shaft"},
         "Electrical shaft opening",
     ),
     (
         77,
-        "IfcOpeningElement",
+        "IfcBuildingElementProxy",
         {"F1": "In slab", "F2": "D<0.5m", "F3": "Circular"},
         "Small service penetration",
     ),
     (
         78,
-        "IfcOpeningElement",
+        "IfcBuildingElementProxy",
         {"F1": "In slab", "F2": "D>1m", "F3": "Rectangular"},
         "Large equipment opening",
     ),
     (
         79,
-        "IfcOpeningElement",
+        "IfcBuildingElementProxy",
         {"F1": "Building boundary", "F2": "Narrow gap", "F3": "Vertical"},
         "Expansion joint",
     ),
     (
         80,
-        "IfcOpeningElement",
+        "IfcBuildingElementProxy",
         {"F1": "In slab", "F2": "D<0.3m", "F3": "Round"},
         "Floor drain opening",
     ),
     (
         81,
-        "IfcOpeningElement",
+        "IfcBuildingElementProxy",
         {"F1": "Underground exterior wall", "F2": "Light well", "F3": "-"},
         "Window well",
     ),
     (
         82,
-        "IfcOpeningElement",
+        "IfcBuildingElementProxy",
         {"F1": "In slab", "F2": "Temporary", "F3": "Rigging"},
         "Equipment rigging opening",
     ),
     (
         83,
-        "IfcOpeningElement",
+        "IfcBuildingElementProxy",
         {"F1": "Multi-floor", "F2": "Large void", "F3": "Central"},
         "Central void/atrium",
     ),
     (
         84,
-        "IfcOpeningElement",
+        "IfcBuildingElementProxy",
         {"F1": "In slab", "F2": "Stair penetration", "F3": "-"},
         "Stair opening",
     ),
     (
         85,
-        "IfcOpeningElement",
+        "IfcBuildingElementProxy",
         {"F1": "In slab", "F2": "Escalator penetration", "F3": "-"},
         "Escalator opening",
     ),
     (
         86,
-        "IfcOpeningElement",
+        "IfcBuildingElementProxy",
         {"F1": "In slab", "F2": "Vertical circulation", "F3": "-"},
         "Vertical circulation void",
     ),
     (
         87,
-        "IfcOpeningElement",
+        "IfcBuildingElementProxy",
         {"F1": "In roof", "F2": "Large area", "F3": "Glass"},
         "Glazed roof opening",
     ),
     (
         88,
-        "IfcOpeningElement",
+        "IfcBuildingElementProxy",
         {"F1": "Between floors", "F2": "Vertical void", "F3": "Open"},
         "Open floor connection",
     ),
     (
         89,
-        "IfcOpeningElement",
+        "IfcBuildingElementProxy",
         {"F1": "In slab", "F2": "Loading access", "F3": "-"},
         "Loading dock opening",
     ),
     (
         90,
-        "IfcOpeningElement",
+        "IfcBuildingElementProxy",
         {"F1": "Partial floor", "F2": "Balcony edge", "F3": "-"},
         "Balcony void boundary",
     ),
 ]
 
-# --- 2. 初始化 IFC 模型 ---
+# --- 2. 初始化 IFC 模型 (同上) ---
 model = ifcopenshell.file()
 project = ifcopenshell.api.run(
-    "root.create_entity",
-    model,
-    ifc_class="IfcProject",
-    name="Group C Dataset (Visible)",
+    "root.create_entity", model, ifc_class="IfcProject", name="Group C Dataset (Visual)"
 )
 ifcopenshell.api.run("unit.assign_unit", model)
 context = ifcopenshell.api.run("context.add_context", model, context_type="Model")
@@ -176,7 +175,6 @@ body = ifcopenshell.api.run(
     target_view="MODEL_VIEW",
     parent=context,
 )
-
 site = ifcopenshell.api.run(
     "root.create_entity", model, ifc_class="IfcSite", name="Default Site"
 )
@@ -198,11 +196,10 @@ ifcopenshell.api.run(
 )
 
 
-# --- 3. 几何解析器 ---
+# --- 3. 几何解析器 (同上) ---
 def parse_geometry_group_c(features_dict):
     f_str = " ".join(features_dict.values()).lower()
     l, w, h = 1.0, 1.0, 0.3
-
     if "h>20" in f_str:
         h = 22.0
     elif "h>15" in f_str:
@@ -215,56 +212,163 @@ def parse_geometry_group_c(features_dict):
         h = 10.0
     elif "vertical void" in f_str:
         h = 6.0
-    elif "in slab" in f_str or "partial floor" in f_str:
-        h = 0.3
-    elif "in roof" in f_str:
-        h = 0.2
 
-    if (
-        "w>8" in f_str
-        or "large area" in f_str
-        or "large void" in f_str
-        or "atrium" in f_str
+    if any(
+        x in f_str
+        for x in ["w>8", "large area", "large void", "atrium", "central void"]
     ):
         l, w = 10.0, 10.0
-    elif "w<2" in f_str or "aspect>15" in f_str:
+    elif any(x in f_str for x in ["w<2", "aspect>15", "cable"]):
         l, w = 1.5, 1.5
-    elif "w<3" in f_str or "aspect>10" in f_str:
+    elif any(x in f_str for x in ["w<3", "aspect>10", "hvac"]):
         l, w = 2.5, 2.5
-    elif "d<0.5" in f_str or "d<0.3" in f_str or "small" in f_str:
+    elif any(x in f_str for x in ["d<0.5", "d<0.3", "small"]):
         l, w = 0.4, 0.4
-    elif "d>1" in f_str:
-        l, w = 1.5, 1.5
-    elif "narrow gap" in f_str:
-        l, w = 10.0, 0.2
+
     if "stair" in f_str or "escalator" in f_str:
         l, w = 4.0, 2.0
-
     return l, w, h
 
 
-# --- 4. 生成循环 ---
+# --- 4. 上下文模拟器 (适配 Proxy) ---
+def simulate_context(
+    model, element, function_name, features_dict, storey, body_context
+):
+    func = function_name.lower()
+
+    # ---------------------------
+    # A. 边界判定
+    # ---------------------------
+    boundary_type = None
+    if any(
+        x in func for x in ["shaft", "stairwell", "stair", "elevator", "duct", "pipe"]
+    ):
+        boundary_type = "IfcWall"
+    elif any(x in func for x in ["atrium", "void", "balcony", "open"]):
+        boundary_type = "IfcRailing"
+
+    if boundary_type:
+        boundary_elem = ifcopenshell.api.run(
+            "root.create_entity",
+            model,
+            ifc_class=boundary_type,
+            name=f"Boundary_for_{element.Name}",
+        )
+        rep = ifcopenshell.api.run(
+            "geometry.add_wall_representation",
+            model,
+            context=body_context,
+            length=1,
+            height=1,
+            thickness=0.1,
+        )
+        ifcopenshell.api.run(
+            "geometry.assign_representation",
+            model,
+            product=boundary_elem,
+            representation=rep,
+        )
+        ifcopenshell.api.run(
+            "spatial.assign_container",
+            model,
+            relating_structure=storey,
+            products=[boundary_elem],
+        )
+
+        # 仅 IfcSpace 支持 RelSpaceBoundary
+        if element.is_a("IfcSpace"):
+            rel = ifcopenshell.api.run(
+                "root.create_entity",
+                model,
+                ifc_class="IfcRelSpaceBoundary",
+                name="BoundaryRel",
+            )
+            rel.RelatingSpace = element
+            rel.RelatedBuildingElement = boundary_elem
+            rel.PhysicalOrVirtualBoundary = "PHYSICAL"
+
+    # ---------------------------
+    # B. 内容物判定
+    # ---------------------------
+    content_type = None
+    if "elevator" in func or "lift" in func:
+        content_type = "IfcTransportElement"
+    elif "stair" in func:
+        content_type = "IfcStair"
+    elif "escalator" in func:
+        content_type = "IfcTransportElement"
+    elif any(
+        x in func for x in ["hvac", "duct", "pipe", "drain", "cable", "electrical"]
+    ):
+        content_type = "IfcFlowSegment"
+
+    if content_type:
+        content_elem = ifcopenshell.api.run(
+            "root.create_entity",
+            model,
+            ifc_class=content_type,
+            name=f"Content_inside_{element.Name}",
+        )
+        rep_c = ifcopenshell.api.run(
+            "geometry.add_wall_representation",
+            model,
+            context=body_context,
+            length=0.5,
+            height=0.5,
+            thickness=0.5,
+        )
+        ifcopenshell.api.run(
+            "geometry.assign_representation",
+            model,
+            product=content_elem,
+            representation=rep_c,
+        )
+
+        if element.is_a("IfcSpace"):
+            ifcopenshell.api.run(
+                "aggregate.assign_object",
+                model,
+                relating_object=element,
+                products=[content_elem],
+            )
+        else:
+            # 对于 Proxy，为了可视化，我们把内容物放在同一个 Storey 即可，位置重叠
+            ifcopenshell.api.run(
+                "spatial.assign_container",
+                model,
+                relating_structure=storey,
+                products=[content_elem],
+            )
+
+
+# --- 5. 生成循环 ---
 row_length = 5
 spacing_x = 15.0
 spacing_y = 15.0
 
-print("正在生成可见版 Group C IFC 文件...")
+print("正在生成可视化版 Group C IFC (Use Proxy)...")
 
 for item in dataset:
-    no, original_ifc_type, feat_dict, actual_func = item
+    no, ifc_type, feat_dict, actual_func = item
 
-    # 【关键修改】如果它是 Opening，我们强制改为 Proxy 以便可视化
-    # 但我们会在 Pset 属性里记录它原本应该是 Opening
-    final_ifc_class = original_ifc_type
-    if original_ifc_type == "IfcOpeningElement":
-        final_ifc_class = "IfcBuildingElementProxy"
-
+    # 1. 创建实体
     name_str = f"No.{no}_{actual_func.replace(' ', '_').replace('/', '-')}"
+
+    # [修改点 2] 为 Proxy 增加 PredefinedType='PROVISIONFORVOID'
+    # 这样在 Revit 中虽然是常规模型，但属性上知道它是留洞
+    predefined_type = None
+    if ifc_type == "IfcBuildingElementProxy":
+        predefined_type = "PROVISIONFORVOID"
+
     element = ifcopenshell.api.run(
-        "root.create_entity", model, ifc_class=final_ifc_class, name=name_str
+        "root.create_entity",
+        model,
+        ifc_class=ifc_type,
+        name=name_str,
+        predefined_type=predefined_type,
     )
 
-    # 写入属性集
+    # 2. 写入属性
     pset = ifcopenshell.api.run(
         "pset.add_pset", model, product=element, name="Pset_SimulatedData"
     )
@@ -273,13 +377,12 @@ for item in dataset:
         "Feature2": feat_dict["F2"],
         "Feature3": feat_dict["F3"],
         "ActualFunction": actual_func,
-        "OriginalType": original_ifc_type,  # 记录原始类型
     }
     ifcopenshell.api.run("pset.edit_pset", model, pset=pset, properties=props)
 
-    # 生成几何
+    # 3. 生成几何
     l, w, h = parse_geometry_group_c(feat_dict)
-
+    # 对于 Proxy，我们把它生成为实心体块，这样在 Revit 里才看得到
     representation = ifcopenshell.api.run(
         "geometry.add_wall_representation",
         model,
@@ -289,7 +392,7 @@ for item in dataset:
         thickness=w,
     )
 
-    # 定位
+    # 4. 定位
     idx = no - 66
     pos_x = (float(idx) % row_length) * spacing_x
     pos_y = (float(idx) // row_length) * spacing_y
@@ -305,7 +408,6 @@ for item in dataset:
             [0.0, 0.0, 0.0, 1.0],
         ],
     )
-
     ifcopenshell.api.run(
         "geometry.assign_representation",
         model,
@@ -313,12 +415,13 @@ for item in dataset:
         representation=representation,
     )
 
-    # 空间层级
-    if final_ifc_class == "IfcSpace":
+    # 5. 空间层级
+    if ifc_type == "IfcSpace":
         ifcopenshell.api.run(
             "aggregate.assign_object", model, relating_object=storey, products=[element]
         )
     else:
+        # Proxy 和 Opening 一样，放入 Spatial Container
         ifcopenshell.api.run(
             "spatial.assign_container",
             model,
@@ -326,7 +429,12 @@ for item in dataset:
             products=[element],
         )
 
-filename = "group_c_dataset_visible.ifc"
+    # 6. 上下文环境
+    simulate_context(model, element, actual_func, feat_dict, storey, body)
+
+# --- 6. 保存 ---
+filename = "group_c_dataset_viz.ifc"
 model.write(filename)
 print(f"成功生成: {filename}")
-print("所有 IfcOpeningElement 已转换为 IfcBuildingElementProxy 以便查看。")
+print("  - 所有 Openings 已转换为 IfcBuildingElementProxy (PROVISIONFORVOID)")
+print("  - 可直接在 Revit 中链接或打开查看几何体块")

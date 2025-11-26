@@ -9,7 +9,7 @@ import ifcopenshell.api.aggregate
 import ifcopenshell.api.type
 import ifcopenshell.api.pset
 
-# --- 1. Group C 数据集 (保持不变) ---
+# --- 1. Group C 数据集 (No. 66 - 90) ---
 dataset = [
     (
         66,
@@ -72,7 +72,6 @@ dataset = [
         {"F1": "H>10m", "F2": "aspect>15", "F3": "Cable vertical shaft"},
         "Electrical shaft opening",
     ),
-    # ... 后续的小洞口通常不需要复杂的上下文，依靠尺寸判断即可，但代码会兼容处理
     (
         77,
         "IfcOpeningElement",
@@ -162,7 +161,10 @@ dataset = [
 # --- 2. 初始化 IFC 模型 ---
 model = ifcopenshell.file()
 project = ifcopenshell.api.run(
-    "root.create_entity", model, ifc_class="IfcProject", name="Group C Dataset"
+    "root.create_entity",
+    model,
+    ifc_class="IfcProject",
+    name="Group C Dataset (Visible)",
 )
 ifcopenshell.api.run("unit.assign_unit", model)
 context = ifcopenshell.api.run("context.add_context", model, context_type="Model")
@@ -174,6 +176,7 @@ body = ifcopenshell.api.run(
     target_view="MODEL_VIEW",
     parent=context,
 )
+
 site = ifcopenshell.api.run(
     "root.create_entity", model, ifc_class="IfcSite", name="Default Site"
 )
@@ -200,7 +203,6 @@ def parse_geometry_group_c(features_dict):
     f_str = " ".join(features_dict.values()).lower()
     l, w, h = 1.0, 1.0, 0.3
 
-    # 高度
     if "h>20" in f_str:
         h = 22.0
     elif "h>15" in f_str:
@@ -213,182 +215,56 @@ def parse_geometry_group_c(features_dict):
         h = 10.0
     elif "vertical void" in f_str:
         h = 6.0
+    elif "in slab" in f_str or "partial floor" in f_str:
+        h = 0.3
+    elif "in roof" in f_str:
+        h = 0.2
 
-    # 宽度 (XY)
-    if any(
-        x in f_str
-        for x in ["w>8", "large area", "large void", "atrium", "central void"]
+    if (
+        "w>8" in f_str
+        or "large area" in f_str
+        or "large void" in f_str
+        or "atrium" in f_str
     ):
         l, w = 10.0, 10.0
-    elif any(x in f_str for x in ["w<2", "aspect>15", "cable"]):
-        l, w = 1.5, 1.5  # 细长
-    elif any(x in f_str for x in ["w<3", "aspect>10", "hvac"]):
+    elif "w<2" in f_str or "aspect>15" in f_str:
+        l, w = 1.5, 1.5
+    elif "w<3" in f_str or "aspect>10" in f_str:
         l, w = 2.5, 2.5
-    elif any(x in f_str for x in ["d<0.5", "d<0.3", "small"]):
+    elif "d<0.5" in f_str or "d<0.3" in f_str or "small" in f_str:
         l, w = 0.4, 0.4
-
-    # 特殊形状
+    elif "d>1" in f_str:
+        l, w = 1.5, 1.5
+    elif "narrow gap" in f_str:
+        l, w = 10.0, 0.2
     if "stair" in f_str or "escalator" in f_str:
         l, w = 4.0, 2.0
 
     return l, w, h
 
 
-# --- 4. 上下文模拟器 (关键新增) ---
-def simulate_context(
-    model, element, function_name, features_dict, storey, body_context
-):
-    """
-    根据功能名称，在空间周围/内部生成辅助构件，以欺骗/满足 Agent 的逻辑检查。
-    """
-    func = function_name.lower()
-    f_str = " ".join(features_dict.values()).lower()
-
-    # ---------------------------
-    # A. 边界判定 (Wall vs Railing)
-    # ---------------------------
-    boundary_type = None
-
-    # Shafts 通常由 Wall 围合
-    if any(
-        x in func for x in ["shaft", "stairwell", "stair", "elevator", "duct", "pipe"]
-    ):
-        boundary_type = "IfcWall"
-    # Atrium 通常由 Railing 围合
-    elif any(x in func for x in ["atrium", "void", "balcony", "open"]):
-        boundary_type = "IfcRailing"
-
-    if boundary_type:
-        # 创建一个“假”的边界构件 (不求几何精确，只求存在关系)
-        boundary_elem = ifcopenshell.api.run(
-            "root.create_entity",
-            model,
-            ifc_class=boundary_type,
-            name=f"Boundary_for_{element.Name}",
-        )
-        # 给它一个简单的几何表达，避免某些解析器报错
-        rep = ifcopenshell.api.run(
-            "geometry.add_wall_representation",
-            model,
-            context=body_context,
-            length=1,
-            height=1,
-            thickness=0.1,
-        )
-        ifcopenshell.api.run(
-            "geometry.assign_representation",
-            model,
-            product=boundary_elem,
-            representation=rep,
-        )
-        ifcopenshell.api.run(
-            "spatial.assign_container",
-            model,
-            relating_structure=storey,
-            products=[boundary_elem],
-        )
-
-        # [关键] 建立 SpaceBoundary 关系
-        # 注意：IfcRelSpaceBoundary 关联 Space 和 BuildingElement
-        if element.is_a("IfcSpace"):
-            rel = ifcopenshell.api.run(
-                "root.create_entity",
-                model,
-                ifc_class="IfcRelSpaceBoundary",
-                name="BoundaryRel",
-            )
-            rel.RelatingSpace = element
-            rel.RelatedBuildingElement = boundary_elem
-            # Physical 连接
-            rel.PhysicalOrVirtualBoundary = "PHYSICAL"
-
-    # ---------------------------
-    # B. 内容物判定 (Contents)
-    # ---------------------------
-    content_type = None
-
-    if "elevator" in func or "lift" in func:
-        content_type = "IfcTransportElement"  # 电梯
-    elif "stair" in func:
-        content_type = "IfcStair"
-    elif "escalator" in func:
-        content_type = "IfcTransportElement"
-    elif any(x in func for x in ["hvac", "duct"]):
-        content_type = "IfcFlowSegment"  # 模拟风管
-    elif any(x in func for x in ["plumbing", "pipe", "drain"]):
-        content_type = "IfcFlowSegment"  # 模拟管道
-    elif "cable" in func or "electrical" in func:
-        content_type = "IfcFlowSegment"  # 模拟桥架
-
-    if content_type:
-        # 创建内容构件
-        content_elem = ifcopenshell.api.run(
-            "root.create_entity",
-            model,
-            ifc_class=content_type,
-            name=f"Content_inside_{element.Name}",
-        )
-        # 简单几何
-        rep_c = ifcopenshell.api.run(
-            "geometry.add_wall_representation",
-            model,
-            context=body_context,
-            length=0.5,
-            height=0.5,
-            thickness=0.5,
-        )
-        ifcopenshell.api.run(
-            "geometry.assign_representation",
-            model,
-            product=content_elem,
-            representation=rep_c,
-        )
-
-        # [关键] 放入空间内部
-        # 只有 IfcSpace 支持 RelContainedInSpatialStructure 作为容器
-        if element.is_a("IfcSpace"):
-            ifcopenshell.api.run(
-                "aggregate.assign_object",
-                model,
-                relating_object=element,
-                products=[content_elem],
-            )
-        else:
-            # 如果是 Opening，通常 Opening 不包含设备，但为了 Agent 测试，
-            # 我们可以把设备放在 Storey 下，但是让 Agent 的 spatial_context 逻辑 (通过包含关系) 可能会失效
-            # 针对 Opening，Agent 主要是看 Boundary 或者 geometry。
-            # 这里为了保险，还是把它放在 Storey
-            ifcopenshell.api.run(
-                "spatial.assign_container",
-                model,
-                relating_structure=storey,
-                products=[content_elem],
-            )
-
-            # hack: 虽然不符合规范，但我们可以手动建立关系来测试 Agent
-            # (Agent 代码通过 ifcopenshell API 读取 ContainsElements)
-            # 实际上 IfcOpeningElement 不能作为 RelContained 的主语。
-            # 所以对于 Opening，我们主要依靠 Boundary 和 几何。
-            pass
-
-
-# --- 5. 生成循环 ---
+# --- 4. 生成循环 ---
 row_length = 5
 spacing_x = 15.0
 spacing_y = 15.0
 
-print("正在生成增强版 Group C IFC (含上下文环境)...")
+print("正在生成可见版 Group C IFC 文件...")
 
 for item in dataset:
-    no, ifc_type, feat_dict, actual_func = item
+    no, original_ifc_type, feat_dict, actual_func = item
 
-    # 1. 创建实体
+    # 【关键修改】如果它是 Opening，我们强制改为 Proxy 以便可视化
+    # 但我们会在 Pset 属性里记录它原本应该是 Opening
+    final_ifc_class = original_ifc_type
+    if original_ifc_type == "IfcOpeningElement":
+        final_ifc_class = "IfcBuildingElementProxy"
+
     name_str = f"No.{no}_{actual_func.replace(' ', '_').replace('/', '-')}"
     element = ifcopenshell.api.run(
-        "root.create_entity", model, ifc_class=ifc_type, name=name_str
+        "root.create_entity", model, ifc_class=final_ifc_class, name=name_str
     )
 
-    # 2. 写入属性
+    # 写入属性集
     pset = ifcopenshell.api.run(
         "pset.add_pset", model, product=element, name="Pset_SimulatedData"
     )
@@ -397,11 +273,13 @@ for item in dataset:
         "Feature2": feat_dict["F2"],
         "Feature3": feat_dict["F3"],
         "ActualFunction": actual_func,
+        "OriginalType": original_ifc_type,  # 记录原始类型
     }
     ifcopenshell.api.run("pset.edit_pset", model, pset=pset, properties=props)
 
-    # 3. 生成几何
+    # 生成几何
     l, w, h = parse_geometry_group_c(feat_dict)
+
     representation = ifcopenshell.api.run(
         "geometry.add_wall_representation",
         model,
@@ -411,7 +289,7 @@ for item in dataset:
         thickness=w,
     )
 
-    # 4. 定位
+    # 定位
     idx = no - 66
     pos_x = (float(idx) % row_length) * spacing_x
     pos_y = (float(idx) // row_length) * spacing_y
@@ -427,6 +305,7 @@ for item in dataset:
             [0.0, 0.0, 0.0, 1.0],
         ],
     )
+
     ifcopenshell.api.run(
         "geometry.assign_representation",
         model,
@@ -434,8 +313,8 @@ for item in dataset:
         representation=representation,
     )
 
-    # 5. 空间层级
-    if ifc_type == "IfcSpace":
+    # 空间层级
+    if final_ifc_class == "IfcSpace":
         ifcopenshell.api.run(
             "aggregate.assign_object", model, relating_object=storey, products=[element]
         )
@@ -447,14 +326,7 @@ for item in dataset:
             products=[element],
         )
 
-    # ==========================================
-    # 6. [新增] 模拟上下文环境 (Context Simulation)
-    # ==========================================
-    simulate_context(model, element, actual_func, feat_dict, storey, body)
-
-# --- 6. 保存 ---
-filename = "group_c_dataset.ifc"
+filename = "group_c_dataset_visible.ifc"
 model.write(filename)
 print(f"成功生成: {filename}")
-print("  - 已自动添加 IfcWall/IfcRailing 边界关系")
-print("  - 已自动添加 IfcStair/IfcTransportElement 内容关系")
+print("所有 IfcOpeningElement 已转换为 IfcBuildingElementProxy 以便查看。")

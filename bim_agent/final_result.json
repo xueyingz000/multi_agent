@@ -1,202 +1,474 @@
 [
   {
-    "guid": "3fK1xpn$X6KBroszr073L6",
+    "guid": "2VjRs_xoP6CuH$q6Lqzh1a",
+    "name": "Boundary_for_No.70_Atrium",
+    "category": "ATRIUM",
+    "confidence": 0.45,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "Step-by-step check: 1. Span=0.3 floors, which is less than 1.5, but this does not rule out atrium as it is not a shaft. 2. Content=No stair, elevator, or MEP, so it is not a stairwell, elevator shaft, or MEP shaft. 3. Enclosure=UNKNOWN, but the name suggests it is bounded by railing, indicating an atrium. 4. Shape=Area is 0.0m2, which is unusual, but the aspect ratio is very high (99.9), suggesting a narrow space. However, given the name and likely enclosure by railing, it is classified as an atrium."
+  },
+  {
+    "guid": "3U67ho2c99duEAgtLbdl3t",
+    "name": "Boundary_for_No.71_Atrium_void",
+    "category": "ATRIUM",
+    "confidence": 0.5,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "Step-by-step check: 1. Span=0.3 floors, which is less than 1.5, but the name suggests an atrium void. 2. Content=No stair, elevator, or MEP, which does not indicate a shaft. 3. Enclosure=UNKNOWN, but the name and type suggest it is bounded by railing, indicating an atrium. 4. Shape=Area is 0.0m2, which is unusual, but the aspect ratio is very high, suggesting a narrow space. However, the name 'Boundary_for_No.71_Atrium_void' strongly suggests it is an atrium. Therefore, classified as 'ATRIUM'."
+  },
+  {
+    "guid": "0rG8YkRtP00R8oxOnBox5i",
+    "name": "Boundary_for_No.78_Large_equipment_opening",
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.65,
+    "status": "AUTO_MAPPED",
+    "reasoning": "Step-by-step check: 1. Span=0.3 floors, which is less than 1.5, indicating it is not a multi-floor space like a shaft or atrium. 2. Content=No stair, elevator, or MEP, so it does not fit into stairwell, elevator shaft, or MEP shaft categories. 3. Enclosure=UNKNOWN, but given the name 'Boundary_for_No.78_Large_equipment_opening', it suggests a functional purpose, likely bounded by walls. 4. Shape=Area=0.0m2 and AspectRatio=99.9, indicating a very narrow space, which aligns with the characteristics of a functional shaft."
+  },
+  {
+    "guid": "2pL5whGr9EpxmW2PuhpdVd",
+    "name": "Boundary_for_No.80_Floor_drain_opening",
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.55,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "Step-by-step check: 1. Span=0.3, which is less than 1.5, so it is not a multi-floor space like a shaft or atrium. 2. Content=No stair, elevator, or MEP, so it does not fit into specific shaft categories. 3. Enclosure=UNKNOWN, but given the small area and high aspect ratio, it is more likely to be a 'FUNCTIONAL_SHAFT'. 4. Shape=Area is 0.0m2 and AspectRatio is 99.9, which suggests a narrow/small space, typically a 'FUNCTIONAL_SHAFT'."
+  },
+  {
+    "guid": "0WPp$ndYbF$8lI69Iw2wLC",
+    "name": "Boundary_for_No.82_Equipment_rigging_opening",
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.55,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "Step-by-step check: 1. Span=0.3 floors, which is less than 1.5, indicating it is not a multi-floor space like a shaft or atrium. 2. Content=No stair, elevator, or MEP, so it does not fit into stairwell, elevator shaft, or MEP shaft categories. 3. Enclosure=UNKNOWN, but given the dimensions and aspect ratio, it is likely bounded by walls. 4. Shape=Area=0.0m2 and AspectRatio=99.9, indicating a narrow/small space, which aligns with the characteristics of a 'FUNCTIONAL_SHAFT'."
+  },
+  {
+    "guid": "0erCDskAvBcRxD_loLw2ZS",
+    "name": "Boundary_for_No.83_Central_void-atrium",
+    "category": "GENERAL_ROOM",
+    "confidence": 0.35,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "Step-by-step check: 1. Span=0.3 floors, which is less than 1.5, indicating it is likely a 'GENERAL_ROOM' or 'CORRIDOR', not a shaft/atrium. 2. Content=No stair, elevator, or MEP, so it does not fit any specific shaft category. 3. Enclosure=UNKNOWN, but the name suggests it might be bounded by a railing, which could indicate an atrium; however, the dimensions do not support this. 4. Shape=Area=0.0m2 and AspectRatio=99.9, which does not fit the criteria for either 'ATRIUM' or 'FUNCTIONAL_SHAFT'. Therefore, based on the span and lack of specific content, it is classified as 'GENERAL_ROOM'."
+  },
+  {
+    "guid": "2CMZ5f7qr1Y9O7VHaqy51U",
+    "name": "Boundary_for_No.85_Escalator_opening",
+    "category": "GENERAL_ROOM",
+    "confidence": 0.45,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "Step-by-step check: 1. Span=0.3 floors, which is less than 1.5, indicating it's likely a 'GENERAL_ROOM' or 'CORRIDOR'. 2. Content=Stair=False, Elevator=False, MEP=False, so it does not fit any specific shaft category. 3. Enclosure=UNKNOWN, but given the railing type, it could suggest an open void like an 'ATRIUM', however, the dimensions and aspect ratio do not support this. 4. Shape=Area=0.0m2, AspectRatio=99.9, which is extremely narrow and small, but the area is zero, making it difficult to classify as a 'FUNCTIONAL_SHAFT'. Therefore, based on the floor span and lack of specific content, it is classified as 'GENERAL_ROOM'."
+  },
+  {
+    "guid": "1oaTpe1116vRsA4tmz08J3",
+    "name": "Boundary_for_No.86_Vertical_circulation_void",
+    "category": "GENERIC_ELEMENT",
+    "confidence": 0.45,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "Step-by-step check: 1. Span=0.3 floors, which is less than 1.5, indicating it is not a shaft or atrium. 2. Content=Stair=False, Elevator=False, MEP=False, which does not match any specific shaft type. 3. Enclosure=UNKNOWN, but given the name 'Boundary_for_No.86_Vertical_circulation_void' and the type IfcRailing, it suggests an open void, possibly an atrium. 4. Shape=Area=0.0m2, AspectRatio=99.9, which is extremely narrow, suggesting a functional shaft. However, due to the enclosure by railing and the name, it is more likely an atrium. Therefore, the element is classified as 'GENERIC_ELEMENT' with a higher likelihood of being an atrium."
+  },
+  {
+    "guid": "3HgcKw6MD48Q$BKOyuDOep",
+    "name": "Boundary_for_No.87_Glazed_roof_opening",
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.55,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "Step-by-step check: 1. Span=0.3 floors, which is less than 1.5, but since it's not a GENERAL_ROOM or CORRIDOR, we proceed. 2. Content=No Stair, Elevator, or MEP, so it doesn't match any specific shaft type. 3. Enclosure=UNKNOWN, but if enclosed by RAILING, it would be an ATRIUM, and if by WALL, a FUNCTIONAL_SHAFT. 4. Shape=Area=0.0m2, AspectRatio=99.9, which is very narrow/small, indicating a FUNCTIONAL_SHAFT. Therefore, based on the narrow shape and potential wall enclosure, it is classified as a FUNCTIONAL_SHAFT."
+  },
+  {
+    "guid": "2JAq6wdfDAa99ulAz2tjfB",
+    "name": "Boundary_for_No.88_Open_floor_connection",
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.55,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "Step-by-step check: 1. Span=0.3, which is less than 1.5, but this does not rule out shaft/atrium. 2. Content=Stair=False, Elevator=False, MEP=False, so it is not a stairwell, elevator shaft, or MEP shaft. 3. Enclosure=UNKNOWN, but if enclosed by railing, it would likely be an atrium. However, the area is 0.0m2, which is less than 15m2, and the aspect ratio is 99.9, which is greater than 3.0, indicating a narrow/small space. Therefore, it is classified as a 'FUNCTIONAL_SHAFT'."
+  },
+  {
+    "guid": "1D7y5haIr1JuecWJ_oXr8A",
+    "name": "Boundary_for_No.89_Loading_dock_opening",
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.65,
+    "status": "AUTO_MAPPED",
+    "reasoning": "Step-by-step check: 1. Span=0.3 floors, which is less than 1.5, but further checks are needed. 2. Content=No Stair, Elevator, or MEP, so it doesn't fit specific shaft types. 3. Enclosure=UNKNOWN, but if enclosed by Railing, it could be an Atrium; however, the size and shape are crucial. 4. Shape=Area is 0.0m2 and AspectRatio is 99.9, indicating a very narrow/small space, which aligns with a Functional Shaft. Therefore, based on the narrow aspect ratio and lack of specific content, it is classified as a 'FUNCTIONAL_SHAFT'."
+  },
+  {
+    "guid": "2mPTAeGkLEWALynEx5CxoZ",
+    "name": "Boundary_for_No.90_Balcony_void_boundary",
+    "category": "GENERAL_ROOM",
+    "confidence": 0.45,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "Step-by-step check: 1. Span=0.3 floors, which is less than 1.5, indicating it's likely a 'GENERAL_ROOM' or 'CORRIDOR'. 2. Content=No Stair, Elevator, or MEP, so it doesn't fit any specific shaft category. 3. Enclosure=UNKNOWN, but given the railing type, it could suggest an open void like an 'ATRIUM', however, the dimensions and aspect ratio do not support this. 4. Shape=Area is 0.0m2, which is not indicative of a large atrium or a functional shaft. Therefore, based on the span and lack of specific content, it is classified as 'GENERAL_ROOM'."
+  },
+  {
+    "guid": "31veun9Bf6rhason1XKuyi",
+    "name": "Content_inside_No.67_Stairwell",
+    "category": "GENERAL_ROOM",
+    "confidence": 0.6,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "Step-by-step check: 1. Span=0.1 floors, which is less than 1.5, indicating it is likely a 'GENERAL_ROOM' or 'CORRIDOR'. 2. Content=Stair=False, Elevator=False, MEP=False, so it does not qualify as a 'STAIRWELL', 'ELEVATOR_SHAFT', or 'MEP_SHAFT'. 3. Enclosure=UNKNOWN, which does not provide enough information to classify as 'FUNCTIONAL_SHAFT' or 'ATRIUM'. 4. Shape=Area=0.0m2, AspectRatio=1.0, which does not meet criteria for 'ATRIUM' or 'FUNCTIONAL_SHAFT'. Therefore, based on the available data, it is classified as 'GENERAL_ROOM'."
+  },
+  {
+    "guid": "3HFzeid0fAXe3q_ZVUeXiE",
+    "name": "Content_inside_No.73_Stairwell_opening",
+    "category": "GENERAL_ROOM",
+    "confidence": 0.35,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "Step-by-step check: 1. Span=0.1 floors, which is less than 1.5, indicating it is likely a 'GENERAL_ROOM' or 'CORRIDOR'. 2. Content=Stair=False, Elevator=False, MEP=False, so it does not fit into 'STAIRWELL', 'ELEVATOR_SHAFT', or 'MEP_SHAFT'. 3. Enclosure=UNKNOWN, so we cannot definitively classify it as 'ATRIUM' or 'FUNCTIONAL_SHAFT'. 4. Size & Shape=Area=0.0m2, which is less than 15m2, but AspectRatio=1.0, which does not indicate a narrow shape. Therefore, based on the multi-floor check and lack of specific content, it is classified as 'GENERAL_ROOM'."
+  },
+  {
+    "guid": "0CUwY5i318NxeRuc282sei",
+    "name": "Content_inside_No.84_Stair_opening",
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.65,
+    "status": "AUTO_MAPPED",
+    "reasoning": "Step-by-step check: 1. Span=0.1, which suggests it is not a multi-floor atrium. 2. Content=Stair=False, Elevator=False, MEP=False, eliminating 'STAIRWELL', 'ELEVATOR_SHAFT', and 'MEP_SHAFT'. 3. Since Enclosure=UNKNOWN, using default rules: the space is likely enclosed by WALL rather than railing. 4. Shape check: Area=0.0m2, AspectRatio=1.0, which further supports 'FUNCTIONAL_SHAFT' due to small/narrow dimensions."
+  },
+  {
+    "guid": "17TL6BKFP3dxye9vt8LRu4",
+    "name": "Boundary_for_No.66_Elevator_shaft",
+    "category": "GENERAL_ROOM",
+    "confidence": 0.6,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "Step-by-step check: 1. Span=0.3 floors, which is less than 1.5, indicating it is likely a 'GENERAL_ROOM' or 'CORRIDOR'. 2. Content=No Stair, Elevator, or MEP, so it does not qualify as any specific shaft type. 3. Enclosure=UNKNOWN, but since the span is less than 1.5 floors, it is unlikely to be a shaft or atrium. 4. Shape=Area is 0.0m2 and AspectRatio is 99.9, which does not fit the criteria for 'ATRIUM' or 'FUNCTIONAL_SHAFT'. Therefore, the element is classified as 'GENERAL_ROOM'."
+  },
+  {
+    "guid": "3h1ZVGINj1gPrULE5dxkJd",
+    "name": "Boundary_for_No.67_Stairwell",
+    "category": "GENERAL_ROOM",
+    "confidence": 0.5,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "Step-by-step check: 1. Span=0.3 floors, which is less than 1.5, indicating it is likely a 'GENERAL_ROOM' or 'CORRIDOR'. 2. Content=Stair=False, Elevator=False, MEP=False, so it does not fit into any specific shaft category. 3. Enclosure=UNKNOWN, but since it is not specified as enclosed by railing or wall, it cannot be classified as 'ATRIUM' or 'FUNCTIONAL_SHAFT'. 4. Shape=Area=0.0m2, AspectRatio=99.9, which is unusual and suggests a misclassification or error in data, but does not fit the criteria for 'ATRIUM' or 'FUNCTIONAL_SHAFT'. Therefore, based on the available data, it is most likely a 'GENERAL_ROOM'."
+  },
+  {
+    "guid": "2buFzDq$135fggTDrQi7Xh",
+    "name": "Boundary_for_No.68_HVAC_shaft",
+    "category": "GENERAL_ROOM",
+    "confidence": 0.6,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "Step-by-step check: 1. Span=0.3 floors, which is less than 1.5, indicating it is likely a 'GENERAL_ROOM' or 'CORRIDOR', not a shaft/atrium. 2. Content=Stair=False, Elevator=False, MEP=False, which rules out 'STAIRWELL', 'ELEVATOR_SHAFT', and 'MEP_SHAFT'. 3. Enclosure=UNKNOWN, but since the floor span is very low, it is unlikely to be a shaft or atrium. 4. Shape=Area=0.0m2 and AspectRatio=99.9, which suggests a very narrow space, but the area is zero, reinforcing the classification as a 'GENERAL_ROOM'."
+  },
+  {
+    "guid": "2lAJP068f8$hdNRWYmhwuS",
+    "name": "Boundary_for_No.69_Electrical_shaft",
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.9,
+    "status": "AUTO_MAPPED",
+    "reasoning": "Step-by-step check: 1. Span=0.3 floors, which is less than 1.5, but further checks are needed. 2. Content=Stair=False, Elevator=False, MEP=False, so it does not match any specific shaft type based on contents. 3. Enclosure=UNKNOWN, but given the name 'Boundary_for_No.69_Electrical_shaft', it is likely enclosed by WALL. 4. Shape=Area=0.0m2, AspectRatio=99.9, which is narrow/small, indicating a 'FUNCTIONAL_SHAFT'. Therefore, based on the enclosure assumption and shape, it is classified as 'FUNCTIONAL_SHAFT'."
+  },
+  {
+    "guid": "16DmVW$CD2ahYodNUen7$d",
+    "name": "Boundary_for_No.72_Elevator_shaft_opening",
+    "category": "GENERAL_ROOM",
+    "confidence": 0.45,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "Step-by-step check: 1. Span=0.3 floors, which is less than 1.5, indicating it is likely a 'GENERAL_ROOM' or 'CORRIDOR'. 2. Content=No Stair, Elevator, or MEP, so it does not qualify as any type of shaft. 3. Enclosure=UNKNOWN, but since the span is less than 1.5 floors, it is unlikely to be a shaft or atrium. 4. Shape=Area=0.0m2 and AspectRatio=99.9, which suggests it is not a functional shaft or atrium. Therefore, the element is classified as 'GENERAL_ROOM'."
+  },
+  {
+    "guid": "2XxLrJSPX2Uf78ZhncGVXJ",
+    "name": "Boundary_for_No.73_Stairwell_opening",
+    "category": "GENERAL_ROOM",
+    "confidence": 0.45,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "Step-by-step check: 1. Span=0.3 floors, which is less than 1.5, indicating it is likely a 'GENERAL_ROOM' or 'CORRIDOR'. 2. Content=Stair=False, Elevator=False, MEP=False, so it does not qualify as a 'STAIRWELL', 'ELEVATOR_SHAFT', or 'MEP_SHAFT'. 3. Enclosure=UNKNOWN, but given the dimensions and aspect ratio, it does not fit the criteria for 'ATRIUM' or 'FUNCTIONAL_SHAFT'. Therefore, it is most likely a 'GENERAL_ROOM'."
+  },
+  {
+    "guid": "0Y8bAVcyX3uujBvriv39OE",
+    "name": "Boundary_for_No.74_HVAC_shaft_opening",
+    "category": "GENERAL_ROOM",
+    "confidence": 0.45,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "Step-by-step check: 1. Span=0.3 floors, which is less than 1.5, indicating it is likely a 'GENERAL_ROOM' or 'CORRIDOR', not a shaft/atrium. 2. Content=No stair, elevator, or MEP, further supporting it is not a shaft. 3. Enclosure=UNKNOWN, but given the other checks, it is unlikely to be a shaft or atrium. 4. Shape=Area=0.0m2 and AspectRatio=99.9, which is extremely narrow, but the area is zero, suggesting it is not a functional space like a shaft or atrium."
+  },
+  {
+    "guid": "3UCTYQ2Yf6auwJ8dqxEu8d",
+    "name": "Boundary_for_No.75_Plumbing_shaft_opening",
+    "category": "GENERAL_ROOM",
+    "confidence": 0.45,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "Step-by-step check: 1. Span=0.3 floors, which is less than 1.5, indicating it is likely a 'GENERAL_ROOM' or 'CORRIDOR'. 2. Content=Stair=False, Elevator=False, MEP=False, which rules out 'STAIRWELL', 'ELEVATOR_SHAFT', and 'MEP_SHAFT'. 3. Enclosure=UNKNOWN, but since the floor span is less than 1.5, it is unlikely to be a shaft or atrium. 4. Shape=Area=0.0m2, AspectRatio=99.9, which suggests a narrow/small space, but the area is zero, reinforcing the classification as 'GENERAL_ROOM'."
+  },
+  {
+    "guid": "3gNwZZh951_PNgIjpw_9aH",
+    "name": "Boundary_for_No.76_Electrical_shaft_opening",
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.9,
+    "status": "AUTO_MAPPED",
+    "reasoning": "Step-by-step check: 1. Span=0.3 floors, which is less than 1.5, but further checks are needed. 2. Content=No stair, elevator, or MEP, so it doesn't fit specific shaft types like 'STAIRWELL', 'ELEVATOR_SHAFT', or 'MEP_SHAFT'. 3. Enclosure=UNKNOWN, but assuming WALL due to the name 'Boundary_for_No.76_Electrical_shaft_opening', which suggests a functional purpose. 4. Shape=Area is 0.0m2 and AspectRatio is 99.9, indicating a very narrow/small space, typical of a 'FUNCTIONAL_SHAFT'. Therefore, the element is classified as 'FUNCTIONAL_SHAFT'."
+  },
+  {
+    "guid": "2mIMTpkMj6Qfht6ixY5hO9",
+    "name": "Boundary_for_No.84_Stair_opening",
+    "category": "GENERAL_ROOM",
+    "confidence": 0.45,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "Step-by-step check: 1. Span=0.3 floors, which is less than 1.5, indicating it is likely a 'GENERAL_ROOM' or 'CORRIDOR'. 2. Content=Stair=False, Elevator=False, MEP=False, so it does not qualify as any type of shaft. 3. Enclosure=UNKNOWN, but since the floor span is less than 1.5, it is unlikely to be a shaft or atrium. Therefore, it is classified as 'GENERAL_ROOM'."
+  },
+  {
+    "guid": "3bx9ozgGL6CRTgCqi3r0RC",
+    "name": "Content_inside_No.68_HVAC_shaft",
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.9,
+    "status": "AUTO_MAPPED",
+    "reasoning": "Step-by-step check: 1. Span=0.1, which is less than 1.5, so it could be a general room or corridor, but further checks are needed. 2. Content=No stair, elevator, or MEP, so it doesn't match stairwell, elevator shaft, or MEP shaft. 3. Enclosure=UNKNOWN, but if enclosed by wall, it would be a functional shaft. 4. Shape=Area is 0.0m2, which is less than 15m2, indicating a small/narrow space, therefore likely a functional shaft."
+  },
+  {
+    "guid": "3eSvUfTen3XAwstb_rYyPi",
+    "name": "Content_inside_No.69_Electrical_shaft",
+    "category": "GENERAL_ROOM",
+    "confidence": 0.6,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "Step-by-step check: 1. Span=0.1 floors, which is less than 1.5, indicating it is likely a 'GENERAL_ROOM' or 'CORRIDOR'. 2. Content=No stair, elevator, or MEP, so it does not fit any specific shaft category. 3. Shape=Area is 0.0m2, which is less than 15m2, and AspectRatio is 1.0, which does not indicate a narrow or small space typical of a 'FUNCTIONAL_SHAFT'. Therefore, based on the multi-floor check, it is classified as 'GENERAL_ROOM'."
+  },
+  {
+    "guid": "1kxAt4po97E9GoZPWQt2uL",
+    "name": "Content_inside_No.74_HVAC_shaft_opening",
+    "category": "GENERAL_ROOM",
+    "confidence": 0.45,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "Step-by-step check: 1. Span=0.1 floors, which is less than 1.5, indicating it is likely a 'GENERAL_ROOM' or 'CORRIDOR'. 2. Content=Stair=False, Elevator=False, MEP=False, which means it does not fit into any specific shaft category. 3. Shape=Area=0.0m2, AspectRatio=1.0, which does not meet criteria for 'ATRIUM' or 'FUNCTIONAL_SHAFT'. Therefore, based on the multi-floor check, it is classified as 'GENERAL_ROOM'."
+  },
+  {
+    "guid": "0EOorjA0rCAf8NLGZ36JcX",
+    "name": "Content_inside_No.75_Plumbing_shaft_opening",
+    "category": "GENERAL_ROOM",
+    "confidence": 0.35,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "Step-by-step check: 1. Span=0.1 floors, which is less than 1.5, indicating it is likely a 'GENERAL_ROOM' or 'CORRIDOR'. 2. Content=Stair=False, Elevator=False, MEP=False, so it does not fit into any specific shaft category. 3. Enclosure=UNKNOWN, but since the floor span is very small, it is unlikely to be a shaft or atrium. Therefore, it is classified as 'GENERAL_ROOM'."
+  },
+  {
+    "guid": "1HvD9pR1XDiw7e3$ObvN6E",
+    "name": "Content_inside_No.76_Electrical_shaft_opening",
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.9,
+    "status": "AUTO_MAPPED",
+    "reasoning": "Step-by-step check: 1. Span=0.1, which is less than 1.5, but not enough to rule out a shaft. 2. Content=Stair=False, Elevator=False, MEP=False, so it doesn't match specific shaft types like 'STAIRWELL', 'ELEVATOR_SHAFT', or 'MEP_SHAFT'. 3. Enclosure=UNKNOWN, but if enclosed by WALL, it would likely be a 'FUNCTIONAL_SHAFT'. 4. Shape=Area=0.0m2, AspectRatio=1.0, which suggests a very small or non-existent area, leaning towards 'FUNCTIONAL_SHAFT'. Therefore, based on the available information, it is classified as 'FUNCTIONAL_SHAFT'."
+  },
+  {
+    "guid": "0$iNHePKH1FBRNty9$GBvp",
+    "name": "Content_inside_No.80_Floor_drain_opening",
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.65,
+    "status": "AUTO_MAPPED",
+    "reasoning": "Step-by-step check: 1. Span=0.1, which is less than 1.5, so not a shaft/atrium by multi-floor check. 2. Content=Stair=False, Elevator=False, MEP=False, so it doesn't match stairwell, elevator shaft, or MEP shaft. 3. Enclosure=UNKNOWN, but assuming WALL due to lack of railing indication. 4. Shape=Area=0.0m2, AspectRatio=1.0, which is small and narrow, fitting the functional shaft criteria. Therefore, classified as FUNCTIONAL_SHAFT."
+  },
+  {
+    "guid": "1u1BhgeJL8aPasp7hVTzhO",
     "name": "No.71_Atrium_void",
-    "category": "GENERIC_ELEMENT",
-    "confidence": 0.27,
-    "status": "NEEDS_REVIEW",
-    "reasoning": "The IfcOpeningElement represents a void or opening, and the provided data indicates it is a large atrium void penetrating multiple floors. Since no specific predefined type or external classification is provided, and the dimensions and features align with a generic void element, it is best categorized under 'GENERIC_ELEMENT'. The high confidence is due to the clear alignment of the element's function and attributes with the generic category."
+    "category": "ATRIUM",
+    "confidence": 0.99,
+    "status": "AUTO_MAPPED",
+    "reasoning": "Step-by-step check: 1. Span=3.7 (indicates multi-floor, suitable for atrium or shaft) 2. Content=False for Stair/Elevator/MEP (doesn't fit stairwell, elevator shaft, or MEP shaft) 3. Size & Shape=Area 100.0m2 and AspectRatio 1.0, indicating a large square area suitable for atrium; Enclosure=UNKNOWN, but large size and aspect ratio supports atrium classification. Therefore, based on size and typical atrium characteristics, the element is categorized as 'ATRIUM' with high confidence."
   },
   {
-    "guid": "2kySYdUWb2ugwPsGa2cG$h",
+    "guid": "3N7jTKzqT8EPYrxOE1lEgv",
     "name": "No.72_Elevator_shaft_opening",
-    "category": "GENERIC_ELEMENT",
-    "confidence": 0.27,
-    "status": "NEEDS_REVIEW",
-    "reasoning": "The element is classified as IfcOpeningElement, which typically represents voids or openings in a building structure. The Psets snippet explicitly identifies its function as an 'Elevator shaft opening,' but no predefined type or external status is provided. Given the lack of specific categorization options and the functional description aligning with a general opening element, 'GENERIC_ELEMENT' is the most appropriate category."
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.85,
+    "status": "AUTO_MAPPED",
+    "reasoning": "Step-by-step check: 1. Span=4.6 floors, which is greater than 1.5, indicating a shaft or atrium. 2. Content=No stair, elevator, or MEP, so it does not fit 'STAIRWELL', 'ELEVATOR_SHAFT', or 'MEP_SHAFT'. 3. Enclosure=UNKNOWN, but if enclosed by WALL, it would be a 'FUNCTIONAL_SHAFT'. 4. Shape=Area is 6.25m2 and AspectRatio is 1.0, which is small and square, fitting the 'FUNCTIONAL_SHAFT' criteria. Therefore, it is classified as 'FUNCTIONAL_SHAFT'."
   },
   {
-    "guid": "2WIA0YY818dRC$QkB6S2ae",
+    "guid": "0Q$PqxB3j539HMVfDwoc8h",
     "name": "No.73_Stairwell_opening",
-    "category": "GENERIC_ELEMENT",
-    "confidence": 0.25,
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.55,
     "status": "NEEDS_REVIEW",
-    "reasoning": "The element is classified as an IfcOpeningElement, which is a generic representation of an opening in a building structure. The predefined type is not specified, and the name and property set indicate it is related to a stairwell opening. Since no specific functional category is provided and the allowed category is GENERIC_ELEMENT, this is the most appropriate classification. The confidence is high due to the alignment of the data with the generic nature of the category."
+    "reasoning": "Step-by-step check: 1. Span=4.6 floors, which is greater than 1.5, indicating a vertical space. 2. Content=No stair, elevator, or MEP, so it doesn't fit 'STAIRWELL', 'ELEVATOR_SHAFT', or 'MEP_SHAFT'. 3. Enclosure=UNKNOWN, but if enclosed by WALL, it would be a 'FUNCTIONAL_SHAFT'. 4. Shape=Area is 8.0m2 and AspectRatio is 2.0, which is narrow/small, supporting 'FUNCTIONAL_SHAFT'. Therefore, based on available data, it is likely a 'FUNCTIONAL_SHAFT'."
   },
   {
-    "guid": "3nOgD_drv9VOgYHhk5SUhN",
+    "guid": "1eZ3PUZuz3gAu_HQQcUpmP",
     "name": "No.74_HVAC_shaft_opening",
-    "category": "GENERIC_ELEMENT",
-    "confidence": 0.27,
-    "status": "NEEDS_REVIEW",
-    "reasoning": "The element is classified as IfcOpeningElement, which typically represents voids or openings in a building structure. The name and Psets indicate its function as an HVAC shaft opening, but no specific predefined type or external property is provided to further refine its classification. Given the lack of detailed categorization options, 'GENERIC_ELEMENT' is the most appropriate functional category."
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.9,
+    "status": "AUTO_MAPPED",
+    "reasoning": "Step-by-step check: 1. Span=3.7 floors, which is greater than 1.5, indicating a shaft or atrium. 2. Content=No stair, elevator, or MEP, so it does not fit 'STAIRWELL', 'ELEVATOR_SHAFT', or 'MEP_SHAFT'. 3. Enclosure=UNKNOWN, but if enclosed by WALL, it would be a 'FUNCTIONAL_SHAFT'. 4. Shape=Area is 6.25m2 and AspectRatio is 1.0, which is small and square, fitting the 'FUNCTIONAL_SHAFT' criteria. Therefore, it is classified as 'FUNCTIONAL_SHAFT'."
   },
   {
-    "guid": "1TlSnEeAj51fLCn01YgPrt",
+    "guid": "2vKzbrxpn4bg7Chlrbp$n3",
     "name": "No.75_Plumbing_shaft_opening",
-    "category": "GENERIC_ELEMENT",
-    "confidence": 0.25,
-    "status": "NEEDS_REVIEW",
-    "reasoning": "The element is classified as an IfcOpeningElement, which typically represents voids or openings in a building structure. The name and Pset data indicate it is a plumbing shaft opening, but no specific predefined type or external classification is provided. Given the lack of detailed functional categorization and the allowed categories list, 'GENERIC_ELEMENT' is the most appropriate match with high confidence."
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.8,
+    "status": "AUTO_MAPPED",
+    "reasoning": "Step-by-step check: 1. Span=3.7 floors, which is greater than 1.5, indicating a shaft or atrium. 2. Content=No stair, elevator, or MEP, so it doesn't fit 'STAIRWELL', 'ELEVATOR_SHAFT', or 'MEP_SHAFT'. 3. Enclosure=UNKNOWN, but if enclosed by WALL, it would be a 'FUNCTIONAL_SHAFT'. 4. Shape=Area is 1.0m2 and AspectRatio is 1.0, which is small and square, fitting the 'FUNCTIONAL_SHAFT' criteria. Therefore, it is classified as 'FUNCTIONAL_SHAFT'."
   },
   {
-    "guid": "2mC3HDWmDEGBWK5oM4joRD",
+    "guid": "2nr$9Rbx13qvwpxHmiEyOa",
     "name": "No.76_Electrical_shaft_opening",
-    "category": "GENERIC_ELEMENT",
-    "confidence": 0.27,
-    "status": "NEEDS_REVIEW",
-    "reasoning": "The element is classified as IfcOpeningElement, which typically represents voids or openings in a building structure. The name and Psets indicate it is specifically an electrical shaft opening, but no predefined type or external status is provided to further refine the classification. Given the lack of specific functional categories and the allowed categories list, 'GENERIC_ELEMENT' is the most appropriate match with high confidence."
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.8,
+    "status": "AUTO_MAPPED",
+    "reasoning": "Step-by-step check: 1. Span=3.1 floors, which is greater than 1.5, indicating a shaft or atrium. 2. Content=No stair, elevator, or MEP, so it doesn't match specific shaft types like 'STAIRWELL', 'ELEVATOR_SHAFT', or 'MEP_SHAFT'. 3. Enclosure=UNKNOWN, but if enclosed by WALL, it would likely be a 'FUNCTIONAL_SHAFT'. 4. Shape=Area is 2.25m2 and AspectRatio is 1.0, which is small and square, fitting the 'FUNCTIONAL_SHAFT' criteria. Therefore, it is classified as 'FUNCTIONAL_SHAFT'."
   },
   {
-    "guid": "3PErXtP3r0tgE4WFvgOzRS",
+    "guid": "3l4YpWYpD8w88Wy_MiTjed",
     "name": "No.77_Small_service_penetration",
-    "category": "GENERIC_ELEMENT",
-    "confidence": 0.27,
-    "status": "NEEDS_REVIEW",
-    "reasoning": "The element is classified as IfcOpeningElement, which typically represents voids or openings in building elements. The predefined type is None, and the name explicitly indicates a 'Small service penetration,' which aligns with a generic functional category. Additionally, the Psets snippet confirms its function as a small service penetration, and the dimensions suggest it is a minor feature. Given the lack of external or predefined type data, 'GENERIC_ELEMENT' is the most appropriate category."
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.65,
+    "status": "AUTO_MAPPED",
+    "reasoning": "Step-by-step check: 1. Span=0.1 floors, which is less than 1.5, but this does not rule out a shaft. 2. Content=No Stair, Elevator, or MEP, so it does not fit 'STAIRWELL', 'ELEVATOR_SHAFT', or 'MEP_SHAFT'. 3. Enclosure=UNKNOWN, but if enclosed by Wall, it would likely be a 'FUNCTIONAL_SHAFT'. 4. Shape=Area=0.16m2, which is less than 15m2, indicating a 'FUNCTIONAL_SHAFT'. Therefore, based on the available information, it is classified as 'FUNCTIONAL_SHAFT'."
   },
   {
-    "guid": "2L2Xszd_vEYOnkhBxOKc1T",
+    "guid": "2sHIPbrL16zO05AkJYDLTY",
     "name": "No.78_Large_equipment_opening",
-    "category": "GENERIC_ELEMENT",
-    "confidence": 0.25,
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.55,
     "status": "NEEDS_REVIEW",
-    "reasoning": "The IfcOpeningElement class represents voids or openings in building elements, and the provided data indicates that this is a large equipment opening in a slab. Since no specific predefined type or external classification is provided, and the functional description aligns with a generic opening, the most appropriate functional category is GENERIC_ELEMENT. The confidence is high due to the clear functional description and lack of conflicting data."
+    "reasoning": "Step-by-step check: 1. Span=0.1 floors, which is less than 1.5, but not enough to rule out shaft/atrium. 2. Content=No stair, elevator, or MEP, so not a stairwell, elevator shaft, or MEP shaft. 3. Enclosure=UNKNOWN, but if enclosed by wall, likely a functional shaft. 4. Shape=Area is 1.0m2 and AspectRatio is 1.0, which is small and square, suggesting a functional shaft. Therefore, classified as FUNCTIONAL_SHAFT."
   },
   {
-    "guid": "3nlLW$OnT10BT8XHNHgC5d",
+    "guid": "27VplzG8bB4hvYkvAQ7VxU",
     "name": "No.79_Expansion_joint",
-    "category": "GENERIC_ELEMENT",
-    "confidence": 0.27,
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.55,
     "status": "NEEDS_REVIEW",
-    "reasoning": "The element is classified as IfcOpeningElement, which typically represents voids or openings in a building structure. The Psets indicate its actual function as an 'Expansion joint,' which aligns with a generic element used to accommodate movement or gaps in construction. The absence of predefined type and external status further supports categorizing it as a generic element."
+    "reasoning": "Step-by-step check: 1. Span=0.1 floors, which is less than 1.5, indicating it's not a shaft/atrium. 2. Content=No stair, elevator, or MEP, so it doesn't fit into specific shaft categories like 'STAIRWELL', 'ELEVATOR_SHAFT', or 'MEP_SHAFT'. 3. Enclosure=UNKNOWN, but if enclosed by WALL, it would likely be a 'FUNCTIONAL_SHAFT'. 4. Shape=Area is 1.0m2 and AspectRatio is 1.0, which is small and square, fitting the 'FUNCTIONAL_SHAFT' criteria. Therefore, based on the enclosure assumption and size, it is classified as 'FUNCTIONAL_SHAFT'."
   },
   {
-    "guid": "3eGOjqoWbB$fy0SGgCuCzG",
+    "guid": "3sXt4Gtgv9u8AfUUeeRCks",
     "name": "No.80_Floor_drain_opening",
-    "category": "GENERIC_ELEMENT",
-    "confidence": 0.27,
-    "status": "NEEDS_REVIEW",
-    "reasoning": "The element is classified as IfcOpeningElement, which typically represents voids or openings in building elements. The name and Psets indicate it is a floor drain opening, but no specific predefined type or external property is provided to further refine its classification. Given the lack of detailed functional categorization, 'GENERIC_ELEMENT' is the most appropriate category based on the allowed options."
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.65,
+    "status": "AUTO_MAPPED",
+    "reasoning": "Step-by-step check: 1. Span=0.1, which is less than 1.5, but not enough to classify as 'GENERAL_ROOM' or 'CORRIDOR'. 2. Content=No Stair, Elevator, or MEP, so not 'STAIRWELL', 'ELEVATOR_SHAFT', or 'MEP_SHAFT'. 3. Enclosure=UNKNOWN, but if enclosed by WALL, likely 'FUNCTIONAL_SHAFT'. 4. Shape=Area=0.16m2, AspectRatio=1.0, which is small and square, fitting 'FUNCTIONAL_SHAFT'. Therefore, classified as 'FUNCTIONAL_SHAFT'."
   },
   {
-    "guid": "0bCrLEs0L9xguWj3HjcT76",
+    "guid": "2p29xnCKbAhOmBm_EvCR7_",
     "name": "No.81_Window_well",
-    "category": "GENERIC_ELEMENT",
-    "confidence": 0.25,
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.55,
     "status": "NEEDS_REVIEW",
-    "reasoning": "The element is classified as IfcOpeningElement, which typically represents voids or openings in a building structure. The name 'No.81_Window_well' and the Psets snippet indicate that it functions as a window well, which is a type of opening. However, the predefined type is None, and the dimensions suggest it is not a typical window or door opening, but rather a specialized opening element. Given the lack of specific predefined type and the unique function as a window well, it fits best under the GENERIC_ELEMENT category, which accommodates elements that do not fit neatly into more specific categories."
+    "reasoning": "Step-by-step check: 1. Span=0.1, which is less than 1.5, so not a shaft/atrium by multi-floor check. 2. Content=No stair, elevator, or MEP, so not a stairwell, elevator shaft, or MEP shaft. 3. Enclosure=UNKNOWN, but assuming WALL due to lack of railing indication, suggesting a functional shaft. 4. Shape=Area=1.0m2, AspectRatio=1.0, which is small and square, fitting a functional shaft. Therefore, classified as FUNCTIONAL_SHAFT."
   },
   {
-    "guid": "3aIEwkC_LDQBQWf$b_Kdrn",
+    "guid": "0XplRd4n1E$RqaW4ckyrv1",
     "name": "No.82_Equipment_rigging_opening",
-    "category": "GENERIC_ELEMENT",
-    "confidence": 0.23,
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.55,
     "status": "NEEDS_REVIEW",
-    "reasoning": "The element is classified as an IfcOpeningElement, which typically represents voids or openings in building elements. The name and Psets indicate it is a temporary opening for equipment rigging, which does not fit into a specific predefined category. Given the lack of specific predefined types and the temporary nature, it is best categorized under GENERIC_ELEMENT. The confidence is moderate to high due to the clear indication of its temporary and non-standard function."
+    "reasoning": "Step-by-step check: 1. Span=0.1, which is less than 1.5, but not enough to rule out shaft/atrium. 2. Content=No stair, elevator, or MEP, so not a stairwell, elevator shaft, or MEP shaft. 3. Enclosure=UNKNOWN, but if enclosed by wall, likely a functional shaft. 4. Shape=Area is 1.0m2 and AspectRatio is 1.0, which is small and square, suggesting a functional shaft. Therefore, classified as FUNCTIONAL_SHAFT."
   },
   {
-    "guid": "1FWHAgUo989ef$fywO2_E_",
+    "guid": "2RTzQPmO1509s2yAs89AwW",
     "name": "No.83_Central_void-atrium",
-    "category": "GENERIC_ELEMENT",
-    "confidence": 0.27,
-    "status": "NEEDS_REVIEW",
-    "reasoning": "The element is classified as IfcOpeningElement, which typically represents voids or openings in a structure. The name and Pset data indicate it is a central void or atrium, which aligns with a generic functional category. The absence of predefined type and external status further supports the assignment to a broad category like GENERIC_ELEMENT."
+    "category": "ATRIUM",
+    "confidence": 0.99,
+    "status": "AUTO_MAPPED",
+    "reasoning": "Step-by-step check: 1. Span=2.9 floors, which is greater than 1.5, indicating a vertical space. 2. Content=No stair, elevator, or MEP, so it is not a stairwell, elevator shaft, or MEP shaft. 3. Enclosure=UNKNOWN, but given the size and shape, it is likely an atrium. 4. Shape=Area is 100.0m2 and AspectRatio is 1.0, which is large and square, fitting the atrium criteria. Therefore, it is classified as an 'ATRIUM'."
   },
   {
-    "guid": "2aOkyOUHn9Yf_PTQmeLy_D",
+    "guid": "0cBIie8ZfEevEoQ4T$kXzP",
     "name": "No.84_Stair_opening",
-    "category": "GENERIC_ELEMENT",
-    "confidence": 0.25,
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.55,
     "status": "NEEDS_REVIEW",
-    "reasoning": "The element is classified as an IfcOpeningElement, which typically represents voids or openings in building elements. The Pset_SimulatedData indicates that the function of this element is a 'Stair opening,' which aligns with a generic representation of an opening. Since no specific predefined type or external classification is provided, the most appropriate functional category is 'GENERIC_ELEMENT.' The confidence is high due to the clear indication of its purpose in the Pset data."
+    "reasoning": "Step-by-step check: 1. Span=0.1, which is less than 1.5, so not a multi-floor space like a shaft or atrium. 2. Content=No stair, elevator, or MEP, so not a stairwell, elevator shaft, or MEP shaft. 3. Enclosure=UNKNOWN, but given the small area and aspect ratio, it is more likely to be a functional shaft. 4. Shape=Area is 8.0m2 and AspectRatio is 2.0, which suggests a narrow/small space, aligning with a functional shaft."
   },
   {
-    "guid": "1E66lZ7on1TA34a$2BKSSS",
+    "guid": "3bcFZtiH18kBaiyvS8VMxT",
     "name": "No.85_Escalator_opening",
-    "category": "GENERIC_ELEMENT",
-    "confidence": 0.27,
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.55,
     "status": "NEEDS_REVIEW",
-    "reasoning": "The IFC class IfcOpeningElement represents voids or openings in building elements, and the predefined type is not specified. The name and Psets indicate that this is an opening for an escalator, which aligns with a generic functional category for elements that do not have a specific predefined type or external classification. The dimensions and Psets further support this categorization."
+    "reasoning": "Step-by-step check: 1. Span=0.1, which is less than 1.5, but further checks needed. 2. Content=No Stair, Elevator, or MEP, so not a stairwell, elevator shaft, or MEP shaft. 3. Enclosure=UNKNOWN, but if enclosed by wall, likely a functional shaft. 4. Shape=Area is 8.0m2 and AspectRatio is 2.0, which is narrow/small, suggesting a functional shaft. Therefore, classified as FUNCTIONAL_SHAFT."
   },
   {
-    "guid": "2VYhmoy5XCmBFS8zWepVqw",
+    "guid": "2M3qLrAzf1mPyU1ett2G9e",
     "name": "No.86_Vertical_circulation_void",
-    "category": "GENERIC_ELEMENT",
-    "confidence": 0.27,
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.55,
     "status": "NEEDS_REVIEW",
-    "reasoning": "The IFC class IfcOpeningElement typically represents voids or openings within building elements. The name and Psets snippet indicate that this element is associated with vertical circulation voids, which are generic features in the building model. Since no specific predefined type or external classification is provided, and the dimensions suggest it is a void space, the most appropriate functional category is GENERIC_ELEMENT."
+    "reasoning": "Step-by-step check: 1. Span=0.1 floors, which is less than 1.5, but not enough to classify as 'GENERAL_ROOM' or 'CORRIDOR'. 2. Content=No Stair, Elevator, or MEP, so not 'STAIRWELL', 'ELEVATOR_SHAFT', or 'MEP_SHAFT'. 3. Enclosure=UNKNOWN, but assuming WALL due to lack of other indicators, suggesting 'FUNCTIONAL_SHAFT'. 4. Shape=Area=1.0m2, AspectRatio=1.0, which is small and square, supporting 'FUNCTIONAL_SHAFT'. Therefore, classified as 'FUNCTIONAL_SHAFT'."
   },
   {
-    "guid": "2WjZTrCwT8V8fgebWSx5z2",
+    "guid": "0PGIlPTbbBPP7l70dQo1El",
     "name": "No.87_Glazed_roof_opening",
-    "category": "GENERIC_ELEMENT",
-    "confidence": 0.23,
-    "status": "NEEDS_REVIEW",
-    "reasoning": "The element is classified as an IfcOpeningElement, which typically represents voids or openings in a building structure. The name and Pset_SimulatedData indicate it is a glazed roof opening, but no specific predefined type or external/internal classification is provided. Given the lack of detailed functional categorization and the allowed categories list containing only 'GENERIC_ELEMENT', this is the most appropriate match with a high confidence level."
+    "category": "ATRIUM",
+    "confidence": 0.9,
+    "status": "AUTO_MAPPED",
+    "reasoning": "Step-by-step check: 1. Span=0.1 floors, which is less than 1.5, but the area and aspect ratio suggest a large open space. 2. Content=No stair, elevator, or MEP, so not a shaft. 3. Shape=Area is 100.0m2 and AspectRatio is 1.0, indicating a large square space. 4. Enclosure=UNKNOWN, but given the size and shape, it is likely an atrium. Therefore, classified as 'ATRIUM'."
   },
   {
-    "guid": "0pN8ZEj35Fr868MiOBXv0j",
+    "guid": "04NkY_FXz4GPeG9u1SQDyW",
     "name": "No.88_Open_floor_connection",
-    "category": "GENERIC_ELEMENT",
-    "confidence": 0.27,
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.55,
     "status": "NEEDS_REVIEW",
-    "reasoning": "The IFC class IfcOpeningElement represents voids or openings within a building structure, and the provided data indicates it is a vertical void between floors with no specific predefined type. The dimensions and Psets suggest it serves as an open floor connection, which aligns with the generic nature of the allowed category 'GENERIC_ELEMENT'."
+    "reasoning": "Step-by-step check: 1. Span=1.7 floors, which is greater than 1.5, indicating it could be a shaft or atrium. 2. Content=No stair, elevator, or MEP, so it does not fit into stairwell, elevator shaft, or MEP shaft categories. 3. Enclosure=UNKNOWN, but if enclosed by wall, it would likely be a functional shaft. 4. Shape=Area is 1.0m2 and AspectRatio is 1.0, which is small and square, fitting the criteria for a functional shaft. Therefore, based on the available information, it is classified as a 'FUNCTIONAL_SHAFT'."
   },
   {
-    "guid": "18vaYZU818ReNjXj$JmU5h",
+    "guid": "2YSEZHjUf3v9Qw9gS9tt9U",
     "name": "No.89_Loading_dock_opening",
-    "category": "GENERIC_ELEMENT",
-    "confidence": 0.23,
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.6,
     "status": "NEEDS_REVIEW",
-    "reasoning": "The element is classified as an IfcOpeningElement, which typically represents voids or openings in a building structure. The provided data indicates that this opening is associated with a loading dock, as described in the Pset_SimulatedData under 'ActualFunction'. However, the lack of specific predefined types, externality information, and zero dimensions reduces the confidence slightly. Based on the allowed categories, 'GENERIC_ELEMENT' is the most appropriate classification."
+    "reasoning": "Step-by-step check: 1. Span=0.1 (less than 1.5, suggests potentially not a shaft/atrium but needs further checks). 2. Content=Stair=False, Elevator=False, MEP=False (doesn't match stairwell, elevator, or MEP shaft). 3. Enclosure=UNKNOWN but typically by WALL (suggests functional shaft if enclosed by wall). 4. Shape=Area=1.0m2, AspectRatio=1.0 (small/narrow suggests functional shaft). Therefore, based on enclosure assumption and size, likely 'FUNCTIONAL_SHAFT'."
   },
   {
-    "guid": "0jwUEyVaHDGxoOc8tBF1wT",
+    "guid": "1bS0OlJ81FZ96z9bPikS71",
     "name": "No.90_Balcony_void_boundary",
-    "category": "GENERIC_ELEMENT",
-    "confidence": 0.23,
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.55,
     "status": "NEEDS_REVIEW",
-    "reasoning": "The IfcOpeningElement class represents voids or openings, and the provided data indicates it is associated with a balcony void boundary. Since no specific predefined type or external classification is provided, and the dimensions suggest a generic void, the most appropriate functional category is GENERIC_ELEMENT. The confidence is set to 0.85 due to the lack of explicit external or predefined type information."
+    "reasoning": "Step-by-step check: 1. Span=0.1, which is less than 1.5, but not enough to rule out shaft/atrium. 2. Content=No stair, elevator, or MEP, so not a stairwell, elevator shaft, or MEP shaft. 3. Enclosure=UNKNOWN, but if enclosed by wall, likely a functional shaft. 4. Shape=Area is 1.0m2, which is less than 15m2, indicating a small/narrow space, suggesting a functional shaft. Therefore, classified as 'FUNCTIONAL_SHAFT'."
   },
   {
-    "guid": "0OGhmVjt9B1wwRpY2PBcNT",
+    "guid": "2BSm04xnP0BgLveYFNQLNq",
+    "name": "Content_inside_No.66_Elevator_shaft",
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.9,
+    "status": "AUTO_MAPPED",
+    "reasoning": "Step-by-step check: 1. Span=0.1, which is less than 1.5, but multi-floor check is inconclusive since this isn't a 'GENERAL_ROOM' or 'CORRIDOR'. 2. Content=false for Stair, Elevator, and MEP, hence it's not a 'STAIRWELL', 'ELEVATOR_SHAFT', or 'MEP_SHAFT'. 3. Enclosure is UNKNOWN, but typically if not a railing (which indicates an Atrium), it leans towards a wall, suggesting 'FUNCTIONAL_SHAFT'. 4. Shape check shows Area=0.0m2 and AspectRatio=1.0; narrow/small criteria hinting towards 'FUNCTIONAL_SHAFT'."
+  },
+  {
+    "guid": "0nee_i1Z5B3uMSX2XDdzrx",
+    "name": "Content_inside_No.72_Elevator_shaft_opening",
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.9,
+    "status": "AUTO_MAPPED",
+    "reasoning": "Step-by-step check: 1. Span=0.1 floors, which is less than 1.5, indicating it might not be a shaft/atrium; however, the other checks must be considered. 2. Content=No stairs, elevators, or MEP identified, making specific shaft types unlikely. 3. Enclosure=UNKNOWN but could be critical; since the shaft is not clearly a large or open area, if enclosed by a wall, it would be a 'FUNCTIONAL_SHAFT'. 4. Shape=Area is 0.0m2 with AspectRatio=1.0, suggesting it does not meet the criteria for an atrium, and given its dimensional characteristics, it aligns with a 'FUNCTIONAL_SHAFT'."
+  },
+  {
+    "guid": "1Jxu9D7pb7KhfGjfTiT8ga",
+    "name": "Content_inside_No.85_Escalator_opening",
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.65,
+    "status": "AUTO_MAPPED",
+    "reasoning": "Step-by-step check: 1. Span=0.1, which is less than 1.5, so not a multi-floor space like a shaft or atrium. 2. Content=No stair, elevator, or MEP, so not a stairwell, elevator shaft, or MEP shaft. 3. Enclosure=UNKNOWN, but given the small dimensions and aspect ratio, it is more likely to be enclosed by walls. 4. Shape=Area is 0.0m2, which is less than 15m2, indicating a small/narrow space. Therefore, it is classified as 'FUNCTIONAL_SHAFT'."
+  },
+  {
+    "guid": "3hFAy7r8r3YB2Pq4O9J1La",
     "name": "No.66_Elevator_shaft",
-    "category": "MECHANICAL_ROOM",
-    "confidence": 0.78,
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.9,
     "status": "AUTO_MAPPED",
-    "reasoning": "The element is classified as an IfcSpace with the name 'No.66_Elevator_shaft', and the Pset_SimulatedData indicates its actual function is 'Elevator shaft'. Elevator shafts are typically categorized as mechanical spaces due to their role in housing elevator equipment and systems. The dimensions and features further support this classification, as the height and bounding box dimensions align with typical elevator shaft characteristics."
+    "reasoning": "Step-by-step check: 1. Span=6.3 floors, which is greater than 1.5, indicating a vertical space. 2. Content=No stair, elevator, or MEP, so it doesn't fit 'STAIRWELL', 'ELEVATOR_SHAFT', or 'MEP_SHAFT'. 3. Enclosure=WALL, which suggests 'FUNCTIONAL_SHAFT'. 4. Shape=Area is 6.25m2 and AspectRatio is 1.0, which is small and square, supporting 'FUNCTIONAL_SHAFT'. Therefore, the classification is 'FUNCTIONAL_SHAFT'."
   },
   {
-    "guid": "0t7oBgCYX3QvgXSc0WtVQR",
+    "guid": "2y_aAYppjCJAGhAX$E5c0f",
     "name": "No.67_Stairwell",
-    "category": "GENERAL_ROOM",
-    "confidence": 0.75,
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.9,
     "status": "AUTO_MAPPED",
-    "reasoning": "The element is classified as IfcSpace, which typically represents a room or area. The name 'No.67_Stairwell' and the Pset_SimulatedData indicate its function as a stairwell, which aligns with a general room category. The dimensions and features (e.g., height > 15m, contains stair) further support this classification. While 'Stairwell' is not explicitly listed as a category, it fits best under GENERAL_ROOM based on the provided options."
+    "reasoning": "Step-by-step check: 1. Span=4.6 floors, which is greater than 1.5, indicating a vertical space. 2. Content=No stair, elevator, or MEP, so it doesn't fit 'STAIRWELL', 'ELEVATOR_SHAFT', or 'MEP_SHAFT'. 3. Enclosure=WALL, which suggests 'FUNCTIONAL_SHAFT'. 4. Size & Shape=Area is 8.0m2 and AspectRatio is 2.0, which fits the criteria for a 'FUNCTIONAL_SHAFT' as it is small and not square/large. Therefore, the classification is 'FUNCTIONAL_SHAFT'."
   },
   {
-    "guid": "1A280Do_b9pPfqNPH$wb5_",
+    "guid": "1aOW_$Lsz1sxwkFmK_jXqI",
     "name": "No.68_HVAC_shaft",
-    "category": "MECHANICAL_ROOM",
-    "confidence": 0.78,
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.95,
     "status": "AUTO_MAPPED",
-    "reasoning": "The element is classified as IfcSpace with the name 'HVAC shaft', indicating its function is related to mechanical systems. The Pset_SimulatedData confirms its actual function as 'HVAC shaft', which aligns with mechanical infrastructure. Additionally, the dimensions and features such as 'Vertical ductwork' strongly suggest it is part of a mechanical system space."
+    "reasoning": "Step-by-step check: 1. Span=4.6 floors, which is greater than 1.5, indicating a vertical space. 2. Content=No stair, elevator, or MEP, so it does not fit 'STAIRWELL', 'ELEVATOR_SHAFT', or 'MEP_SHAFT'. 3. Enclosure=WALL, which suggests it is not an 'ATRIUM'. 4. Shape=Area is 6.25m2 and AspectRatio is 1.0, which is small and square, fitting the criteria for 'FUNCTIONAL_SHAFT'. Therefore, the element is classified as 'FUNCTIONAL_SHAFT'."
   },
   {
-    "guid": "0E_m95UlnFdgHqxq6LpTPO",
+    "guid": "11Bsj6JsTFhurnyp3znGP$",
     "name": "No.69_Electrical_shaft",
-    "category": "MECHANICAL_ROOM",
-    "confidence": 0.75,
+    "category": "FUNCTIONAL_SHAFT",
+    "confidence": 0.95,
     "status": "AUTO_MAPPED",
-    "reasoning": "The element is classified as an IfcSpace with the name 'Electrical_shaft', and the Pset_SimulatedData indicates its function as an 'Electrical shaft'. This aligns with spaces typically used for housing electrical or mechanical systems. The height of 16m and the description of a 'Cable vertical shaft' further support this categorization. While the predefined type and external status are unknown, the provided data strongly suggests a mechanical or utility function."
+    "reasoning": "Step-by-step check: 1. Span=4.6 floors, which is greater than 1.5, indicating a vertical space. 2. Content=No Stair, Elevator, or MEP, so it does not fit 'STAIRWELL', 'ELEVATOR_SHAFT', or 'MEP_SHAFT'. 3. Enclosure=WALL, which suggests it is not an 'ATRIUM'. 4. Size & Shape=Area is 2.25m2 and AspectRatio is 1.0, which is small and square, fitting the criteria for 'FUNCTIONAL_SHAFT'. Therefore, the classification is 'FUNCTIONAL_SHAFT'."
   },
   {
-    "guid": "2k$_1fL$93Vwbi992wf4R6",
+    "guid": "2wG8D$x8L2c9wsznhriaNU",
     "name": "No.70_Atrium",
-    "category": "GENERAL_ROOM",
-    "confidence": 0.75,
+    "category": "ATRIUM",
+    "confidence": 0.99,
     "status": "AUTO_MAPPED",
-    "reasoning": "The element is classified as IfcSpace with the name 'No.70_Atrium' and predefined function 'Atrium' in the Pset_SimulatedData. Atriums are typically categorized as general-purpose spaces within buildings. The dimensions and features (height > 12m, width > 8m) further support this classification. No specific attributes align with other allowed categories like MECHANICAL_ROOM, CORRIDOR, or INDOOR_PARKING."
+    "reasoning": "Step-by-step check: 1. Span=3.7 floors, which is greater than 1.5, indicating a vertical space. 2. Content=No stair, elevator, or MEP, so it does not fit into stairwell, elevator shaft, or MEP shaft categories. 3. Enclosure=RAILING, which suggests an open void, likely an atrium. 4. Shape=Area is 100.0m2 and AspectRatio is 1.0, which is large and square, fitting the atrium criteria. Therefore, the space is classified as 'ATRIUM'."
   }
 ]
