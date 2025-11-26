@@ -1,0 +1,202 @@
+[
+  {
+    "guid": "3fK1xpn$X6KBroszr073L6",
+    "name": "No.71_Atrium_void",
+    "category": "GENERIC_ELEMENT",
+    "confidence": 0.27,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "The IfcOpeningElement represents a void or opening, and the provided data indicates it is a large atrium void penetrating multiple floors. Since no specific predefined type or external classification is provided, and the dimensions and features align with a generic void element, it is best categorized under 'GENERIC_ELEMENT'. The high confidence is due to the clear alignment of the element's function and attributes with the generic category."
+  },
+  {
+    "guid": "2kySYdUWb2ugwPsGa2cG$h",
+    "name": "No.72_Elevator_shaft_opening",
+    "category": "GENERIC_ELEMENT",
+    "confidence": 0.27,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "The element is classified as IfcOpeningElement, which typically represents voids or openings in a building structure. The Psets snippet explicitly identifies its function as an 'Elevator shaft opening,' but no predefined type or external status is provided. Given the lack of specific categorization options and the functional description aligning with a general opening element, 'GENERIC_ELEMENT' is the most appropriate category."
+  },
+  {
+    "guid": "2WIA0YY818dRC$QkB6S2ae",
+    "name": "No.73_Stairwell_opening",
+    "category": "GENERIC_ELEMENT",
+    "confidence": 0.25,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "The element is classified as an IfcOpeningElement, which is a generic representation of an opening in a building structure. The predefined type is not specified, and the name and property set indicate it is related to a stairwell opening. Since no specific functional category is provided and the allowed category is GENERIC_ELEMENT, this is the most appropriate classification. The confidence is high due to the alignment of the data with the generic nature of the category."
+  },
+  {
+    "guid": "3nOgD_drv9VOgYHhk5SUhN",
+    "name": "No.74_HVAC_shaft_opening",
+    "category": "GENERIC_ELEMENT",
+    "confidence": 0.27,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "The element is classified as IfcOpeningElement, which typically represents voids or openings in a building structure. The name and Psets indicate its function as an HVAC shaft opening, but no specific predefined type or external property is provided to further refine its classification. Given the lack of detailed categorization options, 'GENERIC_ELEMENT' is the most appropriate functional category."
+  },
+  {
+    "guid": "1TlSnEeAj51fLCn01YgPrt",
+    "name": "No.75_Plumbing_shaft_opening",
+    "category": "GENERIC_ELEMENT",
+    "confidence": 0.25,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "The element is classified as an IfcOpeningElement, which typically represents voids or openings in a building structure. The name and Pset data indicate it is a plumbing shaft opening, but no specific predefined type or external classification is provided. Given the lack of detailed functional categorization and the allowed categories list, 'GENERIC_ELEMENT' is the most appropriate match with high confidence."
+  },
+  {
+    "guid": "2mC3HDWmDEGBWK5oM4joRD",
+    "name": "No.76_Electrical_shaft_opening",
+    "category": "GENERIC_ELEMENT",
+    "confidence": 0.27,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "The element is classified as IfcOpeningElement, which typically represents voids or openings in a building structure. The name and Psets indicate it is specifically an electrical shaft opening, but no predefined type or external status is provided to further refine the classification. Given the lack of specific functional categories and the allowed categories list, 'GENERIC_ELEMENT' is the most appropriate match with high confidence."
+  },
+  {
+    "guid": "3PErXtP3r0tgE4WFvgOzRS",
+    "name": "No.77_Small_service_penetration",
+    "category": "GENERIC_ELEMENT",
+    "confidence": 0.27,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "The element is classified as IfcOpeningElement, which typically represents voids or openings in building elements. The predefined type is None, and the name explicitly indicates a 'Small service penetration,' which aligns with a generic functional category. Additionally, the Psets snippet confirms its function as a small service penetration, and the dimensions suggest it is a minor feature. Given the lack of external or predefined type data, 'GENERIC_ELEMENT' is the most appropriate category."
+  },
+  {
+    "guid": "2L2Xszd_vEYOnkhBxOKc1T",
+    "name": "No.78_Large_equipment_opening",
+    "category": "GENERIC_ELEMENT",
+    "confidence": 0.25,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "The IfcOpeningElement class represents voids or openings in building elements, and the provided data indicates that this is a large equipment opening in a slab. Since no specific predefined type or external classification is provided, and the functional description aligns with a generic opening, the most appropriate functional category is GENERIC_ELEMENT. The confidence is high due to the clear functional description and lack of conflicting data."
+  },
+  {
+    "guid": "3nlLW$OnT10BT8XHNHgC5d",
+    "name": "No.79_Expansion_joint",
+    "category": "GENERIC_ELEMENT",
+    "confidence": 0.27,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "The element is classified as IfcOpeningElement, which typically represents voids or openings in a building structure. The Psets indicate its actual function as an 'Expansion joint,' which aligns with a generic element used to accommodate movement or gaps in construction. The absence of predefined type and external status further supports categorizing it as a generic element."
+  },
+  {
+    "guid": "3eGOjqoWbB$fy0SGgCuCzG",
+    "name": "No.80_Floor_drain_opening",
+    "category": "GENERIC_ELEMENT",
+    "confidence": 0.27,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "The element is classified as IfcOpeningElement, which typically represents voids or openings in building elements. The name and Psets indicate it is a floor drain opening, but no specific predefined type or external property is provided to further refine its classification. Given the lack of detailed functional categorization, 'GENERIC_ELEMENT' is the most appropriate category based on the allowed options."
+  },
+  {
+    "guid": "0bCrLEs0L9xguWj3HjcT76",
+    "name": "No.81_Window_well",
+    "category": "GENERIC_ELEMENT",
+    "confidence": 0.25,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "The element is classified as IfcOpeningElement, which typically represents voids or openings in a building structure. The name 'No.81_Window_well' and the Psets snippet indicate that it functions as a window well, which is a type of opening. However, the predefined type is None, and the dimensions suggest it is not a typical window or door opening, but rather a specialized opening element. Given the lack of specific predefined type and the unique function as a window well, it fits best under the GENERIC_ELEMENT category, which accommodates elements that do not fit neatly into more specific categories."
+  },
+  {
+    "guid": "3aIEwkC_LDQBQWf$b_Kdrn",
+    "name": "No.82_Equipment_rigging_opening",
+    "category": "GENERIC_ELEMENT",
+    "confidence": 0.23,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "The element is classified as an IfcOpeningElement, which typically represents voids or openings in building elements. The name and Psets indicate it is a temporary opening for equipment rigging, which does not fit into a specific predefined category. Given the lack of specific predefined types and the temporary nature, it is best categorized under GENERIC_ELEMENT. The confidence is moderate to high due to the clear indication of its temporary and non-standard function."
+  },
+  {
+    "guid": "1FWHAgUo989ef$fywO2_E_",
+    "name": "No.83_Central_void-atrium",
+    "category": "GENERIC_ELEMENT",
+    "confidence": 0.27,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "The element is classified as IfcOpeningElement, which typically represents voids or openings in a structure. The name and Pset data indicate it is a central void or atrium, which aligns with a generic functional category. The absence of predefined type and external status further supports the assignment to a broad category like GENERIC_ELEMENT."
+  },
+  {
+    "guid": "2aOkyOUHn9Yf_PTQmeLy_D",
+    "name": "No.84_Stair_opening",
+    "category": "GENERIC_ELEMENT",
+    "confidence": 0.25,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "The element is classified as an IfcOpeningElement, which typically represents voids or openings in building elements. The Pset_SimulatedData indicates that the function of this element is a 'Stair opening,' which aligns with a generic representation of an opening. Since no specific predefined type or external classification is provided, the most appropriate functional category is 'GENERIC_ELEMENT.' The confidence is high due to the clear indication of its purpose in the Pset data."
+  },
+  {
+    "guid": "1E66lZ7on1TA34a$2BKSSS",
+    "name": "No.85_Escalator_opening",
+    "category": "GENERIC_ELEMENT",
+    "confidence": 0.27,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "The IFC class IfcOpeningElement represents voids or openings in building elements, and the predefined type is not specified. The name and Psets indicate that this is an opening for an escalator, which aligns with a generic functional category for elements that do not have a specific predefined type or external classification. The dimensions and Psets further support this categorization."
+  },
+  {
+    "guid": "2VYhmoy5XCmBFS8zWepVqw",
+    "name": "No.86_Vertical_circulation_void",
+    "category": "GENERIC_ELEMENT",
+    "confidence": 0.27,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "The IFC class IfcOpeningElement typically represents voids or openings within building elements. The name and Psets snippet indicate that this element is associated with vertical circulation voids, which are generic features in the building model. Since no specific predefined type or external classification is provided, and the dimensions suggest it is a void space, the most appropriate functional category is GENERIC_ELEMENT."
+  },
+  {
+    "guid": "2WjZTrCwT8V8fgebWSx5z2",
+    "name": "No.87_Glazed_roof_opening",
+    "category": "GENERIC_ELEMENT",
+    "confidence": 0.23,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "The element is classified as an IfcOpeningElement, which typically represents voids or openings in a building structure. The name and Pset_SimulatedData indicate it is a glazed roof opening, but no specific predefined type or external/internal classification is provided. Given the lack of detailed functional categorization and the allowed categories list containing only 'GENERIC_ELEMENT', this is the most appropriate match with a high confidence level."
+  },
+  {
+    "guid": "0pN8ZEj35Fr868MiOBXv0j",
+    "name": "No.88_Open_floor_connection",
+    "category": "GENERIC_ELEMENT",
+    "confidence": 0.27,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "The IFC class IfcOpeningElement represents voids or openings within a building structure, and the provided data indicates it is a vertical void between floors with no specific predefined type. The dimensions and Psets suggest it serves as an open floor connection, which aligns with the generic nature of the allowed category 'GENERIC_ELEMENT'."
+  },
+  {
+    "guid": "18vaYZU818ReNjXj$JmU5h",
+    "name": "No.89_Loading_dock_opening",
+    "category": "GENERIC_ELEMENT",
+    "confidence": 0.23,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "The element is classified as an IfcOpeningElement, which typically represents voids or openings in a building structure. The provided data indicates that this opening is associated with a loading dock, as described in the Pset_SimulatedData under 'ActualFunction'. However, the lack of specific predefined types, externality information, and zero dimensions reduces the confidence slightly. Based on the allowed categories, 'GENERIC_ELEMENT' is the most appropriate classification."
+  },
+  {
+    "guid": "0jwUEyVaHDGxoOc8tBF1wT",
+    "name": "No.90_Balcony_void_boundary",
+    "category": "GENERIC_ELEMENT",
+    "confidence": 0.23,
+    "status": "NEEDS_REVIEW",
+    "reasoning": "The IfcOpeningElement class represents voids or openings, and the provided data indicates it is associated with a balcony void boundary. Since no specific predefined type or external classification is provided, and the dimensions suggest a generic void, the most appropriate functional category is GENERIC_ELEMENT. The confidence is set to 0.85 due to the lack of explicit external or predefined type information."
+  },
+  {
+    "guid": "0OGhmVjt9B1wwRpY2PBcNT",
+    "name": "No.66_Elevator_shaft",
+    "category": "MECHANICAL_ROOM",
+    "confidence": 0.78,
+    "status": "AUTO_MAPPED",
+    "reasoning": "The element is classified as an IfcSpace with the name 'No.66_Elevator_shaft', and the Pset_SimulatedData indicates its actual function is 'Elevator shaft'. Elevator shafts are typically categorized as mechanical spaces due to their role in housing elevator equipment and systems. The dimensions and features further support this classification, as the height and bounding box dimensions align with typical elevator shaft characteristics."
+  },
+  {
+    "guid": "0t7oBgCYX3QvgXSc0WtVQR",
+    "name": "No.67_Stairwell",
+    "category": "GENERAL_ROOM",
+    "confidence": 0.75,
+    "status": "AUTO_MAPPED",
+    "reasoning": "The element is classified as IfcSpace, which typically represents a room or area. The name 'No.67_Stairwell' and the Pset_SimulatedData indicate its function as a stairwell, which aligns with a general room category. The dimensions and features (e.g., height > 15m, contains stair) further support this classification. While 'Stairwell' is not explicitly listed as a category, it fits best under GENERAL_ROOM based on the provided options."
+  },
+  {
+    "guid": "1A280Do_b9pPfqNPH$wb5_",
+    "name": "No.68_HVAC_shaft",
+    "category": "MECHANICAL_ROOM",
+    "confidence": 0.78,
+    "status": "AUTO_MAPPED",
+    "reasoning": "The element is classified as IfcSpace with the name 'HVAC shaft', indicating its function is related to mechanical systems. The Pset_SimulatedData confirms its actual function as 'HVAC shaft', which aligns with mechanical infrastructure. Additionally, the dimensions and features such as 'Vertical ductwork' strongly suggest it is part of a mechanical system space."
+  },
+  {
+    "guid": "0E_m95UlnFdgHqxq6LpTPO",
+    "name": "No.69_Electrical_shaft",
+    "category": "MECHANICAL_ROOM",
+    "confidence": 0.75,
+    "status": "AUTO_MAPPED",
+    "reasoning": "The element is classified as an IfcSpace with the name 'Electrical_shaft', and the Pset_SimulatedData indicates its function as an 'Electrical shaft'. This aligns with spaces typically used for housing electrical or mechanical systems. The height of 16m and the description of a 'Cable vertical shaft' further support this categorization. While the predefined type and external status are unknown, the provided data strongly suggests a mechanical or utility function."
+  },
+  {
+    "guid": "2k$_1fL$93Vwbi992wf4R6",
+    "name": "No.70_Atrium",
+    "category": "GENERAL_ROOM",
+    "confidence": 0.75,
+    "status": "AUTO_MAPPED",
+    "reasoning": "The element is classified as IfcSpace with the name 'No.70_Atrium' and predefined function 'Atrium' in the Pset_SimulatedData. Atriums are typically categorized as general-purpose spaces within buildings. The dimensions and features (height > 12m, width > 8m) further support this classification. No specific attributes align with other allowed categories like MECHANICAL_ROOM, CORRIDOR, or INDOOR_PARKING."
+  }
+]

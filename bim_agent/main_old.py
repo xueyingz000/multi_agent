@@ -333,7 +333,7 @@ class SemanticAlignmentAgent:
 # ===========================
 if __name__ == "__main__":
     # 1. 检查文件是否存在
-    ifc_path = "group_a_dataset.ifc"
+    ifc_path = "group_b_dataset.ifc"
     if not os.path.exists(ifc_path):
         print(
             f"错误: 找不到文件 {ifc_path}。请将一个 IFC 文件放入该目录并重命名为 model.ifc"
