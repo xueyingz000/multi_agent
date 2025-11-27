@@ -454,7 +454,7 @@ class IntelligentClassifier:
 # 模块 3: 主流程
 # ===========================
 def main():
-    ifc_path = "group_d_dataset.ifc"
+    ifc_path = "group_a_dataset.ifc"
 
     if not os.path.exists(ifc_path):
         print(f"错误: 未找到 {ifc_path}")
@@ -587,9 +587,22 @@ def main():
             }
         )
 
+    # 收集待复核队列和全部分类列表
+    output_data = {
+        "meta": {
+            "total_count": len(results),
+            "review_count": len(hitl_queue),
+            # 提取所有类别的名称供前端下拉框使用
+            "all_categories": [c["name"] for c in full_categories],
+        },
+        "results": results,  # 包含所有构件，前端根据 status == "NEEDS_REVIEW" 过滤
+    }
+
     print(f"\n分析完成。需复核: {len(hitl_queue)}/{len(results)}")
-    with open("final_result.json", "w", encoding="utf-8") as f:
-        json.dump(results, f, indent=2, ensure_ascii=False)
+
+    # 保存为 hitl_data.json
+    with open("hitl_data.json", "w", encoding="utf-8") as f:
+        json.dump(output_data, f, indent=2, ensure_ascii=False)
 
 
 if __name__ == "__main__":

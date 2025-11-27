@@ -1,0 +1,268 @@
+{
+  "meta": {
+    "total_count": 30,
+    "review_count": 22,
+    "all_categories": [
+      "INTERIOR_FLOOR_SLAB",
+      "ROOF_SLAB",
+      "BALCONY",
+      "FOUNDATION_SLAB",
+      "STAIR_LANDING",
+      "EXTERIOR_WALL",
+      "INTERIOR_WALL",
+      "SHEAR_WALL",
+      "CURTAIN_WALL",
+      "MECHANICAL_ROOM",
+      "GENERAL_ROOM",
+      "CORRIDOR",
+      "INDOOR_PARKING",
+      "ATRIUM",
+      "ELEVATOR_SHAFT",
+      "STAIRWELL",
+      "MEP_SHAFT",
+      "FUNCTIONAL_SHAFT"
+    ]
+  },
+  "results": [
+    {
+      "guid": "2wNolPhYP8jedoCo0cg18j",
+      "name": "No.19_IfcBeam_BEAM",
+      "category": "GENERIC_ELEMENT",
+      "confidence": 0.42,
+      "status": "NEEDS_REVIEW",
+      "reasoning": "The IFC class is IfcBeam with a predefined type of BEAM, but the lack of externality information and absence of specific property sets or functional data limits the ability to assign a more specific category. Based on the provided dimensions and generic naming convention, it fits best under the GENERIC_ELEMENT category."
+    },
+    {
+      "guid": "0SrjR1$_DFBfhikSbihlOm",
+      "name": "No.20_IfcBeam_LINTEL",
+      "category": "GENERIC_ELEMENT",
+      "confidence": 0.33,
+      "status": "NEEDS_REVIEW",
+      "reasoning": "The IFC class IfcBeam with PredefinedType LINTEL typically represents structural elements used to support loads above openings, such as doors or windows. However, due to the lack of detailed property sets (Psets) and external context (e.g., IsExternal is UNKNOWN), the element cannot be confidently mapped to a more specific functional category. Therefore, it is categorized as GENERIC_ELEMENT with high confidence based on its general structural function."
+    },
+    {
+      "guid": "2iCkY5$Gn25AS1ROLyjGru",
+      "name": "No.17_IfcColumn_COLUMN",
+      "category": "GENERIC_ELEMENT",
+      "confidence": 0.4,
+      "status": "NEEDS_REVIEW",
+      "reasoning": "The element is classified as an IfcColumn with a PredefinedType of COLUMN, but lacks sufficient metadata (e.g., IsExternal is UNKNOWN, no property sets provided) to assign it to a more specific functional category. Based on the provided data and the allowed categories, GENERIC_ELEMENT is the most appropriate classification."
+    },
+    {
+      "guid": "3$reUEjGfFpOdQv3nMDcIw",
+      "name": "No.18_IfcColumn_PILASTER",
+      "category": "GENERIC_ELEMENT",
+      "confidence": 0.33,
+      "status": "NEEDS_REVIEW",
+      "reasoning": "The element is classified as an IfcColumn with a PredefinedType of PILASTER, which typically represents a decorative or structural feature. However, due to the lack of detailed property sets (Psets) and the IsExternal attribute being UNKNOWN, it is challenging to assign it to a more specific functional category. Therefore, it is mapped to the GENERIC_ELEMENT category with moderate confidence."
+    },
+    {
+      "guid": "2D4PmCM8D47h2r6hj4PPSz",
+      "name": "No.27_IfcCovering_CEILING",
+      "category": "GENERIC_ELEMENT",
+      "confidence": 0.35,
+      "status": "NEEDS_REVIEW",
+      "reasoning": "The IFC class IfcCovering with PredefinedType CEILING represents a ceiling element, but due to the lack of external attributes, predefined property sets, and specific functional data, it cannot be mapped to a more specific category. Therefore, it fits the GENERIC_ELEMENT category with high confidence."
+    },
+    {
+      "guid": "2LBCZ4Sa52lw8Ag2knpIiJ",
+      "name": "No.28_IfcCovering_FLOORING",
+      "category": "GENERIC_ELEMENT",
+      "confidence": 0.33,
+      "status": "NEEDS_REVIEW",
+      "reasoning": "The IFC class IfcCovering with PredefinedType FLOORING typically represents a surface layer applied to a floor, which aligns with a generic element category due to the lack of specific functional categorization. The absence of externality information and minimal property set data further supports a generic classification."
+    },
+    {
+      "guid": "1qfCpCSsb0ceIl8Gy9eBUq",
+      "name": "No.16_IfcCurtainWall_USERDEFINED",
+      "category": "CURTAIN_WALL",
+      "confidence": 0.65,
+      "status": "AUTO_MAPPED",
+      "reasoning": "The IFC Class is explicitly defined as IfcCurtainWall, and the element's predefined type is USERDEFINED, which aligns with the allowed category 'CURTAIN_WALL'. Additionally, the Pset_CurtainWallCommon confirms the element's external nature, further supporting its classification as a curtain wall."
+    },
+    {
+      "guid": "0s6bAb3zH4hBv8OcOddWYp",
+      "name": "No.29_IfcRailing_HANDRAIL",
+      "category": "GENERIC_ELEMENT",
+      "confidence": 0.35,
+      "status": "NEEDS_REVIEW",
+      "reasoning": "The IFC class IfcRailing with PredefinedType HANDRAIL does not have sufficient specific data or predefined categories to map it to a more specialized functional category. The absence of external classification (IsExternal: UNKNOWN) and lack of detailed property sets further supports the assignment to the GENERIC_ELEMENT category as a default classification."
+    },
+    {
+      "guid": "1A7HxPmIT90AM0n1pAPghb",
+      "name": "No.30_IfcRailing_GUARDRAIL",
+      "category": "GENERIC_ELEMENT",
+      "confidence": 0.35,
+      "status": "NEEDS_REVIEW",
+      "reasoning": "The IFC class IfcRailing with PredefinedType GUARDRAIL does not have sufficient data or specific predefined categories to map it to a more specialized functional category. The absence of externality information and property sets further supports categorizing it as a GENERIC_ELEMENT."
+    },
+    {
+      "guid": "38mojf6xL8CgVfXRivUDcQ",
+      "name": "No.23_IfcRamp_STRAIGHT_RAMP",
+      "category": "GENERIC_ELEMENT",
+      "confidence": 0.23,
+      "status": "NEEDS_REVIEW",
+      "reasoning": "The IFC class IfcRamp represents a ramp structure, but the lack of predefined type and external context makes it difficult to assign a more specific functional category. Based on the provided data, the element fits the GENERIC_ELEMENT category due to its undefined functional specificity."
+    },
+    {
+      "guid": "2SBOiXnDrDRfqXnbqA0x8I",
+      "name": "No.24_IfcRoof_FLAT_ROOF",
+      "category": "ROOF_SLAB",
+      "confidence": 0.5,
+      "status": "NEEDS_REVIEW",
+      "reasoning": "The IFC class is IfcRoof with a PredefinedType of FLAT_ROOF, which aligns with the functional category of ROOF_SLAB. Although the IsExternal property is UNKNOWN, the dimensions and predefined type strongly suggest it serves as a flat roof slab. The absence of Psets data slightly reduces confidence."
+    },
+    {
+      "guid": "2WWmJRfnDD08Apq4gQdPcv",
+      "name": "No.25_IfcRoof_SHED_ROOF",
+      "category": "ROOF_SLAB",
+      "confidence": 0.5,
+      "status": "NEEDS_REVIEW",
+      "reasoning": "The IFC class IfcRoof with PredefinedType SHED_ROOF strongly aligns with the functional category ROOF_SLAB, as it represents a roof structure. The dimensions and lack of external property data do not contradict this categorization, but the absence of detailed Psets slightly reduces confidence."
+    },
+    {
+      "guid": "0Ii8wG8I90_QrBqWcYZ2B2",
+      "name": "No.26_IfcRoof_GABLE_ROOF",
+      "category": "ROOF_SLAB",
+      "confidence": 0.5,
+      "status": "NEEDS_REVIEW",
+      "reasoning": "The IFC class IfcRoof with PredefinedType GABLE_ROOF aligns with the functional category ROOF_SLAB as it represents a roof structure. The dimensions and naming convention further support this classification, although the lack of external property data slightly reduces confidence."
+    },
+    {
+      "guid": "1vPO6MKZfA_8o8aWLDqBTI",
+      "name": "No.1_IfcSlab_FLOOR",
+      "category": "INTERIOR_FLOOR_SLAB",
+      "confidence": 0.71,
+      "status": "AUTO_MAPPED",
+      "reasoning": "The IFC element is classified as an IfcSlab with a PredefinedType of FLOOR and is marked as not external (IsExternal: FALSE). This strongly suggests that the slab is an interior floor slab. The dimensions and properties do not indicate any characteristics typical of other categories such as roof slabs, balconies, or foundation slabs."
+    },
+    {
+      "guid": "0mWeM1FKD33hifZwlyfosr",
+      "name": "No.2_IfcSlab_ROOF",
+      "category": "ROOF_SLAB",
+      "confidence": 0.6,
+      "status": "NEEDS_REVIEW",
+      "reasoning": "The IFC class is IfcSlab with a PredefinedType of ROOF, which strongly suggests that the element is a roof slab. The name also includes 'ROOF', reinforcing this classification. The dimensions and lack of specific property sets do not contradict this categorization."
+    },
+    {
+      "guid": "19iLKAyE56heQ7hcU1YIMW",
+      "name": "No.3_IfcSlab_LANDING",
+      "category": "STAIR_LANDING",
+      "confidence": 0.6,
+      "status": "NEEDS_REVIEW",
+      "reasoning": "The element is classified as IfcSlab with a PredefinedType of LANDING, which typically corresponds to stair landings. The dimensions and naming convention further support this categorization, and the IsExternal property being FALSE indicates it is an interior element, consistent with stair landings."
+    },
+    {
+      "guid": "3z4pCnrvj9JOFTkoQhUn22",
+      "name": "No.4_IfcSlab_BASESLAB",
+      "category": "FOUNDATION_SLAB",
+      "confidence": 0.71,
+      "status": "AUTO_MAPPED",
+      "reasoning": "The element is classified as IfcSlab with a PredefinedType of BASESLAB, which typically indicates a slab used in foundation applications. The IsExternal property is FALSE, suggesting it is not exposed to external conditions, further supporting its use as a foundation slab. The dimensions and volume are consistent with typical foundation slab characteristics."
+    },
+    {
+      "guid": "3fjIOb9FrBL9ZWgt0_5OFm",
+      "name": "No.5_IfcSlab_FLOOR",
+      "category": "ROOF_SLAB",
+      "confidence": 0.63,
+      "status": "NEEDS_REVIEW",
+      "reasoning": "The element is classified as an IfcSlab with a PredefinedType of FLOOR and is marked as external (IsExternal: TRUE). This suggests it is not an interior floor slab, which typically would not be external. Given the options, a roof slab is a plausible category for an external slab with a predefined type of FLOOR. The confidence is not absolute due to the lack of explicit information about its placement or function, but the external nature strongly suggests a roof application."
+    },
+    {
+      "guid": "0TE7mFz19DTBP5D5lAIDMg",
+      "name": "No.6_IfcSlab_LANDING",
+      "category": "STAIR_LANDING",
+      "confidence": 0.6,
+      "status": "NEEDS_REVIEW",
+      "reasoning": "The IFC element is classified as an IfcSlab with a PredefinedType of LANDING, which typically corresponds to a stair landing. The element is external, but this does not conflict with the functional category of a stair landing, as external stair landings are common. The dimensions and properties provided do not contradict this classification."
+    },
+    {
+      "guid": "0t21HhNlP7ShKcWV3f$dci",
+      "name": "No.21_IfcStair_STRAIGHT_RUN_STAIR",
+      "category": "GENERIC_ELEMENT",
+      "confidence": 0.3,
+      "status": "NEEDS_REVIEW",
+      "reasoning": "The element is classified as IfcStair with a predefined type of STRAIGHT_RUN_STAIR, which is a common architectural component. However, due to the lack of specific external or functional attributes and the absence of detailed property sets, it is best categorized under GENERIC_ELEMENT. This category is suitable for elements that do not have specific functional categories or detailed data to support a more precise classification."
+    },
+    {
+      "guid": "1EKHl2CNLFI8xGQJaXWqfK",
+      "name": "No.22_IfcStair_QUARTER_WINDING_STAIR",
+      "category": "GENERIC_ELEMENT",
+      "confidence": 0.33,
+      "status": "NEEDS_REVIEW",
+      "reasoning": "The element is classified as IfcStair with a predefined type of QUARTER_WINDING_STAIR, which is a specific type of stair. However, the lack of detailed property sets and external status information limits the ability to categorize it more specifically. Given the allowed categories, 'GENERIC_ELEMENT' is the most suitable classification, as it encompasses a wide range of elements without specific functional categorization."
+    },
+    {
+      "guid": "2vUK1TwHz1mg9S6opYPnGb",
+      "name": "No.12_IfcWall_STANDARD",
+      "category": "EXTERIOR_WALL",
+      "confidence": 0.6,
+      "status": "NEEDS_REVIEW",
+      "reasoning": "The element is classified as an IfcWall with a PredefinedType of STANDARD and is marked as external (IsExternal: TRUE). These characteristics align with the functional category of an EXTERIOR_WALL. The presence of the 'IsExternal' property in the Pset_WallCommon further supports this classification. The high confidence level is due to the clear indication of the wall being external."
+    },
+    {
+      "guid": "3i$Rt6XCTAHegxSpoxKCpi",
+      "name": "No.13_IfcWall_STANDARD",
+      "category": "INTERIOR_WALL",
+      "confidence": 0.6,
+      "status": "NEEDS_REVIEW",
+      "reasoning": "The element is classified as IfcWall with a PredefinedType of STANDARD and is marked as IsExternal: FALSE, indicating it is not an exterior wall. The dimensions and properties suggest it is a standard wall used internally, rather than a specialized type like a shear or curtain wall."
+    },
+    {
+      "guid": "3DAPto82P94uXSrugIIJsi",
+      "name": "No.14_IfcWall_SHEAR",
+      "category": "SHEAR_WALL",
+      "confidence": 0.6,
+      "status": "NEEDS_REVIEW",
+      "reasoning": "The IFC element is classified as IfcWall with a PredefinedType of SHEAR, which directly corresponds to the functional category of SHEAR_WALL. Additionally, the IsExternal attribute is FALSE, indicating it is not an exterior wall, further supporting the classification as a SHEAR_WALL."
+    },
+    {
+      "guid": "1weOHbb0D3QAKgPej4tBlh",
+      "name": "No.15_IfcWall_PLUMBINGWALL",
+      "category": "INTERIOR_WALL",
+      "confidence": 0.58,
+      "status": "NEEDS_REVIEW",
+      "reasoning": "The element is classified as an IfcWall with a predefined type of PLUMBINGWALL, which typically indicates an interior application for housing plumbing systems. Additionally, the 'IsExternal' attribute is set to FALSE, further supporting its classification as an interior wall. The dimensions and aspect ratio are consistent with typical interior wall specifications."
+    },
+    {
+      "guid": "1TcBhSEZHBcQyV7eCSnJwR",
+      "name": "No.7_IfcSpace_PARKING",
+      "category": "INDOOR_PARKING",
+      "confidence": 0.95,
+      "status": "AUTO_MAPPED",
+      "reasoning": "The IFC element is classified as IfcSpace with a PredefinedType of PARKING, indicating its primary function is related to parking. The IsExternal attribute is FALSE, suggesting it is located indoors. These attributes align closely with the 'INDOOR_PARKING' category, making it the most suitable functional category."
+    },
+    {
+      "guid": "1JGsPltibF9eg9P2zoRgKH",
+      "name": "No.8_IfcSpace_EXTERNAL",
+      "category": "GENERAL_ROOM",
+      "confidence": 0.88,
+      "status": "AUTO_MAPPED",
+      "reasoning": "The element is classified as IfcSpace with a PredefinedType of EXTERNAL and IsExternal set to TRUE, indicating it is an external space. However, the provided categories do not include a specific category for external spaces. Given the dimensions and lack of specific features indicating a specialized function (e.g., mechanical equipment or vertical transportation), it is most appropriately categorized as a GENERAL_ROOM. The confidence is moderate due to the lack of a more precise category for external spaces."
+    },
+    {
+      "guid": "2PM7Jgz29CN8DitZK7CRz9",
+      "name": "No.9_IfcSpace_INTERNAL",
+      "category": "GENERAL_ROOM",
+      "confidence": 0.91,
+      "status": "AUTO_MAPPED",
+      "reasoning": "The element is classified as IfcSpace with a PredefinedType of INTERNAL and IsExternal set to FALSE, indicating it is an internal space. The dimensions and lack of specific features like a shaft or mechanical equipment suggest it is a general-purpose room rather than a specialized space like a mechanical room or corridor."
+    },
+    {
+      "guid": "3Lo6CdyNP9Vh0OehiWojOs",
+      "name": "No.10_IfcSpace_GFA",
+      "category": "GENERAL_ROOM",
+      "confidence": 0.8,
+      "status": "AUTO_MAPPED",
+      "reasoning": "The element is classified as IfcSpace with a predefined type of GFA, which typically refers to Gross Floor Area. This suggests a general purpose space rather than a specialized area like a mechanical room or corridor. The dimensions and lack of specific predefined attributes or property sets further support the categorization as a general room."
+    },
+    {
+      "guid": "1p_J86OqnFb95dYfLRy6k0",
+      "name": "No.11_IfcSpace_PARKING",
+      "category": "INDOOR_PARKING",
+      "confidence": 0.95,
+      "status": "AUTO_MAPPED",
+      "reasoning": "The IFC element is classified as IfcSpace with a predefined type of PARKING, which directly aligns with the functional category of INDOOR_PARKING. The element's external nature does not conflict with this category, as parking spaces can be external or internal. The dimensions and Psets snippet further support this classification."
+    }
+  ]
+}
