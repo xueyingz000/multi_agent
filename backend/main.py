@@ -1,0 +1,149 @@
+import os
+import shutil
+from fastapi import FastAPI, UploadFile, File, HTTPException, Form
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import Optional, Dict
+
+# --- 导入 Agent ---
+# 确保你把刚才写的 Agent 1 代码保存为 backend/agents/regulation_agent.py
+from agents.regulation_agent import RegulationAnalysisAgent
+
+app = FastAPI()
+
+# 配置 CORS (允许前端 React 访问)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# --- 全局状态存储 (模拟数据库) ---
+# 在生产环境中，这些应该存入 Redis 或 SQL 数据库
+session_state = {
+    "current_ifc_path": None,      # 当前上传的 IFC 文件路径
+    "current_rules": None,         # Agent 1 的输出结果 (JSON)
+    "current_rule_name": None      # 当前选用的法规名称
+}
+
+# 初始化 Agents
+# 注意：确保环境变量中有 OPENAI_API_KEY
+reg_agent = RegulationAnalysisAgent() 
+
+# ============================================================
+# 1. Import: 上传 IFC 文件
+# ============================================================
+@app.post("/upload/ifc")
+async def upload_ifc(file: UploadFile = File(...)):
+    try:
+        # 1. 确保临时目录存在
+        os.makedirs("temp", exist_ok=True)
+        file_path = f"temp/{file.filename}"
+        
+        # 2. 保存文件
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            
+        # 3. 更新状态
+        session_state["current_ifc_path"] = file_path
+        
+        return {
+            "status": "success", 
+            "message": f"IFC File '{file.filename}' uploaded successfully.",
+            "step": "Import Complete"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ============================================================
+# 2. Select Rule: 触发 Agent 1 (法规分析)
+# ============================================================
+@app.post("/upload/regulation")
+async def analyze_regulation(
+    file: UploadFile = File(...), 
+    region_name: str = Form(...)
+):
+    """
+    用户上传 PDF 法规 -> 触发 Agent 1 -> 返回结构化 JSON
+    """
+    try:
+        print(f"🚀 Triggering Agent 1 for region: {region_name}")
+        
+        # 1. 保存 PDF
+        os.makedirs("temp", exist_ok=True)
+        pdf_path = f"temp/{file.filename}"
+        with open(pdf_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            
+        # 2. 【核心】调用 Agent 1 进行分析
+        # 这里会消耗 Token 调用 LLM
+        rules_json = reg_agent.analyze(pdf_path, region_name)
+        
+        if not rules_json:
+            raise HTTPException(status_code=500, detail="Agent 1 failed to analyze PDF")
+
+        # 3. 存储规则供后续 Agent 使用
+        session_state["current_rules"] = rules_json
+        session_state["current_rule_name"] = region_name
+
+        return {
+            "status": "success",
+            "message": "Regulation analyzed by Agent 1",
+            "data": rules_json  # 将结果返回给前端展示，让用户看到提取了什么规则
+        }
+        
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ============================================================
+# 3. Process & Review: 触发 Agent 2 & 3 (语义对齐与计算)
+# ============================================================
+class CalculationRequest(BaseModel):
+    element_guid: str
+
+@app.post("/analyze/element")
+async def analyze_element_logic(req: CalculationRequest):
+    """
+    前端点击某个构件 -> 触发 Agent 2 & 3
+    User Journey: Debug / Review 阶段
+    """
+    if not session_state["current_ifc_path"]:
+        raise HTTPException(status_code=400, detail="Please upload IFC first")
+    if not session_state["current_rules"]:
+        raise HTTPException(status_code=400, detail="Please select/upload regulation first")
+
+    # 获取上下文
+    guid = req.element_guid
+    rules = session_state["current_rules"]
+    ifc_path = session_state["current_ifc_path"]
+
+    print(f"🚀 Triggering Agent 2 & 3 for element: {guid}")
+
+    # --- 这里将是 Agent 2 和 Agent 3 的逻辑 ---
+    # 目前我们先写一个 Mock (占位符)，等你写完 Agent 2 代码后替换这里
+    
+    # [Future Agent 2]: Semantic Alignment
+    # semantic_info = semantic_agent.align(ifc_path, guid, rules)
+    
+    # [Future Agent 3]: Calculation
+    # result = calc_agent.calculate(semantic_info)
+    
+    # --- 临时 Mock 返回 (为了让前端不报错) ---
+    import random
+    mock_factor = 0.5 if random.random() > 0.5 else 1.0
+    mock_reason = "Matched Rule 3.0.2: Height < 2.2m" if mock_factor == 0.5 else "Standard Area"
+
+    return {
+        "element_id": guid,
+        "type": "IfcSlab", 
+        "calc_factor": mock_factor,
+        "reason": f"[Agent 2&3 Pending] Based on {session_state['current_rule_name']}: {mock_reason}",
+        "matched_rule": rules["height_requirements"][0] if rules.get("height_requirements") else None
+    }
+
+if __name__ == "__main__":
+    import uvicorn
+    # 启动服务器
+    uvicorn.run(app, host="0.0.0.0", port=8000)
