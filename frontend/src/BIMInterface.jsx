@@ -49,6 +49,7 @@ const BIMInterface = () => {
     const [ifcFile, setIfcFile] = useState(null);
     const [treeData, setTreeData] = useState(null);
     const [selectedProps, setSelectedProps] = useState(null);
+    const [selectedPsets, setSelectedPsets] = useState(null);
 
     // --- 新增：法规 Agent 相关状态 ---
     const [showRuleModal, setShowRuleModal] = useState(false); // 控制弹窗
@@ -290,6 +291,31 @@ const BIMInterface = () => {
                                     <div className="text-right text-gray-200 font-mono">2.8m</div>
                                 </div>
                             </div>
+
+                            {/* 动态属性集展示 */}
+                            {selectedPsets && selectedPsets.length > 0 && (
+                                <div className="space-y-4">
+                                    {selectedPsets.map((pset, index) => (
+                                        <div key={index}>
+                                            <h3 className="text-xs font-bold text-emerald-500 uppercase mb-2 border-b border-gray-800 pb-1">
+                                                {pset.Name ? pset.Name.value : 'Property Set'}
+                                            </h3>
+                                            <div className="grid grid-cols-2 gap-y-1 text-xs">
+                                                {pset.HasProperties && pset.HasProperties.map((prop, pIdx) => (
+                                                    <React.Fragment key={pIdx}>
+                                                        <div className="text-gray-400 truncate pr-2" title={prop.Name ? prop.Name.value : ''}>
+                                                            {prop.Name ? prop.Name.value : 'Unknown'}
+                                                        </div>
+                                                        <div className="text-right text-gray-200 truncate">
+                                                            {prop.NominalValue ? String(prop.NominalValue.value) : '-'}
+                                                        </div>
+                                                    </React.Fragment>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     )}
                 </aside>

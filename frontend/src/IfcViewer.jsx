@@ -14,6 +14,7 @@ const IfcViewer = ({ file, onLoaded, onSelect, width, height }) => {
     const ifcLoaderRef = useRef(null);
     const modelRef = useRef(null);
     const highlightMatRef = useRef(null);
+    const subsetRef = useRef(null);
 
     // 初始化场景 (ComponentDidMount)
     useEffect(() => {
@@ -79,7 +80,8 @@ const IfcViewer = ({ file, onLoaded, onSelect, width, height }) => {
             mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
             raycaster.setFromCamera(mouse, cameraRef.current);
-            const intersects = raycaster.intersectObjects([modelRef.current]);
+            // 开启递归查找，以防模型是 Group 结构
+            const intersects = raycaster.intersectObjects([modelRef.current], true);
 
             if (intersects.length > 0) {
                 const index = intersects[0].faceIndex;
@@ -87,20 +89,39 @@ const IfcViewer = ({ file, onLoaded, onSelect, width, height }) => {
                 const id = ifcLoader.ifcManager.getExpressId(geometry, index);
 
                 // 高亮
-                ifcLoader.ifcManager.createSubset({
+                const subset = ifcLoader.ifcManager.createSubset({
                     modelID: modelRef.current.modelID,
                     ids: [id],
                     material: highlightMaterial,
                     scene: scene,
                     removePrevious: true
                 });
+                subsetRef.current = subset;
 
-                // 获取属性并传给父组件
-                const props = await ifcLoader.ifcManager.getItemProperties(modelRef.current.modelID, id);
-                onSelect(id, props);
+                try {
+                    // 获取属性并传给父组件
+                    const props = await ifcLoader.ifcManager.getItemProperties(modelRef.current.modelID, id);
+                    // 获取属性集 (Property Sets)
+                    const psets = await ifcLoader.ifcManager.getPropertySets(modelRef.current.modelID, id, true);
+
+                    onSelect(id, props, psets);
+                } catch (err) {
+                    console.error("Error fetching element properties:", err);
+                }
             } else {
                 // 清除高亮
-                ifcLoader.ifcManager.removeSubset(modelRef.current.modelID, scene, highlightMaterial);
+                // 1. Explicitly remove previous subset mesh
+                if (subsetRef.current) {
+                    scene.remove(subsetRef.current);
+                    if (subsetRef.current.geometry) subsetRef.current.geometry.dispose();
+                    subsetRef.current = null;
+                }
+
+                // 2. Also call manager (without scene parameter to just remove from internal map if needed, 
+                // but actually removeSubset with scene is what removes it from scene graph usually. 
+                // Since we did it manually above, we can just ensure manager state is clean)
+                ifcLoader.ifcManager.removeSubset(modelRef.current.modelID, highlightMaterial);
+
                 onSelect(null, null);
             }
         };
