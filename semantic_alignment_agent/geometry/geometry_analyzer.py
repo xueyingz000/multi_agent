@@ -10,7 +10,7 @@ from datetime import datetime
 from ..utils import (
     log, Point3D, BoundingBox, GeometricFeatures, IfcElementInfo
 )
-from ..utils.data_structures import GeometricAnalysisResult, SpatialRelationship
+from ..utils.data_structures import GeometricAnalysisResult
 from ..llm.llm_client import LLMClient
 from ..llm.prompt_templates import PromptTemplates
 

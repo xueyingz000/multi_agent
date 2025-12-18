@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web IFC Viewer - 交互版</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+
+        #three-canvas {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+        }
+
+        /* 左上角控制区 */
+        #controls-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.15);
+            z-index: 1;
+            width: 280px;
+        }
+
+        /* 右侧属性面板 (默认隐藏) */
+        #property-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            bottom: 20px;
+            width: 320px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            box-shadow: -2px 0 15px rgba(0, 0, 0, 0.1);
+            z-index: 1;
+            display: none;
+            /* 初始隐藏 */
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #property-header {
+            padding: 15px;
+            background: #0078d4;
+            color: white;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #property-content {
+            padding: 15px;
+            overflow-y: auto;
+            flex: 1;
+            font-size: 13px;
+        }
+
+        /* 属性表格样式 */
+        .prop-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+
+        .prop-table td {
+            padding: 6px;
+            border-bottom: 1px solid #eee;
+            word-break: break-word;
+        }
+
+        .prop-key {
+            font-weight: bold;
+            color: #555;
+            width: 40%;
+        }
+
+        .prop-val {
+            color: #333;
+        }
+
+        .group-title {
+            font-weight: bold;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            color: #0078d4;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 3px;
+        }
+
+        /* 其他 UI 元素 */
+        h1 {
+            margin: 0 0 15px 0;
+            font-size: 20px;
+            color: #333;
+        }
+
+        input[type="file"] {
+            display: block;
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+
+        .tips {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.6;
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        #loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            flex-direction: column;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0078d4;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        button.close-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+    </style>
+
+    <!-- Import Map -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.155.0/build/three.module.js",
+                "three/examples/jsm/": "https://unpkg.com/three@0.155.0/examples/jsm/",
+                "web-ifc-three": "https://unpkg.com/web-ifc-three@0.0.126/IFCLoader.js",
+                "web-ifc": "https://unpkg.com/web-ifc@0.0.44/web-ifc-api.js" 
+            }
+        }
+    </script>
+</head>
+
+<body>
+
+    <div id="controls-container">
+        <h1>🏗️ Web IFC 查看器</h1>
+        <input type="file" id="file-input" accept=".ifc">
+        <div class="tips">
+            <strong>操作指南:</strong><br>
+            🖱️ 左键拖拽: 旋转<br>
+            🖱️ 右键拖拽: 平移<br>
+            🖱️ 滚轮: 缩放<br>
+            👆 <strong>双击构件:</strong> 查看属性 & 高亮<br>
+            ⌨️ Escape: 取消选择
+        </div>
+    </div>
+
+    <div id="property-panel">
+        <div id="property-header">
+            <span>构件属性</span>
+            <button class="close-btn"
+                onclick="document.getElementById('property-panel').style.display='none'">✕</button>
+        </div>
+        <div id="property-content">点击构件查看详情...</div>
+    </div>
+
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <div>正在解析 IFC 模型...</div>
+    </div>
+
+    <canvas id="three-canvas"></canvas>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+        import { IFCLoader } from 'web-ifc-three';
+
+        // --- 1. 基础场景初始化 ---
+        const canvas = document.getElementById('three-canvas');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xe8e8e8);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(15, 15, 15);
+
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+
+        // 灯光
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+        scene.add(ambientLight);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+        dirLight.position.set(10, 20, 10);
+        scene.add(dirLight);
+        const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.4); // 补光
+        dirLight2.position.set(-10, -10, -5);
+        scene.add(dirLight2);
+
+        // 辅助网格
+        const gridHelper = new THREE.GridHelper(100, 100, 0x888888, 0xbbbbbb);
+        scene.add(gridHelper);
+        const axesHelper = new THREE.AxesHelper(5);
+        scene.add(axesHelper);
+
+        const controls = new OrbitControls(camera, canvas);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.screenSpacePanning = true;
+
+        // --- 2. IFC 加载器配置 ---
+        const ifcLoader = new IFCLoader();
+        // 必须指向正确的 wasm 路径
+        ifcLoader.ifcManager.setWasmPath('https://unpkg.com/web-ifc@0.0.44/');
+
+        // 配置高亮材质 (半透明黄色)
+        const highlightMaterial = new THREE.MeshLambertMaterial({
+            transparent: true,
+            opacity: 0.6,
+            color: 0xffcc00,
+            depthTest: false // 确保高亮始终显示在最前面
+        });
+
+        let ifcModel = null;
+
+        // --- 3. 交互核心逻辑 (Raycasting) ---
+        const raycaster = new THREE.Raycaster();
+        raycaster.firstHitOnly = true; // 性能优化：只检测第一个碰撞点
+        const mouse = new THREE.Vector2();
+
+        function cast(event) {
+            // 计算鼠标在屏幕上的归一化坐标 (-1 到 +1)
+            const bounds = canvas.getBoundingClientRect();
+            const x1 = event.clientX - bounds.left;
+            const y1 = event.clientY - bounds.top;
+            mouse.x = (x1 / bounds.width) * 2 - 1;
+            mouse.y = -(y1 / bounds.height) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+
+            // 检测射线与模型的碰撞
+            return raycaster.intersectObjects([ifcModel]);
+        }
+
+        // 双击事件处理
+        window.ondblclick = async (event) => {
+            if (!ifcModel) return;
+
+            const found = cast(event)[0];
+            if (found) {
+                // 1. 获取选中构件的 expressID (IFC 中的唯一 ID)
+                const index = found.faceIndex;
+                const geometry = found.object.geometry;
+                const id = ifcLoader.ifcManager.getExpressId(geometry, index);
+
+                // 2. 高亮构件
+                // createSubset 方法会创建一个包含指定 ID 的新 Mesh
+                // removePrevious: true 会自动清除上一次的高亮
+                ifcLoader.ifcManager.createSubset({
+                    modelID: ifcModel.modelID,
+                    ids: [id],
+                    material: highlightMaterial,
+                    scene: scene,
+                    removePrevious: true
+                });
+
+                // 3. 获取并显示属性
+                displayProperties(id);
+            } else {
+                // 点击空白处，清除高亮
+                ifcLoader.ifcManager.removeSubset(ifcModel.modelID, scene, highlightMaterial);
+                document.getElementById('property-panel').style.display = 'none';
+            }
+        };
+
+        // 按 ESC 清除选择
+        window.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && ifcModel) {
+                ifcLoader.ifcManager.removeSubset(ifcModel.modelID, scene, highlightMaterial);
+                document.getElementById('property-panel').style.display = 'none';
+            }
+        });
+
+        // --- 4. 属性解析逻辑 ---
+        async function displayProperties(id) {
+            const propPanel = document.getElementById('property-panel');
+            const propContent = document.getElementById('property-content');
+
+            propPanel.style.display = 'flex';
+            propContent.innerHTML = 'Loading properties...';
+
+            try {
+                const modelID = ifcModel.modelID;
+
+                // 获取基本属性 (Name, GlobalId, Tag 等)
+                const props = await ifcLoader.ifcManager.getItemProperties(modelID, id);
+
+                // 获取属性集 (Property Sets - Pset_WallCommon 等，包含尺寸信息)
+                const psets = await ifcLoader.ifcManager.getPropertySets(modelID, id);
+
+                let html = `<div class="group-title">基本信息 (Basic)</div>`;
+                html += `<table class="prop-table">`;
+                html += `<tr><td class="prop-key">Entity</td><td class="prop-val">${props.expressID}</td></tr>`;
+                html += `<tr><td class="prop-key">Name</td><td class="prop-val">${props.Name ? props.Name.value : '-'}</td></tr>`;
+                html += `<tr><td class="prop-key">Type</td><td class="prop-val">${formatIFCType(props.constructor.name)}</td></tr>`;
+                html += `<tr><td class="prop-key">GlobalId</td><td class="prop-val">${props.GlobalId ? props.GlobalId.value : '-'}</td></tr>`;
+                html += `</table>`;
+
+                // 遍历属性集 (Pset)
+                for (const pset of psets) {
+                    // 这里做一些简单的过滤，只显示属性集
+                    if (pset.HasProperties) {
+                        html += `<div class="group-title">${pset.Name ? pset.Name.value : 'PSet'}</div>`;
+                        html += `<table class="prop-table">`;
+
+                        for (const propRef of pset.HasProperties) {
+                            // 这里需要再次异步获取具体每条属性的值，因为 IFC 是引用的
+                            const prop = await ifcLoader.ifcManager.getItemProperties(modelID, propRef.value);
+                            const key = prop.Name ? prop.Name.value : 'Unknown';
+                            let val = '-';
+
+                            if (prop.NominalValue) {
+                                val = prop.NominalValue.value;
+                                // 简单的数值处理 (例如保留3位小数)
+                                if (typeof val === 'number') val = val.toFixed(3);
+                            }
+
+                            html += `<tr><td class="prop-key">${key}</td><td class="prop-val">${val}</td></tr>`;
+                        }
+                        html += `</table>`;
+                    }
+                }
+
+                propContent.innerHTML = html;
+
+            } catch (error) {
+                console.error(error);
+                propContent.innerHTML = "无法读取属性数据";
+            }
+        }
+
+        function formatIFCType(typeStr) {
+            // 简单美化 IFC 类型名称，例如 IfcWallStandardCase -> Wall Standard Case
+            return typeStr.replace('Ifc', '').replace(/([A-Z])/g, ' $1').trim();
+        }
+
+        // --- 5. 文件加载逻辑 ---
+        const input = document.getElementById('file-input');
+        const overlay = document.getElementById('loading-overlay');
+
+        input.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            overlay.style.display = 'flex';
+
+            // 清理旧模型
+            if (ifcModel) {
+                scene.remove(ifcModel);
+                ifcLoader.ifcManager.removeSubset(ifcModel.modelID, scene, highlightMaterial);
+                ifcModel = null;
+            }
+
+            const ifcURL = URL.createObjectURL(file);
+            ifcLoader.load(ifcURL, (model) => {
+                ifcModel = model;
+                scene.add(model);
+                overlay.style.display = 'none';
+
+                // 自动对焦
+                if (model.geometry.boundingBox) {
+                    const center = new THREE.Vector3();
+                    model.geometry.boundingBox.getCenter(center);
+                    controls.target.copy(center);
+                    camera.position.set(center.x + 10, center.y + 10, center.z + 10);
+                }
+            });
+        });
+
+        // 渲染循环
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // 窗口自适应
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
+    </script>
+</body>
+
+</html>

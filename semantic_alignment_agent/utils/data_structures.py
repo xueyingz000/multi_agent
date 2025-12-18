@@ -138,6 +138,9 @@ class IfcElementInfo:
     description: Optional[str] = None
     predefined_type: Optional[str] = None
     object_type: Optional[str] = None
+    # Optional geometry holders (used by analyzers)
+    bounding_box: Optional[BoundingBox] = None
+    geometry: Optional[Any] = None
     geometric_features: Optional[GeometricFeatures] = None
     functional_inference: Optional[FunctionalInference] = None
     properties: Dict[str, Any] = field(default_factory=dict)

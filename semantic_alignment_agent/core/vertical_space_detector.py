@@ -68,7 +68,7 @@ class VerticalSpaceDetector:
             ],
             VerticalSpaceType.SHAFT: ["shaft", "duct", "pipe", "竖井", "管井", "风井"],
             # 以下两类最终也并入functional shafts
-            VerticalSpaceType.STAIRWELL: [
+            VerticalSpaceType.STAIRCASE: [
                 "stair",
                 "staircase",
                 "stairwell",

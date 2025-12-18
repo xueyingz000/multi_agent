@@ -373,6 +373,12 @@ Provide detailed confidence assessment in JSON format:
         """Get formatted geometry analysis prompt."""
         return cls.format_prompt(cls.geometry_analyzer_prompt(), **context)
 
+    # Backward-compat alias to avoid breaking existing calls
+    @classmethod
+    def get_geometry_analyzer_prompt(cls, **context) -> str:
+        """Alias for get_geometry_analysis_prompt (compatibility)."""
+        return cls.get_geometry_analysis_prompt(**context)
+
     @classmethod
     def get_element_classification_prompt(cls, **context) -> str:
         """Get formatted element classification prompt."""
@@ -387,3 +393,64 @@ Provide detailed confidence assessment in JSON format:
     def get_confidence_assessment_prompt(cls, **context) -> str:
         """Get formatted confidence assessment prompt."""
         return cls.format_prompt(cls.confidence_assessment_prompt(), **context)
+
+    # =========================
+    # ReAct / CoT Agent Prompts
+    # =========================
+
+    @staticmethod
+    def react_plan_prompt() -> str:
+        """Prompt for planning next action in ReAct loop."""
+        return """
+You are a ReAct agent for IFC semantic alignment. Plan the next best action.
+
+Available tools (choose ONE per step):
+- GetGeometryFeatures(ifc_type, guid): analyze geometry for element
+- RuleAlignA(guid): rule-based functional alignment for A-type (IfcSlab/IfcSpace)
+- RuleAlignB(guid): rule-based geometric alignment for B-type (VerticalSpace)
+- LLMClassifyElement(guid): LLM-based element classification
+- ParseRegulations(region): parse regulation data and extract rules
+ - InferFunction(guid): rule-based function inference for element
+
+Current context:
+{context}
+
+Goal: Align IFC element to regulation category with high confidence.
+
+Think step by step and output STRICT JSON with fields:
+{{
+  "thought": "brief reasoning",
+  "action": {{"tool": "ToolName", "args": {{"key": "value"}}}},
+  "should_stop": false,
+  "stop_reason": null
+}}
+"""
+
+    @staticmethod
+    def react_reflect_prompt() -> str:
+        """Prompt for reflection and termination check in ReAct loop."""
+        return """
+You are reflecting on the last observation and deciding whether to stop.
+
+Context:
+{context}
+
+Observation:
+{observation}
+
+If alignment is sufficiently confident and clear, set should_stop=true.
+Output STRICT JSON:
+{{
+  "reflection": "what was learned",
+  "should_stop": false,
+  "stop_reason": null
+}}
+"""
+
+    @classmethod
+    def get_react_plan_prompt(cls, **context) -> str:
+        return cls.format_prompt(cls.react_plan_prompt(), **context)
+
+    @classmethod
+    def get_react_reflect_prompt(cls, **context) -> str:
+        return cls.format_prompt(cls.react_reflect_prompt(), **context)

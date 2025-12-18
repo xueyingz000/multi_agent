@@ -254,7 +254,7 @@
 <body>
 
     <div id="controls-container">
-        <h1>🏗️ Web IFC 查看器</h1>
+        <h1>🏗️ Web IFC 查看器 </h1>
 
         <label>1. 加载 IFC 模型:</label>
         <input type="file" id="file-input" accept=".ifc">
@@ -281,7 +281,6 @@
             <select id="category-select"></select>
 
             <div class="nav-buttons">
-                <!-- <button id="prev-btn">上一个</button> -->
                 <button id="next-btn" class="primary-btn">确认 & 下一个</button>
             </div>
 
@@ -309,14 +308,13 @@
         import * as THREE from 'three';
         import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
         import { IFCLoader } from 'web-ifc-three';
-        import { IFCPRODUCT } from 'web-ifc'; // 导入常量，用于查找构件
 
         // --- 变量定义 ---
         let ifcModel = null;
-        let reviewData = null; // 存储完整的 JSON 对象
-        let reviewQueue = [];  // 需要审核的 items 数组
+        let reviewData = null;
+        let reviewQueue = [];
         let currentIndex = -1;
-        let guidToExpressIdMap = new Map(); // GlobalId -> ExpressID 映射
+        let guidToExpressIdMap = new Map();
 
         const canvas = document.getElementById('three-canvas');
         const scene = new THREE.Scene();
@@ -351,25 +349,25 @@
 
         // --- 2. IFC Loader ---
         const ifcLoader = new IFCLoader();
+        // 这里的路径需要确保正确，通常指向 wasm 文件所在目录
         ifcLoader.ifcManager.setWasmPath('https://unpkg.com/web-ifc@0.0.44/');
 
         // 高亮材质
         const highlightMaterial = new THREE.MeshLambertMaterial({
             transparent: true,
             opacity: 0.8,
-            color: 0xff0000, // HITL 模式下使用红色高亮
+            color: 0xff0000, // HITL 模式红色
             depthTest: false
         });
 
-        // 普通选择高亮材质
         const selectMaterial = new THREE.MeshLambertMaterial({
             transparent: true,
             opacity: 0.6,
-            color: 0xffcc00,
+            color: 0xffcc00, // 普通选择黄色
             depthTest: false
         });
 
-        // --- 3. 核心功能: Raycasting (保留原有双击功能) ---
+        // --- 3. 核心功能: Raycasting ---
         const raycaster = new THREE.Raycaster();
         raycaster.firstHitOnly = true;
         const mouse = new THREE.Vector2();
@@ -389,7 +387,7 @@
                 const index = found.faceIndex;
                 const geometry = found.object.geometry;
                 const id = ifcLoader.ifcManager.getExpressId(geometry, index);
-                highlightItem(id, selectMaterial); // 使用普通黄色高亮
+                highlightItem(id, selectMaterial);
                 displayProperties(id);
             } else {
                 clearHighlight(selectMaterial);
@@ -398,8 +396,6 @@
         };
 
         // --- 4. HITL 逻辑 ---
-
-        // UI 元素引用
         const jsonInput = document.getElementById('json-input');
         const hitlPanel = document.getElementById('hitl-panel');
         const statusDiv = document.getElementById('review-status');
@@ -410,7 +406,6 @@
         const loadingOverlay = document.getElementById('loading-overlay');
         const loadingText = document.getElementById('loading-text');
 
-        // 加载 JSON
         jsonInput.addEventListener('change', async (event) => {
             const file = event.target.files[0];
             if (!file) return;
@@ -427,7 +422,6 @@
             reader.readAsText(file);
         });
 
-        // 初始化审核流程
         async function initReviewProcess() {
             if (!ifcModel) {
                 alert("请先加载 IFC 模型！");
@@ -435,30 +429,29 @@
             }
 
             loadingOverlay.style.display = 'flex';
-            loadingText.innerText = '正在建立 GUID 映射 (这可能需要几秒钟)...';
+            loadingText.innerText = '正在建立 GUID 映射 (遍历空间结构)...';
 
             // 1. 建立 GUID -> ExpressID 映射
-            // 为了性能，我们只在第一次加载 JSON 时做这个
             await buildGuidMap();
 
             loadingOverlay.style.display = 'none';
 
             // 2. 填充下拉框
             categorySelect.innerHTML = '';
-            reviewData.meta.all_categories.forEach(cat => {
-                const opt = document.createElement('option');
-                opt.value = cat;
-                opt.innerText = cat;
-                categorySelect.appendChild(opt);
-            });
-            // 增加一个 UNKNOWN 选项以防万一
-            const unknownOpt = document.createElement('option');
-            unknownOpt.value = "UNKNOWN";
-            unknownOpt.innerText = "UNKNOWN";
-            categorySelect.appendChild(unknownOpt);
+            if (reviewData.meta && reviewData.meta.all_categories) {
+                reviewData.meta.all_categories.forEach(cat => {
+                    const opt = document.createElement('option');
+                    opt.value = cat;
+                    opt.innerText = cat;
+                    categorySelect.appendChild(opt);
+                });
+                const unknownOpt = document.createElement('option');
+                unknownOpt.value = "UNKNOWN";
+                unknownOpt.innerText = "UNKNOWN";
+                categorySelect.appendChild(unknownOpt);
+            }
 
             // 3. 筛选需要审核的项
-            // 这里我们只关注 NEEDS_REVIEW，但你也可以让所有 items 都走一遍
             reviewQueue = reviewData.results.filter(item => item.status === "NEEDS_REVIEW");
 
             if (reviewQueue.length === 0) {
@@ -470,40 +463,68 @@
             // 4. 开始第一项
             hitlPanel.style.display = 'flex';
             currentIndex = 0;
+
+            // 关键：调用 loadReviewItem
             loadReviewItem(currentIndex);
         }
 
-        // 核心：建立 GUID 到 ExpressID 的映射
+        // --- 核心：通过遍历空间结构建立 GUID 映射 ---
         async function buildGuidMap() {
             guidToExpressIdMap.clear();
             const modelID = ifcModel.modelID;
 
-            // 获取所有 IfcProduct (即物理构件)
-            // IFCPRODUCT 是 web-ifc 的类型常量
-            const lines = await ifcLoader.ifcManager.getAllItemsOfType(modelID, IFCPRODUCT, false);
+            console.log("开始建立 GUID 映射...");
 
-            // 批量获取属性以提高速度（如果模型非常大，这里可能需要分批处理）
-            // 简单的做法是遍历 ID 并获取 GlobalId
-            for (let i = 0; i < lines.length; i++) {
-                const id = lines[i];
-                try {
-                    // 只获取 GlobalId 属性，减少开销
-                    const props = await ifcLoader.ifcManager.getItemProperties(modelID, id);
-                    if (props && props.GlobalId) {
-                        guidToExpressIdMap.set(props.GlobalId.value, id);
+            try {
+                // 获取空间结构树
+                const rootNode = await ifcLoader.ifcManager.getSpatialStructure(modelID);
+                const allIds = [];
+
+                // 递归收集所有 ID
+                function traverse(node) {
+                    if (node.expressID !== undefined) {
+                        allIds.push(node.expressID);
                     }
-                } catch (e) {
-                    // 忽略无属性项
+                    if (node.children && node.children.length > 0) {
+                        node.children.forEach(child => traverse(child));
+                    }
                 }
+
+                if (rootNode && rootNode.expressID) {
+                    traverse(rootNode);
+                }
+
+                console.log(`通过空间结构找到了 ${allIds.length} 个构件。开始读取属性...`);
+
+                let matchCount = 0;
+                for (let i = 0; i < allIds.length; i++) {
+                    const id = allIds[i];
+                    try {
+                        const props = await ifcLoader.ifcManager.getItemProperties(modelID, id);
+                        if (props && props.GlobalId) {
+                            let guidVal = props.GlobalId.value || props.GlobalId;
+                            guidToExpressIdMap.set(guidVal, id);
+                            matchCount++;
+                            // 调试日志
+                            if (matchCount <= 3) console.log(`[调试] 提取到模型内部 GUID: ${guidVal}`);
+                        }
+                    } catch (e) { }
+                }
+
+                console.log(`映射完成。共索引了 ${guidToExpressIdMap.size} 个构件的 GUID。`);
+
+            } catch (err) {
+                console.error("建立映射时出错:", err);
+                alert("建立模型索引失败，请检查控制台报错。");
             }
-            console.log(`Mapped ${guidToExpressIdMap.size} items.`);
         }
 
-        // 加载并显示当前审核项
+        // --- 核心：加载审核项 (此前丢失的函数) ---
         async function loadReviewItem(index) {
             if (index < 0 || index >= reviewQueue.length) {
-                detailsDiv.innerHTML = "审核完成！请点击导出。";
+                detailsDiv.innerHTML = "<strong>🎉 审核完成！请点击下方按钮导出。</strong>";
                 nextBtn.disabled = true;
+                categorySelect.disabled = true;
                 clearHighlight(highlightMaterial);
                 return;
             }
@@ -511,37 +532,34 @@
             const item = reviewQueue[index];
             statusDiv.innerText = `进度: ${index + 1} / ${reviewQueue.length}`;
 
-            // 显示详情
             detailsDiv.innerHTML = `
-                <strong>Name:</strong> ${item.name}<br>
-                <strong>Current Status:</strong> ${item.status}<br>
-                <strong>Reasoning:</strong> <span style="color:#666; font-style:italic;">${item.reasoning}</span>
+                <div style="margin-bottom:4px;"><strong>Name:</strong> ${item.name}</div>
+                <div style="margin-bottom:4px;"><strong>GUID:</strong> <span style="font-size:11px; color:#555;">${item.guid}</span></div>
+                <div style="margin-bottom:4px;"><strong>Category:</strong> ${item.category}</div>
+                <div style="margin-bottom:4px;"><strong>Confidence:</strong> ${item.confidence}</div>
+                <div style="margin-bottom:4px;"><strong>Current Status:</strong> ${item.status}</div>
+                <div><strong>Reasoning:</strong> <span style="color:#666; font-style:italic;">${item.reasoning}</span></div>
             `;
 
-            // 设置下拉框默认值 (使用建议的 category)
             categorySelect.value = item.category || "GENERIC_ELEMENT";
 
-            // 3D 高亮与定位
+            // 查找对应的 ExpressID
             const expressID = guidToExpressIdMap.get(item.guid);
 
             if (expressID) {
-                // 高亮
+                console.log(`Found item ${item.guid} -> ID: ${expressID}`);
                 highlightItem(expressID, highlightMaterial);
-
-                // 相机聚焦
                 focusCameraOnItem(expressID);
-
-                // 顺便在右侧面板显示详细属性
                 displayProperties(expressID);
             } else {
                 console.warn(`GUID ${item.guid} not found in model.`);
                 clearHighlight(highlightMaterial);
-                // 可能是 JSON 和 IFC 不匹配
-                alert(`警告: 无法在模型中找到 GUID: ${item.guid}`);
+                // 弹窗警告改为 Console 警告，避免打断操作
+                detailsDiv.innerHTML += `<br><strong style="color:red;">⚠️ 警告: 模型中未找到此 GUID，无法高亮。</strong>`;
             }
         }
 
-        // 下一步按钮逻辑
+        // 下一步按钮
         nextBtn.addEventListener('click', () => {
             if (currentIndex >= 0 && currentIndex < reviewQueue.length) {
                 const item = reviewQueue[currentIndex];
@@ -549,22 +567,21 @@
 
                 // 更新数据
                 item.category = selectedCategory;
-                item.status = "HUMAN_VERIFIED"; // 更新状态
+                item.status = "HUMAN_VERIFIED";
 
-                // 也更新原始 data 中的对应项 (reviewQueue 是引用，所以原始数据也会变，但为了保险)
+                // 更新原始数据
                 const originalItem = reviewData.results.find(r => r.guid === item.guid);
                 if (originalItem) {
                     originalItem.category = selectedCategory;
                     originalItem.status = "HUMAN_VERIFIED";
                 }
 
-                // 移动到下一个
                 currentIndex++;
                 loadReviewItem(currentIndex);
             }
         });
 
-        // 导出按钮逻辑
+        // 导出按钮
         exportBtn.addEventListener('click', () => {
             if (!reviewData) return;
             const str = JSON.stringify(reviewData, null, 2);
@@ -581,13 +598,17 @@
 
         function highlightItem(expressID, material) {
             if (!ifcModel) return;
-            ifcLoader.ifcManager.createSubset({
-                modelID: ifcModel.modelID,
-                ids: [expressID],
-                material: material,
-                scene: scene,
-                removePrevious: true
-            });
+            try {
+                ifcLoader.ifcManager.createSubset({
+                    modelID: ifcModel.modelID,
+                    ids: [expressID],
+                    material: material,
+                    scene: scene,
+                    removePrevious: true
+                });
+            } catch (e) {
+                console.error("高亮失败:", e);
+            }
         }
 
         function clearHighlight(material) {
@@ -596,38 +617,39 @@
         }
 
         async function focusCameraOnItem(expressID) {
-            // 创建一个临时的 subset 来获取包围盒，不加入场景
-            const subset = ifcLoader.ifcManager.createSubset({
-                modelID: ifcModel.modelID,
-                ids: [expressID],
-                scene: scene, // 必须加入场景才能计算 bounding box? web-ifc-three subset is a mesh
-                removePrevious: true,
-                material: highlightMaterial
-            });
+            try {
+                const subset = ifcLoader.ifcManager.createSubset({
+                    modelID: ifcModel.modelID,
+                    ids: [expressID],
+                    scene: scene,
+                    removePrevious: true,
+                    material: highlightMaterial
+                });
 
-            if (subset && subset.geometry) {
-                subset.geometry.computeBoundingBox();
-                const box = subset.geometry.boundingBox;
-                if (box) {
-                    const center = new THREE.Vector3();
-                    box.getCenter(center);
+                if (subset && subset.geometry) {
+                    subset.geometry.computeBoundingBox();
+                    const box = subset.geometry.boundingBox;
+                    if (box) {
+                        const center = new THREE.Vector3();
+                        box.getCenter(center);
 
-                    const size = new THREE.Vector3();
-                    box.getSize(size);
-                    const maxDim = Math.max(size.x, size.y, size.z);
-                    const fov = camera.fov * (Math.PI / 180);
-                    let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
-                    cameraZ *= 2.0; // Zoom out a bit
+                        const size = new THREE.Vector3();
+                        box.getSize(size);
+                        const maxDim = Math.max(size.x, size.y, size.z);
+                        // 避免 maxDim 为 0 (例如空几何体)
+                        const fov = camera.fov * (Math.PI / 180);
+                        let cameraZ = Math.abs((maxDim || 5) / 2 / Math.tan(fov / 2));
+                        cameraZ *= 2.5;
 
-                    // 简单动画移动相机
-                    const newPos = center.clone().add(new THREE.Vector3(cameraZ, cameraZ, cameraZ));
-
-                    // 使用 Tween 或简单的插值会更平滑，这里直接设置位置
-                    camera.position.copy(newPos);
-                    camera.lookAt(center);
-                    controls.target.copy(center);
-                    controls.update();
+                        const newPos = center.clone().add(new THREE.Vector3(cameraZ, cameraZ, cameraZ));
+                        camera.position.copy(newPos);
+                        camera.lookAt(center);
+                        controls.target.copy(center);
+                        controls.update();
+                    }
                 }
+            } catch (e) {
+                console.warn("无法聚焦:", e);
             }
         }
 
@@ -693,7 +715,6 @@
             loadingOverlay.style.display = 'flex';
             loadingText.innerText = '正在解析 IFC 模型...';
 
-            // 重置状态
             if (ifcModel) {
                 scene.remove(ifcModel);
                 ifcLoader.ifcManager.removeSubset(ifcModel.modelID, scene, highlightMaterial);
@@ -711,10 +732,8 @@
                 scene.add(model);
                 loadingOverlay.style.display = 'none';
 
-                // 启用 JSON 上传
                 document.getElementById('json-input').disabled = false;
 
-                // 自动对焦整个模型
                 if (model.geometry.boundingBox) {
                     const center = new THREE.Vector3();
                     model.geometry.boundingBox.getCenter(center);

@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BIM AI 协作平台 (VPN/稳定版)</title>
+    <style>
+        /* --- 基础样式 --- */
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #222;
+        }
+
+        #three-canvas {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+            outline: none;
+        }
+
+        /* 错误提示 */
+        #error-banner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: #d32f2f;
+            color: white;
+            padding: 12px;
+            text-align: center;
+            z-index: 100;
+            display: none;
+            font-weight: bold;
+            font-family: monospace;
+        }
+
+        /* 左侧控制区 */
+        #controls-container {
+            position: absolute;
+            top: 60px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            z-index: 2;
+            width: 300px;
+        }
+
+        /* 复核面板 */
+        #review-panel {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 360px;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            z-index: 2;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #444;
+        }
+
+        #review-header {
+            background: #0078d4;
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #review-body {
+            padding: 20px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        /* 组件样式 */
+        .progress-container {
+            height: 6px;
+            background: #444;
+            width: 100%;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: #00ff88;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .ai-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .conf-high {
+            background-color: #28a745;
+        }
+
+        .conf-low {
+            background-color: #dc3545;
+        }
+
+        .field-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+            display: block;
+        }
+
+        .field-value {
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 5px;
+            word-break: break-word;
+        }
+
+        .reasoning-box {
+            background: #f8f9fa;
+            border-left: 3px solid #0078d4;
+            padding: 10px;
+            font-size: 13px;
+            color: #555;
+            margin: 10px 0;
+            line-height: 1.4;
+            font-style: italic;
+        }
+
+        select.category-select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-confirm {
+            background: #0078d4;
+            color: white;
+        }
+
+        .btn-skip {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        /* Loading */
+        #loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            flex-direction: column;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0078d4;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .file-group {
+            margin-bottom: 15px;
+        }
+
+        .file-group label {
+            display: block;
+            font-size: 12px;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+    </style>
+
+    <!-- 1. 垫片：强制浏览器支持 Import Map -->
+    <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+
+    <!-- 2. 关键：使用一套完全兼容的旧版本 (Three r148 + WebIFC 0.124) -->
+    <!-- 既然你有 VPN，我们使用 unpkg，这是最标准的源 -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.148.0/build/three.module.js",
+                "three/examples/jsm/": "https://unpkg.com/three@0.148.0/examples/jsm/",
+                "web-ifc": "https://unpkg.com/web-ifc@0.0.44/web-ifc-api.js",
+                "web-ifc-three": "https://unpkg.com/web-ifc-three@0.0.124/IFCLoader.js"
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <div id="error-banner"></div>
+
+    <div id="controls-container">
+        <h2 style="margin-top:0">🏗️ BIM AI 协作平台</h2>
+        <div class="file-group">
+            <label>Step 1: 加载模型 (.ifc)</label>
+            <input type="file" id="file-input" accept=".ifc">
+        </div>
+        <div class="file-group">
+            <label>Step 2: 加载 AI 分析数据 (.json)</label>
+            <input type="file" id="json-input" accept=".json" disabled>
+        </div>
+        <div class="tips" style="font-size: 12px; color: #666; margin-top: 10px;">
+            版本: Three.js r148 (Stable)<br>
+            确保 VPN 已开启。
+        </div>
+    </div>
+
+    <div id="review-panel">
+        <div class="progress-container">
+            <div class="progress-bar" id="review-progress-bar"></div>
+        </div>
+        <div id="review-header">
+            <span id="review-counter">复核进度: 0 / 0</span>
+            <button onclick="exportResults()"
+                style="background:none; border:1px solid #fff; color:fff; border-radius:4px; cursor:pointer; color: white;">导出
+                JSON</button>
+        </div>
+        <div id="review-body">
+            <div id="review-content">
+                <div style="text-align:center; color:#999; padding:20px;">暂无待复核数据</div>
+            </div>
+            <div id="review-actions" style="display:none;">
+                <label class="field-label">人工确认分类:</label>
+                <select id="category-select" class="category-select"></select>
+                <div class="action-buttons">
+                    <button class="btn btn-skip" onclick="prevItem()">上一个</button>
+                    <button class="btn btn-confirm" onclick="confirmAndNext()">确认并下一个</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <div id="loading-text">处理中...</div>
+    </div>
+
+    <canvas id="three-canvas"></canvas>
+
+    <script type="module">
+
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+        import { IFCLoader } from 'web-ifc-three';
+        import { IFCPRODUCT } from 'web-ifc';  // <--- 新增这一行
+
+        // 错误捕获
+        window.onerror = function (msg) {
+            console.error(msg);
+            const banner = document.getElementById('error-banner');
+            banner.style.display = 'block';
+            banner.innerText = "❌ 运行错误: " + msg + " (请按F12查看Console)";
+            hideLoading();
+        };
+
+        let scene, camera, renderer, controls, ifcLoader;
+        let ifcModel = null;
+        let guidMap = new Map();
+        let hitlData = null;
+        let reviewQueue = [];
+        let currentReviewIdx = -1;
+
+        // 高亮材质
+        const highlightMaterial = new THREE.MeshLambertMaterial({
+            transparent: true, opacity: 0.8, color: 0xff0055, depthTest: false
+        });
+
+        // --- 1. 初始化场景 ---
+        function initScene() {
+            try {
+                const canvas = document.getElementById('three-canvas');
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0xe0e4e8);
+
+                camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 500);
+                camera.position.set(20, 20, 20);
+
+                renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                scene.add(ambientLight);
+                const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+                dirLight.position.set(10, 20, 10);
+                scene.add(dirLight);
+
+                const grid = new THREE.GridHelper(100, 100, 0x999999, 0xcccccc);
+                scene.add(grid);
+                const axes = new THREE.AxesHelper(5);
+                scene.add(axes);
+
+                controls = new OrbitControls(camera, canvas);
+                controls.enableDamping = true;
+
+                console.log("✅ 3D 引擎初始化成功");
+            } catch (e) {
+                alert("Three.js 初始化失败: " + e.message);
+            }
+        }
+
+        initScene();
+        animate();
+
+        // --- 2. 配置 IFC Loader ---
+        ifcLoader = new IFCLoader();
+
+        // ★★★ 核心修复：WASM 路径 ★★★
+        // 这里的路径必须以 '/' 结尾，且该路径下必须能访问到 web-ifc.wasm
+        // 版本 0.0.44 的 wasm 文件在 unpkg 的根目录下
+        ifcLoader.ifcManager.setWasmPath('https://unpkg.com/web-ifc@0.0.44/');
+
+        const fileInput = document.getElementById('file-input');
+        const jsonInput = document.getElementById('json-input');
+
+        fileInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            showLoading("正在下载 WASM 引擎并解析 (请稍候)...");
+
+            const url = URL.createObjectURL(file);
+
+            ifcLoader.load(url,
+                (model) => {
+                    ifcModel = model;
+                    scene.add(model);
+
+                    if (model.geometry.boundingBox) {
+                        const center = model.geometry.boundingBox.getCenter(new THREE.Vector3());
+                        controls.target.copy(center);
+                        camera.position.set(center.x + 30, center.y + 30, center.z + 30);
+                    }
+
+                    showLoading("正在建立 GUID 索引...");
+                    setTimeout(async () => {
+                        await buildGuidMap(model.modelID);
+                        hideLoading();
+                        jsonInput.disabled = false;
+                        alert("✅ 模型加载成功！\n请继续选择 .json 文件。");
+                    }, 100);
+                },
+                (progress) => {
+                    // console.log(progress);
+                },
+                (error) => {
+                    console.error(error);
+                    hideLoading();
+                    const banner = document.getElementById('error-banner');
+                    banner.style.display = 'block';
+                    banner.innerText = "❌ 解析失败！可能是 WASM 文件加载超时 (404/Timeout)。请检查 VPN。";
+                }
+            );
+        });
+
+        // // --- 3. 建立索引 (针对 Python GUID) ---
+        // async function buildGuidMap(modelID) {
+        //     guidMap.clear();
+        //     try {
+        //         // 如果模型很大，getAllItems 可能会慢
+        //         const lines = await ifcLoader.ifcManager.getAllItems(modelID, 0, true);
+        //         for (const line of lines) {
+        //             if (line.GlobalId && line.GlobalId.value) {
+        //                 guidMap.set(line.GlobalId.value, line.expressID);
+        //             }
+        //         }
+        //         console.log(`索引建立完成: ${guidMap.size} 个构件`);
+        //     } catch (e) {
+        //         console.error("索引失败", e);
+        //     }
+        // }
+        // // --- 3. 建立索引 (针对 Python GUID) ---
+        // async function buildGuidMap(modelID) {
+        //     guidMap.clear();
+        //     console.log("开始建立 GUID 索引...");
+
+        //     try {
+        //         // 获取所有 IFC 构件行
+        //         // 注意：如果你只想索引有几何体的构件，效率更高的方法是只获取 IFCPRODUCT 类型
+        //         // 但为了保险起见，我们先保持获取所有项目，并在循环中筛选
+        //         const lines = await ifcLoader.ifcManager.getAllItems(modelID, 0, true);
+
+        //         let validCount = 0;
+        //         let debugLogged = false;
+
+        //         for (const line of lines) {
+        //             // 1. 获取 GlobalId，兼容对象写法和字符串直接写法
+        //             let rawGuid = null;
+
+        //             if (line.GlobalId) {
+        //                 if (typeof line.GlobalId === 'string') {
+        //                     rawGuid = line.GlobalId;
+        //                 } else if (line.GlobalId.value) {
+        //                     rawGuid = line.GlobalId.value;
+        //                 }
+        //             }
+
+        //             // 2. 如果存在 GUID，则存入 Map
+        //             if (rawGuid) {
+        //                 // Python 生成的 JSON 里的 GUID 也是 22 位压缩格式，直接匹配即可
+        //                 guidMap.set(rawGuid, line.expressID);
+        //                 validCount++;
+
+        //                 // 打印前几个 GUID 用于调试，确保格式看起来和 JSON 一样
+        //                 if (!debugLogged) {
+        //                     console.log("🔍 [调试] 模型中读取到的第一个 GUID:", rawGuid);
+        //                     console.log("🔍 [调试] 对应的 ExpressID:", line.expressID);
+        //                     debugLogged = true;
+        //                 }
+        //             }
+        //         }
+
+        //         console.log(`✅ 索引建立完成: 成功索引 ${guidMap.size} / ${lines.length} 个构件`);
+
+        //         if (guidMap.size === 0) {
+        //             console.error("❌ 警告: GUID Map 为空！请检查 Console 中 line 对象的结构。");
+        //             // 打印一行原始数据看看结构
+        //             if (lines.length > 0) console.log("🔍 第一行原始数据:", lines[0]);
+        //         }
+
+        //     } catch (e) {
+        //         console.error("❌ 索引建立失败", e);
+        //         alert("索引建立失败，请查看控制台详细错误。");
+        //     }
+        // }
+        // --- 3. 建立索引 (修复版：使用 getAllItemsOfType) ---
+        async function buildGuidMap(modelID) {
+            guidMap.clear();
+            console.log(`🚀 开始建立索引 (Model ID: ${modelID})...`);
+
+            try {
+                // 使用 getAllItemsOfType 获取所有 "产品级" 构件 (墙、梁、板等)
+                // 第三个参数 true 表示直接返回属性数据，而不仅仅是 ID
+                const lines = await ifcLoader.ifcManager.getAllItemsOfType(modelID, IFCPRODUCT, true);
+
+                console.log(`📊 找到 ${lines.length} 个构件，正在解析 GUID...`);
+
+                let successCount = 0;
+
+                for (const line of lines) {
+                    // 安全提取 GUID
+                    let rawGuid = null;
+                    if (line.GlobalId) {
+                        if (line.GlobalId.value) {
+                            rawGuid = line.GlobalId.value;
+                        } else if (typeof line.GlobalId === 'string') {
+                            rawGuid = line.GlobalId;
+                        }
+                    }
+
+                    if (rawGuid) {
+                        guidMap.set(rawGuid, line.expressID);
+                        successCount++;
+                    }
+                }
+
+                console.log(`✅ 索引建立完成！有效构件数: ${successCount}`);
+
+                if (successCount === 0) {
+                    console.warn("⚠️ 警告: 未找到任何带有 GUID 的构件。");
+                }
+
+            } catch (e) {
+                console.error("❌ 索引建立失败", e);
+                const banner = document.getElementById('error-banner');
+                banner.style.display = 'block';
+                banner.innerText = "❌ 索引错误: " + e.message;
+            }
+        }
+        // // --- 3. 建立索引 (强壮版) ---
+        // async function buildGuidMap(modelID) {
+        //     guidMap.clear();
+        //     console.log(`🚀 开始建立索引 (Model ID: ${modelID})...`);
+
+        //     try {
+        //         // 1. 获取所有数据行
+        //         // 注意：getAllItems 会返回模型里的一切，包括点、线、颜色等
+        //         const lines = await ifcLoader.ifcManager.getAllItems(modelID);
+
+        //         if (!lines || lines.length === 0) {
+        //             throw new Error("模型数据为空，无法建立索引");
+        //         }
+
+        //         console.log(`📊 模型包含 ${lines.length} 条数据，正在筛选构件...`);
+
+        //         let successCount = 0;
+
+        //         for (const line of lines) {
+        //             // --- 安全检查开始 ---
+
+        //             // 1. 如果这行数据是空的，跳过
+        //             if (!line) continue;
+
+        //             // 2. 尝试提取 GlobalId
+        //             let rawGuid = null;
+
+        //             try {
+        //                 // 情况 A: GlobalId 是对象 { type: 251, value: "..." }
+        //                 if (line.GlobalId && line.GlobalId.value) {
+        //                     rawGuid = line.GlobalId.value;
+        //                 }
+        //                 // 情况 B: GlobalId 直接是字符串 "..."
+        //                 else if (typeof line.GlobalId === 'string') {
+        //                     rawGuid = line.GlobalId;
+        //                 }
+        //                 // 情况 C: 有些数据可能根本没有 GlobalId (比如 IfcCartesianPoint)，这是正常的，直接忽略
+        //             } catch (err) {
+        //                 // 如果提取过程出错，不中断循环，仅跳过此条
+        //                 continue;
+        //             }
+
+        //             // --- 安全检查结束 ---
+
+        //             // 3. 如果成功提取到了 GUID，存入 Map
+        //             if (rawGuid) {
+        //                 guidMap.set(rawGuid, line.expressID);
+        //                 successCount++;
+        //             }
+        //         }
+
+        //         console.log(`✅ 索引建立完成！有效构件数: ${successCount}`);
+
+        //         // 只有当有效构件为0时才报错
+        //         if (successCount === 0) {
+        //             console.warn("⚠️ 警告: 即使建立了索引，但数量为 0。请检查控制台里打印的第一条 line 数据结构。");
+        //             if (lines.length > 0) console.log("🔍 调试 - 第一条数据:", lines[0]);
+        //         }
+
+        //     } catch (e) {
+        //         console.error("❌ 严重错误: 索引过程崩溃", e);
+        //         const banner = document.getElementById('error-banner');
+        //         banner.style.display = 'block';
+        //         banner.innerText = "❌ 索引失败: " + e.message;
+        //     }
+        // }
+
+        // --- 4. 交互逻辑 ---
+        jsonInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    hitlData = JSON.parse(e.target.result);
+                    initReviewProcess();
+                } catch (err) { alert("JSON 格式错误: " + err); }
+            };
+            reader.readAsText(file);
+        });
+
+        function initReviewProcess() {
+            const categories = hitlData.meta.all_categories || [];
+            const select = document.getElementById('category-select');
+            select.innerHTML = "";
+            categories.sort().forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat; opt.text = cat;
+                select.appendChild(opt);
+            });
+
+            reviewQueue = [];
+            const results = hitlData.results || [];
+            results.forEach(item => {
+                if (item.status === "NEEDS_REVIEW") {
+                    const eid = guidMap.get(item.guid);
+                    if (eid) {
+                        item.expressID = eid;
+                        reviewQueue.push(item);
+                    }
+                }
+            });
+
+            if (reviewQueue.length === 0) {
+                alert("没有检测到需要复核的构件！");
+            } else {
+                document.getElementById('review-panel').style.display = 'flex';
+                currentReviewIdx = 0;
+                loadReviewItem(0);
+            }
+        }
+
+        window.loadReviewItem = function (index) {
+            if (index < 0 || index >= reviewQueue.length) return;
+            const item = reviewQueue[index];
+
+            const progress = ((index + 1) / reviewQueue.length) * 100;
+            document.getElementById('review-progress-bar').style.width = `${progress}%`;
+            document.getElementById('review-counter').innerText = `${index + 1} / ${reviewQueue.length}`;
+
+            const confClass = item.confidence > 0.5 ? 'conf-high' : 'conf-low';
+            document.getElementById('review-content').innerHTML = `
+                <div class="field-label">构件名称</div><div class="field-value">${item.name || 'Unnamed'}</div>
+                <div class="field-label">AI 建议</div>
+                <div class="field-value"><span class="ai-badge ${confClass}">${(item.confidence * 100).toFixed(0)}%</span> ${item.category}</div>
+                <div class="field-label">推理依据</div><div class="reasoning-box">${item.reasoning}</div>
+            `;
+            document.getElementById('category-select').value = item.category;
+            document.getElementById('review-actions').style.display = 'block';
+
+            highlightItem(item.expressID);
+        };
+
+        function highlightItem(id) {
+            ifcLoader.ifcManager.removeSubset(ifcModel.modelID, scene, highlightMaterial);
+            const subset = ifcLoader.ifcManager.createSubset({
+                modelID: ifcModel.modelID, ids: [id], material: highlightMaterial, scene: scene, removePrevious: true
+            });
+            if (subset.geometry) {
+                subset.geometry.computeBoundingBox();
+                const center = new THREE.Vector3();
+                subset.geometry.boundingBox.getCenter(center);
+                controls.target.copy(center);
+                const offset = new THREE.Vector3().subVectors(camera.position, controls.target).normalize().multiplyScalar(10);
+                camera.position.copy(center).add(offset);
+            }
+        }
+
+        window.confirmAndNext = function () {
+            const item = reviewQueue[currentReviewIdx];
+            item.category = document.getElementById('category-select').value;
+            item.status = "MANUAL_FIXED";
+            item.confidence = 1.0;
+
+            const original = hitlData.results.find(r => r.guid === item.guid);
+            if (original) { original.category = item.category; original.status = "MANUAL_FIXED"; }
+
+            if (currentReviewIdx < reviewQueue.length - 1) {
+                currentReviewIdx++;
+                loadReviewItem(currentReviewIdx);
+            } else {
+                alert("复核完成，请导出。");
+            }
+        };
+
+        window.prevItem = function () {
+            if (currentReviewIdx > 0) { currentReviewIdx--; loadReviewItem(currentReviewIdx); }
+        };
+
+        window.exportResults = function () {
+            const str = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(hitlData, null, 2));
+            const node = document.createElement('a');
+            node.setAttribute("href", str);
+            node.setAttribute("download", "reviewed_results.json");
+            document.body.appendChild(node);
+            node.click();
+            node.remove();
+        };
+
+        function showLoading(text) { document.getElementById('loading-text').innerText = text; document.getElementById('loading-overlay').style.display = 'flex'; }
+        function hideLoading() { document.getElementById('loading-overlay').style.display = 'none'; }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (controls) controls.update();
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+
+</html>
