@@ -184,6 +184,16 @@ class CalculationRequest(BaseModel):
     element_guid: str
 
 
+class ApproveRequest(BaseModel):
+    element_guid: str
+
+
+class UpdateRequest(BaseModel):
+    element_guid: str
+    new_type: str
+    reason: Optional[str] = None
+
+
 # ============================================================
 # 3. Process & Review: 触发 Agent 3 (语义对齐与计算)
 # ============================================================
@@ -238,6 +248,71 @@ async def analyze_element_logic(req: CalculationRequest):
             "reason": "Analysis not run yet. Please click 'Run Analysis' first.",
             "calc_factor": 0.0,
         }
+
+
+@app.post("/analyze/approve")
+async def approve_element(req: ApproveRequest):
+    """
+    Approve the Agent 2 analysis for a specific element.
+    """
+    guid = req.element_guid
+    semantic_data = session_state.get("semantic_results")
+
+    if not semantic_data or guid not in semantic_data.get("alignment_results", {}):
+        raise HTTPException(status_code=404, detail="Element analysis not found")
+
+    # 1. Update status in alignment_results
+    semantic_data["alignment_results"][guid]["status"] = "VERIFIED"
+
+    # 2. Remove from hitl_queue
+    if "hitl_queue" in semantic_data:
+        semantic_data["hitl_queue"] = [
+            item for item in semantic_data["hitl_queue"] if item["guid"] != guid
+        ]
+
+    # Update session state
+    session_state["semantic_results"] = semantic_data
+
+    return {"status": "success", "message": "Element approved", "element_id": guid}
+
+
+@app.post("/analyze/update")
+async def update_element(req: UpdateRequest):
+    """
+    Manually update the semantic type for an element.
+    """
+    guid = req.element_guid
+    new_type = req.new_type
+    semantic_data = session_state.get("semantic_results")
+
+    if not semantic_data or guid not in semantic_data.get("alignment_results", {}):
+        raise HTTPException(status_code=404, detail="Element analysis not found")
+
+    # 1. Update type and status
+    semantic_data["alignment_results"][guid]["semantic_category"] = new_type
+    semantic_data["alignment_results"][guid][
+        "status"
+    ] = "VERIFIED"  # Manual edit implies verification
+    if req.reason:
+        semantic_data["alignment_results"][guid][
+            "reasoning"
+        ] += f" [Manual Edit: {req.reason}]"
+
+    # 2. Remove from hitl_queue
+    if "hitl_queue" in semantic_data:
+        semantic_data["hitl_queue"] = [
+            item for item in semantic_data["hitl_queue"] if item["guid"] != guid
+        ]
+
+    # Update session state
+    session_state["semantic_results"] = semantic_data
+
+    return {
+        "status": "success",
+        "message": "Element updated",
+        "element_id": guid,
+        "new_type": new_type,
+    }
 
 
 # ============================================================

@@ -329,6 +329,83 @@ const BIMInterface = () => {
         }
     };
 
+    // --- 新增：处理 Approve ---
+    const handleApprove = async () => {
+        if (!agent2Data || !agent2Data.element_id) return;
+        try {
+            console.log("✅ Approving element:", agent2Data.element_id);
+            const res = await fetch("http://localhost:8000/analyze/approve", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ element_guid: agent2Data.element_id })
+            });
+            if (res.ok) {
+                const json = await res.json();
+                console.log("Approved:", json);
+                // Update local state
+                setAgent2Data(prev => ({ ...prev, is_dirty: false }));
+                // Update review queue
+                setReviewQueue(prev => prev.filter(item => item.guid !== agent2Data.element_id));
+
+                // Update semanticResults summary count
+                if (semanticResults) {
+                    setSemanticResults(prev => ({
+                        ...prev,
+                        needs_review: Math.max(0, prev.needs_review - 1)
+                    }));
+                }
+            } else {
+                alert("Approve failed");
+            }
+        } catch (err) {
+            console.error("Approve failed:", err);
+        }
+    };
+
+    // --- 新增：处理 Edit ---
+    const handleEdit = async () => {
+        if (!agent2Data || !agent2Data.element_id) return;
+
+        // Simple prompt for now
+        const newType = prompt("Enter new semantic type (e.g., EXTERIOR_WALL, BALCONY):", agent2Data.type);
+        if (newType && newType !== agent2Data.type) {
+            try {
+                console.log("✏️ Editing element:", agent2Data.element_id, "to", newType);
+                const res = await fetch("http://localhost:8000/analyze/update", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        element_guid: agent2Data.element_id,
+                        new_type: newType,
+                        reason: "User manual edit"
+                    })
+                });
+                if (res.ok) {
+                    const json = await res.json();
+                    console.log("Updated:", json);
+
+                    // Update local state
+                    setAgent2Data(prev => ({ ...prev, type: newType, is_dirty: false }));
+
+                    // Update review queue
+                    setReviewQueue(prev => prev.filter(item => item.guid !== agent2Data.element_id));
+
+                    // Update semanticResults summary count
+                    if (semanticResults) {
+                        setSemanticResults(prev => ({
+                            ...prev,
+                            needs_review: Math.max(0, prev.needs_review - 1)
+                        }));
+                    }
+                } else {
+                    alert("Update failed");
+                }
+            } catch (err) {
+                console.error("Update failed:", err);
+            }
+        }
+    };
+
     return (
         <div className="flex flex-col h-screen bg-[#0b0c0e] text-gray-300 font-sans text-sm overflow-hidden">
 
@@ -721,10 +798,16 @@ const BIMInterface = () => {
 
                                         {agent2Data.is_dirty && (
                                             <div className="flex space-x-2 pt-2">
-                                                <button className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs py-1.5 rounded transition-colors">
+                                                <button
+                                                    onClick={handleApprove}
+                                                    className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs py-1.5 rounded transition-colors"
+                                                >
                                                     Approve
                                                 </button>
-                                                <button className="flex-1 bg-[#2d333b] hover:bg-[#363c45] text-gray-300 text-xs py-1.5 rounded border border-gray-600 transition-colors">
+                                                <button
+                                                    onClick={handleEdit}
+                                                    className="flex-1 bg-[#2d333b] hover:bg-[#363c45] text-gray-300 text-xs py-1.5 rounded border border-gray-600 transition-colors"
+                                                >
                                                     Edit
                                                 </button>
                                             </div>
