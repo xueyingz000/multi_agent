@@ -2,6 +2,7 @@ import os
 import shutil
 import ifcopenshell
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, Dict
@@ -9,6 +10,7 @@ from typing import Optional, Dict
 # --- 导入 Agent ---
 from agents.regulation_agent import RegulationAnalysisAgent
 from agents.semantic_agent import IfcSemanticAlignmentAgent
+from agents.area_calculation_agent import AreaCalculationAgent
 
 app = FastAPI()
 
@@ -35,6 +37,7 @@ session_state = {
 # 注意：确保环境变量中有 OPENAI_API_KEY
 reg_agent = RegulationAnalysisAgent()
 semantic_agent = IfcSemanticAlignmentAgent()
+calc_agent = AreaCalculationAgent()
 
 
 # ============================================================
@@ -135,6 +138,11 @@ def run_semantic_alignment():
         )
         session_state["semantic_results"] = results
 
+        # Enrich queue with Express IDs for frontend highlighting
+        if "hitl_queue" in results:
+            for item in results["hitl_queue"]:
+                item["express_id"] = get_express_id(item["guid"])
+
         return {
             "status": "success",
             "message": (
@@ -158,6 +166,18 @@ async def stop_semantic_alignment():
     print("🛑 Received stop signal")
     session_state["stop_analysis"] = True
     return {"status": "success", "message": "Stop signal sent"}
+
+
+def get_express_id(guid):
+    """Helper to get Express ID from GUID using the loaded model."""
+    model = session_state.get("current_model")
+    if not model:
+        return None
+    try:
+        entity = model.by_guid(guid)
+        return entity.id()
+    except:
+        return None
 
 
 class CalculationRequest(BaseModel):
@@ -203,6 +223,7 @@ async def analyze_element_logic(req: CalculationRequest):
 
         return {
             "element_id": guid,
+            "express_id": get_express_id(guid),
             "type": agent2_res["ifc_type"],
             "calc_factor": factor,
             "reason": f"Agent 2 Identified as {agent2_res['semantic_category']} ({agent2_res['confidence']}).\nReasoning: {agent2_res['reasoning']}",
@@ -213,40 +234,72 @@ async def analyze_element_logic(req: CalculationRequest):
         # 如果 Agent 2 还没跑，或者没找到该构件
         return {
             "element_id": guid,
+            "express_id": get_express_id(guid),
             "reason": "Analysis not run yet. Please click 'Run Analysis' first.",
             "calc_factor": 0.0,
         }
 
-    # print(f"🚀 Triggering Agent 2 & 3 for element: {guid}")
 
-    # # --- 这里将是 Agent 2 和 Agent 3 的逻辑 ---
-    # # 目前我们先写一个 Mock (占位符)，等你写完 Agent 2 代码后替换这里
+# ============================================================
+# 4. Calculate: 触发 Agent 3 (面积计算)
+# ============================================================
+@app.post("/calculate/area")
+def calculate_area():
+    """
+    Trigger Agent 3: Calculate area based on semantic alignment and rules.
+    """
+    if not session_state["current_model"]:
+        raise HTTPException(status_code=400, detail="No IFC model loaded")
 
-    # # [Future Agent 2]: Semantic Alignment
-    # # semantic_info = semantic_agent.align(ifc_path, guid, rules)
+    rules = session_state.get("current_rules", {})
 
-    # # [Future Agent 3]: Calculation
-    # # result = calc_agent.calculate(semantic_info)
+    # 准备 Agent 2 的对齐数据
+    alignment_list = []
+    agent2_res = session_state.get("semantic_results", {})
+    if agent2_res and "alignment_results" in agent2_res:
+        for guid, info in agent2_res["alignment_results"].items():
+            alignment_list.append(
+                {
+                    "guid": guid,
+                    "category": info.get("semantic_category"),
+                    "dimensions": info.get("dimensions", {}),
+                }
+            )
 
-    # # --- 临时 Mock 返回 (为了让前端不报错) ---
-    # import random
+    try:
+        print("🚀 Triggering Agent 3 (Area Calculation)...")
+        results = calc_agent.calculate(
+            session_state["current_model"], rules, alignment_list
+        )
+        session_state["calculation_results"] = results
 
-    # mock_factor = 0.5 if random.random() > 0.5 else 1.0
-    # mock_reason = (
-    #     "Matched Rule 3.0.2: Height < 2.2m" if mock_factor == 0.5 else "Standard Area"
-    # )
+        return {
+            "status": "success",
+            "message": "Area calculation complete",
+            "data": results,
+        }
+    except Exception as e:
+        print(f"Agent 3 Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-    # return {
-    #     "element_id": guid,
-    #     "type": "IfcSlab",
-    #     "calc_factor": mock_factor,
-    #     "reason": f"[Agent 2&3 Pending] Based on {session_state['current_rule_name']}: {mock_reason}",
-    #     "matched_rule": (
-    #         rules["height_requirements"][0]
-    #         if rules.get("height_requirements")
-    #         else None
-    #     ),
-    # }
+
+@app.get("/export/report")
+def export_report():
+    """
+    Export calculation report to Excel.
+    """
+    if not session_state.get("calculation_results"):
+        raise HTTPException(status_code=400, detail="No calculation results available")
+
+    try:
+        report_path = calc_agent.export_to_excel(session_state["calculation_results"])
+        return FileResponse(
+            path=report_path,
+            filename="Area_Calculation_Report.xlsx",
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":

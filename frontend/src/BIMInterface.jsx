@@ -5,7 +5,7 @@ import {
     Edit3, Scissors, RotateCcw, FileText, Info, CheckSquare, Square,
     BookOpen, X, Loader2,
     // --- 新增图标 ---
-    AlertTriangle, ListChecks, CheckCircle, BrainCircuit, Activity
+    AlertTriangle, ListChecks, CheckCircle, BrainCircuit, Activity, Calculator, FileSpreadsheet
 } from 'lucide-react';
 import IfcViewer from './IfcViewer';
 
@@ -65,6 +65,11 @@ const BIMInterface = () => {
     const [activeTab, setActiveTab] = useState('structure'); // 'structure' | 'review'
     const [agent2Data, setAgent2Data] = useState(null); // 当前选中构件的 Agent 2 分析数据
     const abortControllerRef = useRef(null); // 用于取消请求
+
+    // --- 新增：Agent 3 (面积计算) 相关状态 ---
+    const [isCalculating, setIsCalculating] = useState(false);
+    const [calculationResults, setCalculationResults] = useState(null);
+    const [selectedId, setSelectedId] = useState(null); // Highlighting ID for IfcViewer
 
     // 视口尺寸
     const viewportRef = useRef(null);
@@ -206,8 +211,9 @@ const BIMInterface = () => {
         }
     };
 
-    const handleSelection = async (_, props) => {
-        console.log("🖱️ 3D Selection:", props);
+    const handleSelection = async (id, props) => {
+        console.log("🖱️ 3D Selection:", id, props);
+        setSelectedId(id); // Sync state
         setSelectedProps(props || null);
         setAgent2Data(null); // 重置之前的分析数据
 
@@ -237,6 +243,12 @@ const BIMInterface = () => {
     // 新增：处理复核队列点击
     const handleReviewItemClick = async (item) => {
         console.log("📋 Review Item Clicked:", item);
+
+        // Highlight in 3D Viewer
+        if (item.express_id) {
+            setSelectedId(item.express_id);
+        }
+
         // 模拟选中属性（为了右侧面板能显示）
         const mockProps = {
             GlobalId: { value: item.guid },
@@ -257,9 +269,63 @@ const BIMInterface = () => {
                 const data = await res.json();
                 console.log("✅ Analysis data received (from list):", data);
                 setAgent2Data(data);
+                // Also update express_id if backend returned it (just in case item didn't have it)
+                if (data.express_id) setSelectedId(data.express_id);
             }
         } catch (err) {
             console.error("Failed to fetch element analysis:", err);
+        }
+    };
+
+    // --- 新增：触发 Agent 3 (面积计算) ---
+    const handleCalculateArea = async () => {
+        if (!semanticResults) {
+            alert("Please run Semantic Analysis first.");
+            return;
+        }
+
+        setIsCalculating(true);
+        try {
+            console.log("🚀 Starting Area Calculation...");
+            const res = await fetch("http://localhost:8000/calculate/area", { method: "POST" });
+            const json = await res.json();
+
+            if (json.status === "success") {
+                console.log("✅ Calculation Complete:", json.data);
+                setCalculationResults(json.data);
+                setActiveTab('calculation'); // 自动切换到计算结果 Tab
+            } else {
+                alert("Calculation failed: " + json.message);
+            }
+        } catch (err) {
+            console.error("Calculation error:", err);
+            alert("Calculation error. Check console.");
+        } finally {
+            setIsCalculating(false);
+        }
+    };
+
+    // --- 新增：导出 Excel ---
+    const handleExportReport = async () => {
+        if (!calculationResults) return;
+
+        try {
+            console.log("📥 Exporting Report...");
+            const res = await fetch("http://localhost:8000/export/report");
+            if (res.ok) {
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = "Area_Calculation_Report.xlsx";
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            } else {
+                alert("Export failed");
+            }
+        } catch (err) {
+            console.error("Export error:", err);
         }
     };
 
@@ -317,6 +383,22 @@ const BIMInterface = () => {
                         )}
                         {isAnalyzingSemantic ? "STOP ANALYSIS" : "START ANALYSIS"}
                     </button>
+
+                    {/* Agent 3: Calculate Area Button */}
+                    {semanticResults && (
+                        <button
+                            onClick={handleCalculateArea}
+                            disabled={isCalculating}
+                            className={`flex items-center px-4 py-2 rounded-md shadow-lg transition-all transform hover:scale-105 active:scale-95 font-semibold text-xs tracking-wide ml-4
+                                ${isCalculating
+                                    ? 'bg-blue-800 text-white cursor-wait'
+                                    : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-900/50'
+                                }`}
+                        >
+                            {isCalculating ? <Loader2 size={16} className="mr-2 animate-spin" /> : <Calculator size={16} className="mr-2" />}
+                            {isCalculating ? "CALCULATING..." : "CALCULATE AREA"}
+                        </button>
+                    )}
                 </div>
 
                 {/* Dashboard Stats */}
@@ -340,12 +422,23 @@ const BIMInterface = () => {
                     <div className="flex items-center bg-[#1a1d21] rounded-lg border border-gray-700 px-4 py-2 space-x-4 shadow-inner">
                         <div className="flex flex-col items-center">
                             <span className="text-[10px] text-gray-500">Total GFA</span>
-                            <span className="text-sm font-bold text-white">125,000 m²</span>
+                            <span className="text-sm font-bold text-white">
+                                {calculationResults ? `${calculationResults.total_area} m²` : "---"}
+                            </span>
                         </div>
                     </div>
 
-                    <button className="p-2 bg-[#1a1d21] hover:bg-[#25282e] text-gray-300 rounded border border-gray-700 transition-colors">
-                        <Download size={16} />
+                    <button
+                        onClick={handleExportReport}
+                        disabled={!calculationResults}
+                        title="Export Calculation Report"
+                        className={`p-2 rounded border transition-colors
+                            ${calculationResults
+                                ? 'bg-[#1a1d21] hover:bg-[#25282e] text-emerald-400 border-emerald-900/50 hover:border-emerald-500'
+                                : 'bg-[#1a1d21] text-gray-600 border-gray-800 cursor-not-allowed'
+                            }`}
+                    >
+                        <FileSpreadsheet size={16} />
                     </button>
                 </div>
             </header>
@@ -371,16 +464,24 @@ const BIMInterface = () => {
                                 ${activeTab === 'review' ? 'bg-[#1a1d21] text-orange-500 border-b-2 border-orange-500' : 'text-gray-500 hover:text-gray-300 hover:bg-[#16181d]'}`}
                         >
                             <ListChecks size={14} className="mr-2" />
-                            Review Queue
+                            Review
                             {reviewQueue.length > 0 && (
                                 <span className="absolute top-2 right-4 w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
                             )}
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('calculation')}
+                            className={`flex-1 py-3 text-xs font-bold uppercase tracking-wide flex items-center justify-center transition-colors
+                                ${activeTab === 'calculation' ? 'bg-[#1a1d21] text-blue-500 border-b-2 border-blue-500' : 'text-gray-500 hover:text-gray-300 hover:bg-[#16181d]'}`}
+                        >
+                            <Calculator size={14} className="mr-2" />
+                            Results
                         </button>
                     </div>
 
                     {/* Tab Content */}
                     <div className="flex-1 overflow-y-auto bg-[#0b0c0e]">
-                        {activeTab === 'structure' ? (
+                        {activeTab === 'structure' && (
                             <>
                                 {/* 搜索栏保持不变 */}
                                 <div className="p-3">
@@ -401,7 +502,9 @@ const BIMInterface = () => {
                                     {treeData && <TreeNode node={treeData} />}
                                 </div>
                             </>
-                        ) : (
+                        )}
+
+                        {activeTab === 'review' && (
                             <div className="flex-1 overflow-y-auto p-4 space-y-3">
                                 {reviewQueue.length === 0 ? (
                                     <div className="text-gray-500 text-center mt-10 text-xs">No items to review.</div>
@@ -412,17 +515,91 @@ const BIMInterface = () => {
                                             onClick={() => handleReviewItemClick(item)}
                                             className="bg-[#1a1d21] p-3 rounded border border-gray-700 hover:border-orange-500 cursor-pointer transition-colors group"
                                         >
-                                            <div className="flex justify-between items-start mb-1">
-                                                <span className="text-gray-200 font-bold text-xs truncate w-32">{item.name}</span>
-                                                <span className="text-[10px] text-orange-400 bg-orange-900/20 px-1.5 py-0.5 rounded font-mono">
-                                                    {(item.confidence * 100).toFixed(0)}%
-                                                </span>
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="font-bold text-white text-xs">{item.name}</span>
+                                                <AlertTriangle size={12} className="text-orange-500" />
                                             </div>
-                                            <p className="text-[10px] text-gray-500 line-clamp-2 group-hover:text-gray-400">
-                                                {item.reason_short || item.reasoning || "No reasoning details provided."}
-                                            </p>
+                                            <div className="text-[10px] text-gray-500 space-y-1">
+                                                <div className="flex justify-between">
+                                                    <span>Type:</span>
+                                                    <span className="text-gray-300">{item.type}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span>Reason:</span>
+                                                    <span className="text-orange-400">{item.reason}</span>
+                                                </div>
+                                            </div>
                                         </div>
                                     ))
+                                )}
+                            </div>
+                        )}
+
+                        {activeTab === 'calculation' && (
+                            <div className="p-4 space-y-4">
+                                {!calculationResults ? (
+                                    <div className="text-center mt-10 text-gray-600 text-xs">
+                                        No calculation results yet. <br /> Click "Calculate Area" to start.
+                                    </div>
+                                ) : (
+                                    <>
+                                        {/* Summary */}
+                                        <div className="bg-[#1a1d21] p-3 rounded border border-gray-700 shadow-lg">
+                                            <div className="flex items-center mb-2">
+                                                <Activity size={14} className="text-emerald-400 mr-2" />
+                                                <h3 className="text-white font-bold text-xs uppercase tracking-wider">Project Summary</h3>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <div className="flex justify-between items-end border-b border-gray-800 pb-2">
+                                                    <span className="text-gray-500 text-xs">Total GFA</span>
+                                                    <span className="text-xl font-mono text-emerald-400 font-bold">{calculationResults.total_area} m²</span>
+                                                </div>
+                                                <div className="text-[10px] text-gray-500 pt-1">
+                                                    {calculationResults.summary_text}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Story List */}
+                                        <div className="space-y-2">
+                                            <div className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-2 pl-1">Story Breakdown</div>
+                                            {calculationResults.stories.map((story, idx) => (
+                                                <div key={idx} className="bg-[#1a1d21] p-3 rounded border border-gray-700 hover:border-blue-500 transition-colors">
+                                                    <div className="flex justify-between items-center mb-2">
+                                                        <span className="font-bold text-white text-sm">{story.story_name}</span>
+                                                        <span className="font-mono text-blue-400 font-bold">{story.calculated_area} m²</span>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-2 gap-y-1 gap-x-2 text-[10px] text-gray-400 bg-[#111316] p-2 rounded">
+                                                        <div className="flex justify-between">
+                                                            <span>Base Area:</span>
+                                                            <span className="text-gray-300">{story.base_area}</span>
+                                                        </div>
+                                                        <div className="flex justify-between">
+                                                            <span>Height Coeff:</span>
+                                                            <span className={story.height_coefficient < 1 ? "text-orange-400 font-bold" : "text-gray-300"}>
+                                                                {story.height_coefficient}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex justify-between col-span-2 border-t border-gray-800 pt-1 mt-1">
+                                                            <span>Adjustments:</span>
+                                                            <span className={story.adjustments_area !== 0 ? "text-yellow-400" : "text-gray-500"}>
+                                                                {story.adjustments_area > 0 ? "+" : ""}{story.adjustments_area}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    {story.adjustment_details.length > 0 && (
+                                                        <div className="mt-2 text-[10px] text-gray-500 pl-2 border-l-2 border-gray-800">
+                                                            {story.adjustment_details.map((d, i) => (
+                                                                <div key={i}>• {d}</div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
                                 )}
                             </div>
                         )}
@@ -450,6 +627,7 @@ const BIMInterface = () => {
                             onSelect={handleSelection}
                             width={viewportSize.w}
                             height={viewportSize.h}
+                            selectedId={selectedId}
                         />
                     </div>
                     {!ifcFile && (

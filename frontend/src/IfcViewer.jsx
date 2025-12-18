@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { IFCLoader } from 'web-ifc-three';
 
-const IfcViewer = ({ file, onLoaded, onSelect, width, height }) => {
+const IfcViewer = ({ file, onLoaded, onSelect, width, height, selectedId }) => {
     const mountRef = useRef(null);
     const [loading, setLoading] = useState(false);
 
@@ -15,6 +15,38 @@ const IfcViewer = ({ file, onLoaded, onSelect, width, height }) => {
     const modelRef = useRef(null);
     const highlightMatRef = useRef(null);
     const subsetRef = useRef(null);
+
+    // --- 新增：处理外部传入的 selectedId ---
+    useEffect(() => {
+        if (!selectedId || !modelRef.current || !ifcLoaderRef.current || !sceneRef.current || !highlightMatRef.current) {
+            return;
+        }
+
+        // 1. 清除现有高亮
+        if (subsetRef.current) {
+            sceneRef.current.remove(subsetRef.current);
+            if (subsetRef.current.geometry) subsetRef.current.geometry.dispose();
+            subsetRef.current = null;
+        }
+        ifcLoaderRef.current.ifcManager.removeSubset(modelRef.current.modelID, highlightMatRef.current);
+
+        // 2. 创建新高亮
+        try {
+            const id = parseInt(selectedId); // 确保是数字
+            const subset = ifcLoaderRef.current.ifcManager.createSubset({
+                modelID: modelRef.current.modelID,
+                ids: [id],
+                material: highlightMatRef.current,
+                scene: sceneRef.current,
+                removePrevious: true
+            });
+            subsetRef.current = subset;
+
+            // 可选：聚焦到选中构件 (这里暂时不自动聚焦，以免打断用户视角)
+        } catch (err) {
+            console.error("Error highlighting element:", err);
+        }
+    }, [selectedId]);
 
     // 初始化场景 (ComponentDidMount)
     useEffect(() => {
