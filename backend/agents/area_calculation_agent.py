@@ -124,6 +124,29 @@ class AreaCalculationAgent:
             # B. Determine Base Coefficient (Height)
             height_coeff = self._determine_height_coefficient(height, height_rules)
 
+            # --- BREAKDOWN TRACKING ---
+            # Track area components by coefficient
+            breakdown_1_0 = 0.0
+            breakdown_0_5 = 0.0
+            breakdown_excluded = 0.0
+
+            # Initialize from Base Area
+            if height_coeff == 1.0:
+                breakdown_1_0 += base_area
+            elif height_coeff == 0.5:
+                breakdown_0_5 += base_area
+            else:
+                # If there are other coefficients, for now assume they fall into excluded or custom
+                # But typically height coeff is 1.0 or 0.5 (for low headroom)
+                # If it's 0 (excluded), it goes to excluded.
+                if height_coeff == 0:
+                    breakdown_excluded += base_area
+                else:
+                    # Treat as custom, but for this breakdown we might need to be careful.
+                    # Let's put it in 0.5 if it's < 1.0? Or just leave it as is.
+                    # For strict 1.0, 0.5, excluded categories:
+                    pass
+
             # C. Adjustments based on Semantic Elements AND Geometric Findings
             story_semantics = semantic_by_story.get(story["obj"].GlobalId, [])
             adjustments_area = 0.0
@@ -142,6 +165,11 @@ class AreaCalculationAgent:
                 adjustment_details.append(
                     f"Geometric Balcony/Outside ({round(outside_area, 2)}m2 * {outside_coeff})"
                 )
+                # Add to breakdown
+                if outside_coeff == 0.5:
+                    breakdown_0_5 += outside_area
+                elif outside_coeff == 1.0:
+                    breakdown_1_0 += outside_area
 
             for item in story_semantics:
                 category = item.get("category", "").upper()
@@ -173,6 +201,13 @@ class AreaCalculationAgent:
                         adjustment_details.append(
                             f"Subtracted {category} ({elem_area}m2)"
                         )
+                        # Remove from breakdown (it was likely in base_area)
+                        if height_coeff == 1.0:
+                            breakdown_1_0 -= elem_area
+                        elif height_coeff == 0.5:
+                            breakdown_0_5 -= elem_area
+
+                        breakdown_excluded += elem_area
 
                 # 3. Special Spaces (Parking, Refuge, etc.)
                 else:
@@ -197,12 +232,33 @@ class AreaCalculationAgent:
                             f"Adjusted {category} ({elem_area}m2 * {coeff})"
                         )
 
+                        # Adjust breakdown
+                        # Move area from current height_coeff bucket to new coeff bucket
+                        # Typically moves from 1.0 to 0.5 or 0.0
+
+                        # Remove from original bucket
+                        if height_coeff == 1.0:
+                            breakdown_1_0 -= elem_area
+                        elif height_coeff == 0.5:
+                            breakdown_0_5 -= elem_area
+
+                        # Add to new bucket
+                        if coeff == 1.0:
+                            breakdown_1_0 += elem_area
+                        elif coeff == 0.5:
+                            breakdown_0_5 += elem_area
+                        elif coeff == 0.0:
+                            breakdown_excluded += elem_area
+
             # Calculate Final Area for this story
             # Formula: (Base Area * Height Coeff) + Adjustments
             calculated_area = (base_area * height_coeff) + adjustments_area
 
             # Ensure non-negative
             calculated_area = max(0.0, calculated_area)
+            breakdown_1_0 = max(0.0, breakdown_1_0)
+            breakdown_0_5 = max(0.0, breakdown_0_5)
+            breakdown_excluded = max(0.0, breakdown_excluded)
 
             story_result = {
                 "story_name": story_name,
@@ -213,6 +269,9 @@ class AreaCalculationAgent:
                 "adjustments_area": round(adjustments_area, 2),
                 "adjustment_details": adjustment_details,
                 "calculated_area": round(calculated_area, 2),
+                "area_full": round(breakdown_1_0, 2),
+                "area_half": round(breakdown_0_5, 2),
+                "area_excluded": round(breakdown_excluded, 2),
                 "outline_polygon": str(outline_poly) if outline_poly else None,
             }
 
@@ -237,20 +296,36 @@ class AreaCalculationAgent:
         Export the calculation report to an Excel file.
         """
         try:
+            # Calculate aggregates
+            stories = report.get("stories", [])
+            total_full = sum(s.get("area_full", 0.0) for s in stories)
+            total_half = sum(s.get("area_half", 0.0) for s in stories)
+            total_excluded = sum(s.get("area_excluded", 0.0) for s in stories)
+
             # 1. Summary Data
             summary_data = {
-                "Item": ["Region", "Total Area (sq.m)", "Story Count", "Date"],
+                "Item": [
+                    "Region",
+                    "Total Calculated Area (sq.m)",
+                    "Total Full Area (100%)",
+                    "Total Half Area (50%)",
+                    "Total Excluded Area",
+                    "Story Count",
+                    "Date",
+                ],
                 "Value": [
                     report.get("regulation_applied", "Unknown"),
                     report.get("total_area", 0.0),
-                    len(report.get("stories", [])),
+                    round(total_full, 2),
+                    round(total_half, 2),
+                    round(total_excluded, 2),
+                    len(stories),
                     pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S"),
                 ],
             }
             df_summary = pd.DataFrame(summary_data)
 
             # 2. Detailed Data
-            stories = report.get("stories", [])
             detail_data = []
             for s in stories:
                 detail_data.append(
@@ -264,6 +339,9 @@ class AreaCalculationAgent:
                         "Adjustment Details": "; ".join(
                             s.get("adjustment_details", [])
                         ),
+                        "Full Area (100%)": s.get("area_full", 0.0),
+                        "Half Area (50%)": s.get("area_half", 0.0),
+                        "Excluded Area": s.get("area_excluded", 0.0),
                         "Calculated Area (sq.m)": s.get("calculated_area"),
                     }
                 )

@@ -81,8 +81,6 @@ class GeometryAnalyzer:
                 data["area"] = round(dx * dy, 2)
             elif element.is_a("IfcSlab"):
                 data["thickness"] = round(dz, 2)
-            elif element.is_a("IfcWall"):
-                data["thickness"] = round(min(dx, dy), 2)
 
             data["volume"] = round(dx * dy * dz, 2)
 
@@ -384,14 +382,6 @@ class IfcSemanticAlignmentAgent:
             {"name": "ROOF_SLAB", "valid_ifc_types": ["IfcSlab", "IfcRoof"]},
             {"name": "BALCONY", "valid_ifc_types": ["IfcSlab"]},
             {
-                "name": "EXTERIOR_WALL",
-                "valid_ifc_types": ["IfcWall", "IfcWallStandardCase"],
-            },
-            {
-                "name": "INTERIOR_WALL",
-                "valid_ifc_types": ["IfcWall", "IfcWallStandardCase"],
-            },
-            {
                 "name": "GENERAL_ROOM",
                 "valid_ifc_types": [
                     "IfcSpace",
@@ -522,11 +512,7 @@ class IfcSemanticAlignmentAgent:
 
         # 4. 筛选要分析的构件 (为了演示速度，这里只分析 Space 和 Slab)
         # 实际生产中应分析所有相关构件
-        elements = (
-            ifc_model.by_type("IfcSpace")
-            + ifc_model.by_type("IfcSlab")
-            + ifc_model.by_type("IfcWall")
-        )
+        elements = ifc_model.by_type("IfcSpace") + ifc_model.by_type("IfcSlab")
 
         results = {}
         hitl_queue = []
