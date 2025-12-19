@@ -684,6 +684,11 @@ def get_accumulated_z(element):
 
 def group_walls_by_target_elevations(ifc_file, target_elevations, tolerance=None):
     """按目标标高分组墙体"""
+    import ifcopenshell.util.unit
+
+    # Calculate unit scale (to meters)
+    unit_scale = ifcopenshell.util.unit.calculate_unit_scale(ifc_file)
+
     walls = []
     walls.extend(ifc_file.by_type("IfcWall"))
     walls.extend(ifc_file.by_type("IfcWallStandardCase"))
@@ -708,16 +713,19 @@ def group_walls_by_target_elevations(ifc_file, target_elevations, tolerance=None
             ]
             if diffs:
                 min_diff = min(diffs)
-                tolerance = min_diff / 2.0
+                # 使用更大的容差，因为有些墙体可能偏移较大（如梁下墙）
+                # 但不能超过层高的一半，避免误判
+                tolerance = max(1.5, min_diff / 2.0)
             else:
-                tolerance = 1.0
+                tolerance = 2.0  # 默认2米
         else:
-            tolerance = 1.0
+            tolerance = 2.0
 
     result = {elev: [] for elev in target_elevations}
 
     for wall in walls:
-        z = get_accumulated_z(wall)
+        raw_z = get_accumulated_z(wall)
+        z = raw_z * unit_scale  # Convert to Meters
 
         # 寻找最近的标高
         closest_elev = None

@@ -47,7 +47,9 @@ class AreaCalculationAgent:
         # This returns a dictionary keyed by elevation
         # Pass target elevations to ensure all stories are considered
         target_elevations = [s["elevation"] for s in stories_info]
-        wall_outlines = get_external_wall_outline(ifc_file, target_elevations=target_elevations)
+        wall_outlines = get_external_wall_outline(
+            ifc_file, target_elevations=target_elevations
+        )
 
         # 2.5 Get All Slabs and group by story for Geometric Analysis
         # We need this to determine what is "Outside" the wall outline (Balconies)
@@ -478,21 +480,51 @@ class AreaCalculationAgent:
     def _analyze_stories(self, ifc_file):
         """
         Extract story information using get_storey_elevation tool logic.
+        Filters out storeys that are too close to each other to avoid zero-height issues.
+        Ensures all units are converted to Meters.
         """
+        import ifcopenshell.util.unit
+
+        # Calculate unit scale (to meters)
+        unit_scale = ifcopenshell.util.unit.calculate_unit_scale(ifc_file)
+        logger.info(f"Unit Scale to Meters: {unit_scale}")
+
         stories = ifc_file.by_type("IfcBuildingStorey")
         stories_data = []
         for s in stories:
             elev = get_storey_elevation(s)
+            # Normalize to meters
+            elev_m = (elev * unit_scale) if elev is not None else 0.0
+
             stories_data.append(
                 {
                     "obj": s,
                     "name": s.Name,
-                    "elevation": elev if elev is not None else 0.0,
+                    "elevation": elev_m,
+                    "raw_elevation": elev,  # Keep raw for debugging
                 }
             )
 
         # Sort by elevation
         stories_data.sort(key=lambda x: x["elevation"])
+
+        # Filter out duplicates/near-duplicates (e.g. < 0.2m difference)
+        unique_stories = []
+        if stories_data:
+            current_story = stories_data[0]
+            unique_stories.append(current_story)
+
+            for i in range(1, len(stories_data)):
+                next_story = stories_data[i]
+                if next_story["elevation"] - current_story["elevation"] > 0.2:
+                    unique_stories.append(next_story)
+                    current_story = next_story
+                else:
+                    logger.warning(
+                        f"Skipping duplicate/close story: {next_story['name']} (Elev: {next_story['elevation']}) near {current_story['name']} (Elev: {current_story['elevation']})"
+                    )
+
+        stories_data = unique_stories
 
         # Calculate Height (diff with next story)
         for i, s in enumerate(stories_data):
@@ -501,6 +533,9 @@ class AreaCalculationAgent:
             else:
                 height = 3.0  # Default for top floor
             s["height"] = height
+            logger.info(
+                f"Story {s['name']}: Elev={s['elevation']:.3f}m, Height={s['height']:.3f}m"
+            )
 
         return stories_data
 
