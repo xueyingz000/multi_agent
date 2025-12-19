@@ -664,16 +664,110 @@ def group_walls_by_global_z(ifc_file, z_tolerance=1000):
     return result
 
 
-def get_external_wall_outline(ifc_file, wall_thickness=None):
+def get_accumulated_z(element):
+    """递归获取累积Z坐标"""
+    z = 0.0
+    try:
+        placement = element.ObjectPlacement
+        while placement:
+            matrix = ifcopenshell.util.placement.get_local_placement(placement)
+            if matrix is not None:
+                z += matrix[2][3]
+            if hasattr(placement, "PlacementRelTo") and placement.PlacementRelTo:
+                placement = placement.PlacementRelTo
+            else:
+                break
+    except Exception:
+        pass
+    return z
+
+
+def group_walls_by_target_elevations(ifc_file, target_elevations, tolerance=None):
+    """按目标标高分组墙体"""
+    walls = []
+    walls.extend(ifc_file.by_type("IfcWall"))
+    walls.extend(ifc_file.by_type("IfcWallStandardCase"))
+    walls.extend(ifc_file.by_type("IfcCurtainWall"))
+    walls.extend(ifc_file.by_type("IfcPlate"))
+    walls.extend(ifc_file.by_type("IfcCovering"))
+    walls.extend(ifc_file.by_type("IfcMember"))
+
+    # 按id去重
+    unique_walls = {}
+    for wall in walls:
+        unique_walls[wall.id()] = wall
+    walls = list(unique_walls.values())
+
+    # 计算默认容差
+    if tolerance is None:
+        if len(target_elevations) > 1:
+            sorted_elevs = sorted(target_elevations)
+            diffs = [
+                sorted_elevs[i + 1] - sorted_elevs[i]
+                for i in range(len(sorted_elevs) - 1)
+            ]
+            if diffs:
+                min_diff = min(diffs)
+                tolerance = min_diff / 2.0
+            else:
+                tolerance = 1.0
+        else:
+            tolerance = 1.0
+
+    result = {elev: [] for elev in target_elevations}
+
+    for wall in walls:
+        z = get_accumulated_z(wall)
+
+        # 寻找最近的标高
+        closest_elev = None
+        min_dist = float("inf")
+
+        for elev in target_elevations:
+            dist = abs(z - elev)
+            if dist < min_dist:
+                min_dist = dist
+                closest_elev = elev
+
+        if closest_elev is not None and min_dist < tolerance:
+            result[closest_elev].append(wall)
+
+    return result
+
+
+def get_external_wall_outline(ifc_file, wall_thickness=None, target_elevations=None):
     """使用布尔运算获取外墙轮廓，按楼层分别计算"""
-    # 优先用结构分组
-    walls_by_elevation = group_walls_by_storey_objectplacement_recursive(ifc_file)
-    if len(walls_by_elevation) == 1:
-        logger.info("结构分组只有一个楼层，自动切换为Z坐标分组")
-        walls_by_elevation = group_walls_by_z(ifc_file)
-    if len(walls_by_elevation) == 1:
-        logger.info("局部Z分组只有一个楼层，自动切换为全局Z坐标分组")
-        walls_by_elevation = group_walls_by_global_z(ifc_file)
+    walls_by_elevation = {}
+
+    # 0. 如果提供了目标标高，优先使用
+    if target_elevations:
+        logger.info(f"使用提供的目标标高分组: {target_elevations}")
+        walls_by_elevation = group_walls_by_target_elevations(
+            ifc_file, target_elevations
+        )
+
+        # 检查是否所有楼层都为空
+        if not any(walls_by_elevation.values()):
+            logger.warning("目标标高分组结果为空，尝试使用其他分组方法")
+            walls_by_elevation = {}  # 重置以便后续尝试
+
+    if not walls_by_elevation:
+        # 1. 优先用结构分组
+        walls_by_elevation = group_walls_by_storey_objectplacement_recursive(ifc_file)
+        if len(walls_by_elevation) <= 1:
+            logger.info("结构分组只有一个楼层，自动切换为Z坐标分组")
+            z_walls = group_walls_by_z(ifc_file)
+            # 只有当z分组找到更多层时才切换，或者当前只有1层且z分组也只有1层（可能是同一层）
+            # 这里简单起见，如果结构分组只有1层，就尝试其他方法
+            if len(z_walls) >= 1:
+                walls_by_elevation = z_walls
+
+        if len(walls_by_elevation) <= 1:
+            logger.info("局部Z分组只有一个楼层，自动切换为全局Z坐标分组")
+            gz_walls = group_walls_by_global_z(ifc_file)
+            if len(gz_walls) >= 1:
+                walls_by_elevation = gz_walls
+
     logger.info(f"墙体按标高分组: {len(walls_by_elevation)} 个楼层")
 
     # 计算标准墙厚度（如果未提供）

@@ -12,6 +12,7 @@ import matplotlib.patches as mpatches
 import matplotlib.colors as mcolors
 import logging
 from scipy.spatial import ConvexHull
+
 # from visualization import (
 #     visualize_classification_by_storey,
 #     visualize_section_lines,
@@ -42,12 +43,21 @@ def load_ifc_file(file_path):
 
 
 def get_storey_elevation(storey):
-    """Get the elevation of a storey"""
-    placement = storey.ObjectPlacement
-    if placement:
-        matrix = ifcopenshell.util.placement.get_local_placement(placement)
-        return matrix[2][3]  # Z-axis position is the elevation
-    return None
+    """Get the elevation of a storey (Global Z)"""
+    z = 0.0
+    try:
+        placement = storey.ObjectPlacement
+        while placement:
+            matrix = ifcopenshell.util.placement.get_local_placement(placement)
+            if matrix is not None:
+                z += matrix[2][3]
+            if hasattr(placement, "PlacementRelTo") and placement.PlacementRelTo:
+                placement = placement.PlacementRelTo
+            else:
+                break
+    except:
+        pass
+    return z
 
 
 def get_slab_geometry(ifc_file, slab):

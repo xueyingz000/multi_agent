@@ -45,7 +45,9 @@ class AreaCalculationAgent:
 
         # 2. Get External Wall Outlines (Base Area - Inside)
         # This returns a dictionary keyed by elevation
-        wall_outlines = get_external_wall_outline(ifc_file)
+        # Pass target elevations to ensure all stories are considered
+        target_elevations = [s["elevation"] for s in stories_info]
+        wall_outlines = get_external_wall_outline(ifc_file, target_elevations=target_elevations)
 
         # 2.5 Get All Slabs and group by story for Geometric Analysis
         # We need this to determine what is "Outside" the wall outline (Balconies)
