@@ -197,6 +197,33 @@ const IfcViewer = ({ file, onLoaded, onSelect, width, height, selectedId }) => {
                 // 获取空间结构树 (Building -> Storey -> Space)
                 try {
                     const structure = await ifcLoaderRef.current.ifcManager.getSpatialStructure(ifcModel.modelID);
+
+                    // --- 递归获取节点属性 (Name, GlobalId) ---
+                    const enrichNode = async (node) => {
+                        if (!node) return;
+                        try {
+                            // 只为没有 Name 的节点获取属性
+                            if (!node.Name || !node.Name.value) {
+                                const props = await ifcLoaderRef.current.ifcManager.getItemProperties(ifcModel.modelID, node.expressID);
+                                if (props) {
+                                    if (props.Name) node.Name = props.Name;
+                                    if (props.LongName) node.LongName = props.LongName;
+                                    if (props.GlobalId) node.GlobalId = props.GlobalId;
+                                }
+                            }
+                        } catch (e) {
+                            console.warn("Failed to fetch properties for node:", node.expressID);
+                        }
+
+                        if (node.children && node.children.length > 0) {
+                            await Promise.all(node.children.map(child => enrichNode(child)));
+                        }
+                    };
+
+                    console.log("🌳 Enriching spatial structure...");
+                    await enrichNode(structure);
+                    console.log("✅ Structure enriched:", structure);
+
                     onLoaded(ifcModel, structure);
                 } catch (err) {
                     console.error("Error loading structure:", err);

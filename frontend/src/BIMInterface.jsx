@@ -11,14 +11,41 @@ import IfcViewer from './IfcViewer';
 
 // --- 组件：结构树节点 (保持不变) ---
 const TreeNode = ({ node, onSelectNode, depth = 0 }) => {
-    const [expanded, setExpanded] = useState(depth < 2);
+    // Default expansion: Only expand the root (Building), collapse everything else (Levels)
+    const [expanded, setExpanded] = useState(depth < 1);
     const hasChildren = node.children && node.children.length > 0;
 
     const getIcon = (type) => {
+        if (type === 'IFCPROJECT') return <Box size={14} className="text-purple-400" />;
+        if (type === 'IFCSITE') return <Box size={14} className="text-orange-400" />;
         if (type === 'IFCBUILDING') return <Box size={14} className="text-blue-400" />;
         if (type === 'IFCBUILDINGSTOREY') return <Layers size={14} className="text-yellow-400" />;
         if (type === 'IFCSPACE') return <Square size={14} className="text-emerald-400 transform rotate-45" />;
         return <Box size={14} className="text-gray-500" />;
+    };
+
+    const getNodeName = (node) => {
+        if (!node) return 'Untitled';
+
+        let name = null;
+        if (node.Name && node.Name.value) name = node.Name.value;
+        else if (typeof node.Name === 'string' && node.Name.length > 0) name = node.Name;
+        else if (node.name && typeof node.name === 'string') name = node.name;
+        else if (node.LongName && node.LongName.value) name = node.LongName.value;
+
+        // Handle specific "Default" cases or missing names
+        if (!name || name === 'Default' || name === 'Untitled') {
+            if (node.type === 'IFCPROJECT') return 'Project Model';
+            if (node.type === 'IFCSITE') return 'Site';
+            if (node.type === 'IFCBUILDING') return 'Building';
+        }
+
+        if (name) return name;
+
+        // Fallback to Type + ID
+        const typeStr = node.type || 'Element';
+        const idStr = node.expressID || '?';
+        return `${typeStr} (${idStr})`;
     };
 
     return (
@@ -32,7 +59,7 @@ const TreeNode = ({ node, onSelectNode, depth = 0 }) => {
                     {hasChildren && (expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />)}
                 </span>
                 <span className="mr-2">{getIcon(node.type)}</span>
-                <span className="text-xs truncate">{node.Name ? node.Name.value : 'Untitled'}</span>
+                <span className="text-xs truncate">{getNodeName(node)}</span>
             </div>
             {expanded && hasChildren && (
                 <div>
@@ -206,8 +233,27 @@ const BIMInterface = () => {
     };
 
     const handleModelLoaded = (_, structure) => {
-        if (structure && structure.children && structure.children.length > 0) {
-            setTreeData(structure.children[0]);
+        if (!structure) return;
+
+        // Helper function to find the first IFCBUILDING node
+        const findBuilding = (node) => {
+            if (node.type === 'IFCBUILDING') return node;
+            if (node.children && node.children.length > 0) {
+                for (let child of node.children) {
+                    const found = findBuilding(child);
+                    if (found) return found;
+                }
+            }
+            return null;
+        };
+
+        const buildingNode = findBuilding(structure);
+
+        if (buildingNode) {
+            setTreeData(buildingNode);
+        } else {
+            // Fallback: If no building found, use root or its child
+            setTreeData(structure.children && structure.children.length > 0 ? structure.children[0] : structure);
         }
     };
 
