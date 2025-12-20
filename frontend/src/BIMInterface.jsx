@@ -75,6 +75,7 @@ const TreeNode = ({ node, onSelectNode, depth = 0 }) => {
 const BIMInterface = () => {
     // --- 状态管理 ---
     const [ifcFile, setIfcFile] = useState(null);
+    const [projectName, setProjectName] = useState("Untitled Project");
     const [treeData, setTreeData] = useState(null);
     const [selectedProps, setSelectedProps] = useState(null);
     const [selectedPsets, setSelectedPsets] = useState(null);
@@ -118,6 +119,9 @@ const BIMInterface = () => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
             setIfcFile(file); // 前端渲染
+            // Set project name from filename (remove .ifc extension)
+            const name = file.name.replace(/\.ifc$/i, '');
+            setProjectName(name);
 
             // 后端同步上传
             const formData = new FormData();
@@ -461,7 +465,7 @@ const BIMInterface = () => {
                 <div className="flex items-center space-x-6">
                     <div className="flex flex-col">
                         <span className="text-xs text-gray-500 uppercase tracking-wider">Project</span>
-                        <span className="text-white font-bold text-lg tracking-tight">Shanghai Tower_BIM_v3</span>
+                        <span className="text-white font-bold text-lg tracking-tight">{projectName}</span>
                     </div>
 
                     <label className="flex items-center px-3 py-1.5 bg-[#2d333b] hover:bg-[#363c45] text-white rounded border border-gray-600 cursor-pointer transition-colors text-xs font-medium">
