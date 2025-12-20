@@ -463,6 +463,15 @@ const BIMInterface = () => {
             <header className="h-16 border-b border-gray-800 bg-[#111316] flex items-center px-4 justify-between shrink-0">
 
                 <div className="flex items-center space-x-6">
+                    {/* ChatBIM Branding */}
+                    <div className="flex items-center mr-2">
+                        <span className="text-xl font-bold text-white tracking-tight">
+                            ChatBIM
+                        </span>
+                    </div>
+
+                    <div className="h-8 w-px bg-gray-700 mx-2"></div>
+
                     <div className="flex flex-col">
                         <span className="text-xs text-gray-500 uppercase tracking-wider">Project</span>
                         <span className="text-white font-bold text-lg tracking-tight">{projectName}</span>
