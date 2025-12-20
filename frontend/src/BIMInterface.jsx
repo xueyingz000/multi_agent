@@ -781,19 +781,7 @@ const BIMInterface = () => {
                                 <span className="text-[10px] text-gray-500 mt-1 block font-mono">{selectedProps.GlobalId ? selectedProps.GlobalId.value : ''}</span>
                             </div>
 
-                            {/* 新增：如果法规已加载，显示当前适用的核心规则摘要 */}
-                            {activeRules && (
-                                <div>
-                                    <h3 className="text-xs font-bold text-gray-500 uppercase mb-2">Active Rules (Agent 1)</h3>
-                                    <div className="bg-emerald-900/20 border border-emerald-900 p-2 rounded text-xs">
-                                        <ul className="list-disc pl-4 text-gray-300 space-y-1">
-                                            {activeRules.height_requirements?.slice(0, 2).map((r, i) => (
-                                                <li key={i}>{r.description} (k={r.coefficient})</li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                </div>
-                            )}
+
 
                             {/* 新增：如果语义分析已完成，显示 Agent 2 结果 (已移至 Dashboard 和 Review Tab，这里保留基本信息) */}
                             {semanticResults && !agent2Data && (
@@ -865,8 +853,7 @@ const BIMInterface = () => {
                                     <div className="text-right text-gray-200">
                                         {selectedProps.constructor && selectedProps.constructor.name.replace('Ifc', '')}
                                     </div>
-                                    <div className="text-gray-400">Clear Height</div>
-                                    <div className="text-right text-gray-200 font-mono">2.8m</div>
+
                                 </div>
                             </div>
 
