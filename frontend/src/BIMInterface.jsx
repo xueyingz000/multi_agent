@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
     Box, Layers, ChevronRight, ChevronDown, Search, Filter,
     Download, Upload, Maximize2, MousePointer2,
-    Edit3, Scissors, RotateCcw, FileText, Info, CheckSquare, Square,
+    Edit3, Scissors, RotateCcw, FileText, Info, Square,
     BookOpen, X, Loader2,
     // --- 新增图标 ---
     AlertTriangle, ListChecks, CheckCircle, BrainCircuit, Activity, Calculator, FileSpreadsheet
@@ -732,17 +732,7 @@ const BIMInterface = () => {
                         )}
                     </div>
 
-                    {/* 底部过滤器仅在 Structure tab 显示 */}
-                    {activeTab === 'structure' && (
-                        <div className="p-4 bg-[#16181d] border-t border-gray-800">
-                            {/* ... (原有过滤器代码) ... */}
-                            <h4 className="text-xs text-gray-500 uppercase font-bold mb-3">Filter Visibility</h4>
-                            <div className="space-y-2">
-                                <label className="flex items-center space-x-2"><CheckSquare size={16} className="text-emerald-500" /><span className="text-gray-300">GFA Areas</span></label>
-                                <label className="flex items-center space-x-2"><Square size={16} className="text-gray-600" /><span className="text-gray-400">Half-GFA</span></label>
-                            </div>
-                        </div>
-                    )}
+
                 </aside>
 
                 {/* C. 中间视口 (保持不变) */}
