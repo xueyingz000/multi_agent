@@ -50,6 +50,8 @@ class AreaCalculationAgent:
         wall_outlines = get_external_wall_outline(
             ifc_file, target_elevations=target_elevations
         )
+        # Temporary Fix: Disable external wall detection as per user request
+        # wall_outlines = {}
 
         # 2.5 Get All Slabs and group by story for Geometric Analysis
         # We need this to determine what is "Outside" the wall outline (Balconies)
@@ -76,6 +78,7 @@ class AreaCalculationAgent:
 
             # A. Geometric Analysis (Inside vs Outside)
             outline_data = self._find_outline_for_elevation(wall_outlines, elevation)
+            # outline_data = None  # Disabled
             inside_area = 0.0
             outside_area = 0.0  # Balconies (Geometric)
             outline_poly = None
@@ -91,7 +94,15 @@ class AreaCalculationAgent:
                         polys.append(geom["top_polygon"])
                 if polys:
                     merged_slab_poly = unary_union(polys)
+                    if not merged_slab_poly.is_valid:
+                        merged_slab_poly = merged_slab_poly.buffer(0)
 
+            # Temporary Logic: Treat all slab area as "Inside"
+            # if merged_slab_poly:
+            #     inside_area = merged_slab_poly.area
+            #     outline_poly = merged_slab_poly  # Use slab as the outline
+
+            # Original Logic Disabled
             if outline_data and outline_data.get("merged_polygon"):
                 outline_poly = outline_data["merged_polygon"]
                 # Repair if invalid
