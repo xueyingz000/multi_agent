@@ -47,11 +47,11 @@ class AreaCalculationAgent:
         # This returns a dictionary keyed by elevation
         # Pass target elevations to ensure all stories are considered
         target_elevations = [s["elevation"] for s in stories_info]
-        wall_outlines = get_external_wall_outline(
-            ifc_file, target_elevations=target_elevations
-        )
+        # wall_outlines = get_external_wall_outline(
+        #     ifc_file, target_elevations=target_elevations
+        # )
         # Temporary Fix: Disable external wall detection as per user request
-        # wall_outlines = {}
+        wall_outlines = {}
 
         # 2.5 Get All Slabs and group by story for Geometric Analysis
         # We need this to determine what is "Outside" the wall outline (Balconies)
@@ -98,37 +98,37 @@ class AreaCalculationAgent:
                         merged_slab_poly = merged_slab_poly.buffer(0)
 
             # Temporary Logic: Treat all slab area as "Inside"
-            # if merged_slab_poly:
-            #     inside_area = merged_slab_poly.area
-            #     outline_poly = merged_slab_poly  # Use slab as the outline
+            if merged_slab_poly:
+                inside_area = merged_slab_poly.area
+                outline_poly = merged_slab_poly  # Use slab as the outline
 
             # Original Logic Disabled
-            if outline_data and outline_data.get("merged_polygon"):
-                outline_poly = outline_data["merged_polygon"]
-                # Repair if invalid
-                if not outline_poly.is_valid:
-                    outline_poly = outline_poly.buffer(0)
-
-                # Base Area (Inside) is the Wall Outline
-                # Note: We assume the Wall Outline represents the "Enclosed" area.
-                # However, to be safe, we should perhaps intersect with the slab?
-                # Usually GFA is measured to the outside face of the wall, even if there is no slab (e.g. atriums might be handled by Void deduction).
-                # But if we rely on Outline for GFA:
-                inside_area = outline_poly.area
-
-                # Calculate Outside Area (Balconies)
-                if merged_slab_poly:
-                    if not merged_slab_poly.is_valid:
-                        merged_slab_poly = merged_slab_poly.buffer(0)
-
-                    # Difference: Slab - WallOutline
-                    try:
-                        diff_poly = merged_slab_poly.difference(outline_poly)
-                        outside_area = diff_poly.area
-                    except Exception as e:
-                        logger.warning(
-                            f"Error calculating outside area for {story_name}: {e}"
-                        )
+            # if outline_data and outline_data.get("merged_polygon"):
+            #     outline_poly = outline_data["merged_polygon"]
+            #     # Repair if invalid
+            #     if not outline_poly.is_valid:
+            #         outline_poly = outline_poly.buffer(0)
+            #
+            #     # Base Area (Inside) is the Wall Outline
+            #     # Note: We assume the Wall Outline represents the "Enclosed" area.
+            #     # However, to be safe, we should perhaps intersect with the slab?
+            #     # Usually GFA is measured to the outside face of the wall, even if there is no slab (e.g. atriums might be handled by Void deduction).
+            #     # But if we rely on Outline for GFA:
+            #     inside_area = outline_poly.area
+            #
+            #     # Calculate Outside Area (Balconies)
+            #     if merged_slab_poly:
+            #         if not merged_slab_poly.is_valid:
+            #             merged_slab_poly = merged_slab_poly.buffer(0)
+            #
+            #         # Difference: Slab - WallOutline
+            #         try:
+            #             diff_poly = merged_slab_poly.difference(outline_poly)
+            #             outside_area = diff_poly.area
+            #         except Exception as e:
+            #             logger.warning(
+            #                 f"Error calculating outside area for {story_name}: {e}"
+            #             )
 
             # If no outline found, but we have slabs, maybe it's all "Outside" (e.g. roof deck?)?
             # Or maybe we just take the slab area?
@@ -200,7 +200,54 @@ class AreaCalculationAgent:
 
                 # 1. Balconies (Semantic)
                 if "BALCONY" in category:
-                    pass  # Handled by Geometric Analysis (Outside Area)
+                    # Previously handled by Geometric Analysis (Outside Area)
+                    # Now handled here since we use Slab as Base Area (which includes Balcony)
+
+                    # Find coefficient from enclosure rules or default to 0.5
+                    coeff = 0.5
+                    for rule in enclosure_rules:
+                        if "BALCONY" in rule.get("description", "").upper():
+                            coeff = float(rule.get("coefficient", 0.5))
+                            break
+
+                    # Adjustment = Area * (Coeff - Height_Coeff)
+                    # Because it is currently counted as Base Area * Height_Coeff
+                    diff = elem_area * (coeff - height_coeff)
+                    adjustments_area += diff
+                    adjustment_details.append(
+                        f"Adjusted {category} ({elem_area}m2 * {coeff} [Base {height_coeff}])"
+                    )
+
+                    # Consume from base
+                    remaining_base_area -= elem_area
+
+                    # Add to detailed components
+                    detailed_components.append(
+                        {
+                            "category": category,
+                            "raw_area": elem_area,
+                            "coefficient": coeff,
+                            "effective_area": elem_area * coeff,
+                            "note": "Semantic Balcony Adjustment",
+                        }
+                    )
+
+                    # Adjust breakdown
+                    # Remove from original bucket
+                    if height_coeff == 1.0:
+                        breakdown_1_0 -= elem_area
+                    elif height_coeff == 0.5:
+                        breakdown_0_5 -= elem_area
+                    elif height_coeff == 0.0:
+                        breakdown_excluded -= elem_area
+
+                    # Add to new bucket
+                    if coeff == 1.0:
+                        breakdown_1_0 += elem_area
+                    elif coeff == 0.5:
+                        breakdown_0_5 += elem_area
+                    elif coeff == 0.0:
+                        breakdown_excluded += elem_area
 
                 # 2. Voids / Shafts (Subtract from area, usually inside external wall)
                 elif category in [

@@ -153,23 +153,23 @@ class TestAreaCalculationAgent(unittest.TestCase):
         # Assertions
 
         # Level 1 (Height 3.0 > 2.2 -> Coeff 1.0)
-        # Base Area: 100.0 (Inside Outline)
-        # Geometric Balcony: 20.0 (Outside Outline) * 0.5 = 10.0
-        # Semantic Balcony: Skipped (because Geometric used)
-        # Void (Area 2.0) -> Subtracted
-        # Expected: 100.0 * 1.0 + 10.0 - 2.0 = 108.0
+        # Base Area: 120.0 (Slab Area)
+        # Geometric Balcony: 0.0 (Inside Slab)
+        # Semantic Balcony: 10.0 (Inside Slab) -> Subtracted from Base, Added at 0.5 Coeff
+        # Void (Area 2.0) -> Subtracted from Base
+        # Expected: 120.0 - 10.0 + (10.0 * 0.5) - 2.0 = 113.0
         story1_res = result["stories"][0]
-        self.assertAlmostEqual(story1_res["calculated_area"], 108.0)
+        self.assertAlmostEqual(story1_res["calculated_area"], 113.0)
 
         # Level 2 (Height 2.0 < 2.2 -> Coeff 0.5)
-        # Base Area: 100.0
+        # Base Area: 100.0 (Slab Area)
         # Geometric Balcony: 0.0
         # Expected: 100.0 * 0.5 = 50.0
         story2_res = result["stories"][1]
         self.assertAlmostEqual(story2_res["calculated_area"], 50.0)
 
         # Total
-        self.assertAlmostEqual(result["total_area"], 158.0)
+        self.assertAlmostEqual(result["total_area"], 163.0)
 
         # 4. Test Excel Export
         output_file = "test_report.xlsx"
