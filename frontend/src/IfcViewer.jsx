@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { IFCLoader } from 'web-ifc-three';
+import { IFCRELCONTAINEDINSPATIALSTRUCTURE } from 'web-ifc';
 
 const IfcViewer = ({ file, onLoaded, onSelect, width, height, selectedId }) => {
     const mountRef = useRef(null);
@@ -15,6 +16,7 @@ const IfcViewer = ({ file, onLoaded, onSelect, width, height, selectedId }) => {
     const modelRef = useRef(null);
     const highlightMatRef = useRef(null);
     const subsetRef = useRef(null);
+    const controlsRef = useRef(null);
 
     // --- 新增：处理外部传入的 selectedId ---
     useEffect(() => {
@@ -40,6 +42,11 @@ const IfcViewer = ({ file, onLoaded, onSelect, width, height, selectedId }) => {
                 scene: sceneRef.current,
                 removePrevious: true
             });
+            // 复制模型变换到高亮子集
+            subset.position.copy(modelRef.current.position);
+            subset.rotation.copy(modelRef.current.rotation);
+            subset.scale.copy(modelRef.current.scale);
+
             subsetRef.current = subset;
 
             // 可选：聚焦到选中构件 (这里暂时不自动聚焦，以免打断用户视角)
@@ -63,7 +70,7 @@ const IfcViewer = ({ file, onLoaded, onSelect, width, height, selectedId }) => {
         cameraRef.current = camera;
 
         // 3. Renderer
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, logarithmicDepthBuffer: true }); // Enable logarithmicDepthBuffer
         renderer.setSize(width, height);
         renderer.setPixelRatio(window.devicePixelRatio);
         mountRef.current.appendChild(renderer.domElement);
@@ -83,11 +90,16 @@ const IfcViewer = ({ file, onLoaded, onSelect, width, height, selectedId }) => {
         // 5. Controls
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
+        controlsRef.current = controls;
 
         // 6. IFC Loader Setup
         const ifcLoader = new IFCLoader();
         // 指向本地的 wasm 路径
         ifcLoader.ifcManager.setWasmPath('./');
+
+        // Removed setupThreeMeshBVH call as three-mesh-bvh is not installed
+        // ifcLoader.ifcManager.setupThreeMeshBVH(...);
+
         ifcLoaderRef.current = ifcLoader;
 
         // 高亮材质
@@ -128,6 +140,11 @@ const IfcViewer = ({ file, onLoaded, onSelect, width, height, selectedId }) => {
                     scene: scene,
                     removePrevious: true
                 });
+                // 复制模型变换到高亮子集
+                subset.position.copy(modelRef.current.position);
+                subset.rotation.copy(modelRef.current.rotation);
+                subset.scale.copy(modelRef.current.scale);
+
                 subsetRef.current = subset;
 
                 try {
@@ -190,48 +207,145 @@ const IfcViewer = ({ file, onLoaded, onSelect, width, height, selectedId }) => {
                 modelRef.current = null;
             }
 
-            ifcLoaderRef.current.load(url, async (ifcModel) => {
-                modelRef.current = ifcModel;
-                sceneRef.current.add(ifcModel);
+            const loadModel = async () => {
+                // 配置加载选项
+                // 使用 correct method name: applyWebIfcConfig (Ifc, not IFC)
+                await ifcLoaderRef.current.ifcManager.applyWebIfcConfig({
+                    COORDINATE_TO_ORIGIN: true,
+                    USE_FAST_BOOLS: false // Disable fast bools to ensure complex geometry (windows/doors) are processed correctly
+                });
 
-                // 获取空间结构树 (Building -> Storey -> Space)
-                try {
-                    const structure = await ifcLoaderRef.current.ifcManager.getSpatialStructure(ifcModel.modelID);
+                ifcLoaderRef.current.load(url, async (ifcModel) => {
+                    modelRef.current = ifcModel;
+                    sceneRef.current.add(ifcModel);
 
-                    // --- 递归获取节点属性 (Name, GlobalId) ---
-                    const enrichNode = async (node) => {
-                        if (!node) return;
-                        try {
-                            // 只为没有 Name 的节点获取属性
-                            if (!node.Name || !node.Name.value) {
-                                const props = await ifcLoaderRef.current.ifcManager.getItemProperties(ifcModel.modelID, node.expressID);
-                                if (props) {
-                                    if (props.Name) node.Name = props.Name;
-                                    if (props.LongName) node.LongName = props.LongName;
-                                    if (props.GlobalId) node.GlobalId = props.GlobalId;
+                    // --- 强制双面材质 ---
+                    // 遍历所有材质并设置 side = DoubleSide，防止因法线反转导致的面不可见
+                    if (ifcModel.material) {
+                        if (Array.isArray(ifcModel.material)) {
+                            ifcModel.material.forEach(mat => {
+                                mat.side = THREE.DoubleSide;
+                                // 确保材质不完全透明
+                                if (mat.opacity < 0.1) mat.opacity = 0.3;
+                                mat.transparent = mat.opacity < 1;
+                            });
+                        } else {
+                            ifcModel.material.side = THREE.DoubleSide;
+                        }
+                    }
+
+                    // --- 自动居中模型 ---
+                    // 使用 Box3 计算包围盒，兼容 Mesh 和 Group
+                    const box = new THREE.Box3().setFromObject(ifcModel);
+                    const center = box.getCenter(new THREE.Vector3());
+                    const size = box.getSize(new THREE.Vector3());
+                    const radius = size.length() / 2;
+
+                    if (!box.isEmpty()) {
+                        // 将模型移至原点，但保持底部在 y=0 (让网格作为地面)
+                        ifcModel.position.x = -center.x;
+                        ifcModel.position.y = -box.min.y; // 底部对齐
+                        ifcModel.position.z = -center.z;
+
+                        // 调整相机位置
+                        if (cameraRef.current && controlsRef.current) {
+                            const fitOffset = radius * 2.5 || 50;
+                            // 稍微抬高视角
+                            cameraRef.current.position.set(fitOffset, fitOffset / 2 + size.y / 2, fitOffset);
+                            // 看向模型中心
+                            cameraRef.current.lookAt(0, size.y / 2, 0);
+                            controlsRef.current.target.set(0, size.y / 2, 0);
+                            controlsRef.current.update();
+                        }
+                    }
+
+                    // 获取空间结构树 (Building -> Storey -> Space)
+                    try {
+                        const structure = await ifcLoaderRef.current.ifcManager.getSpatialStructure(ifcModel.modelID);
+
+                        // --- 调试：检查构件是否存在 ---
+                        const allWindows = await ifcLoaderRef.current.ifcManager.getAllItemsOfType(ifcModel.modelID, 2520696781 /* IFCWINDOW */, false); // IFCWINDOW ID might vary, using type name if possible or just log generic
+                        // Better to use string types if imported or available, but web-ifc exports integer constants.
+                        // Let's rely on getAllItemsOfType being correct.
+                        // 2520696781 is IFCWINDOW? No, constants are small integers.
+                        // We need to import constants. But for now, let's just log structure enrichment which processes contained elements.
+
+                        console.log("Model ID:", ifcModel.modelID);
+
+                        // --- 新增：获取包含关系 (Storey/Space -> Elements) ---
+                        const rels = await ifcLoaderRef.current.ifcManager.getAllItemsOfType(ifcModel.modelID, IFCRELCONTAINEDINSPATIALSTRUCTURE, true);
+                        const elementsMap = {};
+                        for (const rel of rels) {
+                            const parentId = rel.RelatingStructure.value;
+                            const childIds = rel.RelatedElements.map(r => r.value);
+                            if (!elementsMap[parentId]) elementsMap[parentId] = [];
+                            elementsMap[parentId].push(...childIds);
+                        }
+
+                        // --- 递归获取节点属性 (Name, GlobalId) 并附加构件 ---
+                        const enrichNode = async (node) => {
+                            if (!node) return;
+                            try {
+                                // 只为没有 Name 的节点获取属性
+                                if (!node.Name || !node.Name.value) {
+                                    const props = await ifcLoaderRef.current.ifcManager.getItemProperties(ifcModel.modelID, node.expressID);
+                                    if (props) {
+                                        if (props.Name) node.Name = props.Name;
+                                        if (props.LongName) node.LongName = props.LongName;
+                                        if (props.GlobalId) node.GlobalId = props.GlobalId;
+                                    }
                                 }
+                            } catch (e) {
+                                console.warn("Failed to fetch properties for node:", node.expressID);
                             }
-                        } catch (e) {
-                            console.warn("Failed to fetch properties for node:", node.expressID);
-                        }
 
-                        if (node.children && node.children.length > 0) {
-                            await Promise.all(node.children.map(child => enrichNode(child)));
-                        }
-                    };
+                            // 1. 先递归处理现有的空间子节点
+                            if (node.children && node.children.length > 0) {
+                                await Promise.all(node.children.map(child => enrichNode(child)));
+                            }
 
-                    console.log("🌳 Enriching spatial structure...");
-                    await enrichNode(structure);
-                    console.log("✅ Structure enriched:", structure);
+                            // 2. 附加包含的构件 (Walls, Windows, Roofs, etc.)
+                            const containedIds = elementsMap[node.expressID];
+                            if (containedIds && containedIds.length > 0) {
+                                if (!node.children) node.children = [];
 
-                    onLoaded(ifcModel, structure);
-                } catch (err) {
-                    console.error("Error loading structure:", err);
-                    onLoaded(ifcModel, null);
-                }
+                                // 并行获取构件信息
+                                const elementNodes = await Promise.all(containedIds.map(async (id) => {
+                                    try {
+                                        const props = await ifcLoaderRef.current.ifcManager.getItemProperties(ifcModel.modelID, id);
+                                        const type = await ifcLoaderRef.current.ifcManager.getIfcType(ifcModel.modelID, id);
+                                        return {
+                                            expressID: id,
+                                            type: type, // e.g. 'IFCWINDOW', 'IFCROOF'
+                                            Name: props.Name,
+                                            GlobalId: props.GlobalId,
+                                            children: []
+                                        };
+                                    } catch (e) {
+                                        return null;
+                                    }
+                                }));
 
-                setLoading(false);
-            });
+                                // 过滤掉失败的，并加入到 children
+                                node.children.push(...elementNodes.filter(n => n));
+                            }
+                        };
+
+                        console.log("🌳 Enriching spatial structure...");
+                        await enrichNode(structure);
+                        console.log("✅ Structure enriched:", structure);
+
+                        onLoaded(ifcModel, structure);
+                    } catch (err) {
+                        console.error("Error loading structure:", err);
+                        onLoaded(ifcModel, null);
+                    }
+
+                    setLoading(false);
+                });
+            };
+
+            loadModel();
         }
     }, [file]); // 依赖 file 变化
 
