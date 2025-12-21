@@ -140,7 +140,15 @@ class AreaCalculationAgent:
             height_coeff = self._determine_height_coefficient(height, height_rules)
 
             # --- BREAKDOWN TRACKING ---
-            # Track area components by coefficient
+            # Track detailed area components
+            detailed_components = []
+
+            # 1. Base Area (Consumed Logic)
+            remaining_base_area = base_area
+            base_coeff = height_coeff
+
+            # --- BREAKDOWN TRACKING ---
+            # Track area components by coefficient (Aggregates)
             breakdown_1_0 = 0.0
             breakdown_0_5 = 0.0
             breakdown_excluded = 0.0
@@ -151,16 +159,8 @@ class AreaCalculationAgent:
             elif height_coeff == 0.5:
                 breakdown_0_5 += base_area
             else:
-                # If there are other coefficients, for now assume they fall into excluded or custom
-                # But typically height coeff is 1.0 or 0.5 (for low headroom)
-                # If it's 0 (excluded), it goes to excluded.
                 if height_coeff == 0:
                     breakdown_excluded += base_area
-                else:
-                    # Treat as custom, but for this breakdown we might need to be careful.
-                    # Let's put it in 0.5 if it's < 1.0? Or just leave it as is.
-                    # For strict 1.0, 0.5, excluded categories:
-                    pass
 
             # C. Adjustments based on Semantic Elements AND Geometric Findings
             story_semantics = semantic_by_story.get(story["obj"].GlobalId, [])
@@ -168,18 +168,25 @@ class AreaCalculationAgent:
             adjustment_details = []
 
             # 1. Add Geometric Balconies (Outside Area)
-            # We treat this as an adjustment or part of the calc.
-            # Let's add it to adjustments.
-            # Default coeff for outside is 0.5
             outside_coeff = 0.5
-            # Check enclosure rules if "Outside" area should be 1.0?
-            # Usually outside = 0.5.
             if outside_area > 0.01:  # Tolerance
                 added_outside = outside_area * outside_coeff
                 adjustments_area += added_outside
                 adjustment_details.append(
                     f"Geometric Balcony/Outside ({round(outside_area, 2)}m2 * {outside_coeff})"
                 )
+
+                # Add to detailed components
+                detailed_components.append(
+                    {
+                        "category": "Geometric Balcony/Outside",
+                        "raw_area": outside_area,
+                        "coefficient": outside_coeff,
+                        "effective_area": added_outside,
+                        "note": "Derived from geometry difference (Slab - Wall Outline)",
+                    }
+                )
+
                 # Add to breakdown
                 if outside_coeff == 0.5:
                     breakdown_0_5 += outside_area
@@ -192,13 +199,6 @@ class AreaCalculationAgent:
                 elem_area = float(dimensions.get("area", 0.0))
 
                 # 1. Balconies (Semantic)
-                # Since we calculated Geometric Balconies, we should NOT double count.
-                # If we rely on geometry, we skip semantic balconies UNLESS they are enclosed (which might be inside?).
-                # If a semantic balcony is "Inside" the outline, it's already in base_area (1.0).
-                # If it's "Outside", it's in outside_area.
-                # So we should probably IGNORE "BALCONY" semantics for Area Addition if we trust geometry.
-                # BUT, maybe Agent 2 knows about specific "Enclosed Balconies" that are outside?
-                # Let's assume Geometric approach supercedes Semantic approach for "Adding Area".
                 if "BALCONY" in category:
                     pass  # Handled by Geometric Analysis (Outside Area)
 
@@ -216,6 +216,21 @@ class AreaCalculationAgent:
                         adjustment_details.append(
                             f"Subtracted {category} ({elem_area}m2)"
                         )
+
+                        # Consume from base
+                        remaining_base_area -= elem_area
+
+                        # Add to detailed components
+                        detailed_components.append(
+                            {
+                                "category": category,
+                                "raw_area": elem_area,
+                                "coefficient": 0.0,
+                                "effective_area": 0.0,
+                                "note": "Excluded/Void",
+                            }
+                        )
+
                         # Remove from breakdown (it was likely in base_area)
                         if height_coeff == 1.0:
                             breakdown_1_0 -= elem_area
@@ -247,10 +262,21 @@ class AreaCalculationAgent:
                             f"Adjusted {category} ({elem_area}m2 * {coeff})"
                         )
 
-                        # Adjust breakdown
-                        # Move area from current height_coeff bucket to new coeff bucket
-                        # Typically moves from 1.0 to 0.5 or 0.0
+                        # Consume from base
+                        remaining_base_area -= elem_area
 
+                        # Add to detailed components
+                        detailed_components.append(
+                            {
+                                "category": category,
+                                "raw_area": elem_area,
+                                "coefficient": coeff,
+                                "effective_area": elem_area * coeff,
+                                "note": f"Special Rule: {matched_rule.get('description', '')}",
+                            }
+                        )
+
+                        # Adjust breakdown
                         # Remove from original bucket
                         if height_coeff == 1.0:
                             breakdown_1_0 -= elem_area
@@ -264,6 +290,18 @@ class AreaCalculationAgent:
                             breakdown_0_5 += elem_area
                         elif coeff == 0.0:
                             breakdown_excluded += elem_area
+
+            # Add Remaining Base Area to components (Insert at beginning)
+            detailed_components.insert(
+                0,
+                {
+                    "category": "General Floor Area (Enclosed)",
+                    "raw_area": max(0.0, remaining_base_area),
+                    "coefficient": height_coeff,
+                    "effective_area": max(0.0, remaining_base_area) * height_coeff,
+                    "note": "Remaining area after specific element adjustments",
+                },
+            )
 
             # Calculate Final Area for this story
             # Formula: (Base Area * Height Coeff) + Adjustments
@@ -288,6 +326,7 @@ class AreaCalculationAgent:
                 "area_half": round(breakdown_0_5, 2),
                 "area_excluded": round(breakdown_excluded, 2),
                 "outline_polygon": str(outline_poly) if outline_poly else None,
+                "components": detailed_components,
             }
 
             detailed_results.append(story_result)
@@ -327,6 +366,7 @@ class AreaCalculationAgent:
                     "Total Excluded Area",
                     "Story Count",
                     "Date",
+                    "Note",
                 ],
                 "Value": [
                     report.get("regulation_applied", "Unknown"),
@@ -336,13 +376,17 @@ class AreaCalculationAgent:
                     round(total_excluded, 2),
                     len(stories),
                     pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "See 'Detailed Components' sheet for full breakdown",
                 ],
             }
             df_summary = pd.DataFrame(summary_data)
 
             # 2. Detailed Data
             detail_data = []
+            component_data = []
+
             for s in stories:
+                # Add to Story Summary
                 detail_data.append(
                     {
                         "Story": s.get("story_name"),
@@ -360,13 +404,31 @@ class AreaCalculationAgent:
                         "Calculated Area (sq.m)": s.get("calculated_area"),
                     }
                 )
+
+                # Add to Component Details
+                for comp in s.get("components", []):
+                    component_data.append(
+                        {
+                            "Story": s.get("story_name"),
+                            "Element / Category": comp.get("category"),
+                            "Raw Area (sq.m)": round(comp.get("raw_area", 0.0), 2),
+                            "Coefficient": comp.get("coefficient"),
+                            "Effective Area (sq.m)": round(
+                                comp.get("effective_area", 0.0), 2
+                            ),
+                            "Notes": comp.get("note", ""),
+                        }
+                    )
+
             df_details = pd.DataFrame(detail_data)
+            df_components = pd.DataFrame(component_data)
 
             # Write to Excel
             with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
                 df_summary.to_excel(writer, sheet_name="Summary", index=False)
-                df_details.to_excel(
-                    writer, sheet_name="Detailed Breakdown", index=False
+                df_details.to_excel(writer, sheet_name="Story Breakdown", index=False)
+                df_components.to_excel(
+                    writer, sheet_name="Detailed Components", index=False
                 )
 
             logger.info(f"✅ Report exported to {output_path}")
