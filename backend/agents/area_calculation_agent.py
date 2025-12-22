@@ -77,9 +77,11 @@ class AreaCalculationAgent:
             height = story["height"]
 
             # Filter out roof stories as per user request
-            if story_name and any(k in story_name for k in ["屋顶", "屋面"]):
-                logger.info(f"Skipping roof story: {story_name}")
-                continue
+            if story_name:
+                name_upper = story_name.upper()
+                if any(k in name_upper for k in ["屋顶", "屋面", "ROOF", "RF", "RL"]):
+                    logger.info(f"Skipping roof story: {story_name}")
+                    continue
 
             # A. Geometric Analysis (Inside vs Outside)
             outline_data = self._find_outline_for_elevation(wall_outlines, elevation)
