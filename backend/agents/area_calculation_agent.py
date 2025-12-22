@@ -76,6 +76,11 @@ class AreaCalculationAgent:
             story_name = story["name"]
             height = story["height"]
 
+            # Filter out roof stories as per user request
+            if story_name and any(k in story_name for k in ["屋顶", "屋面"]):
+                logger.info(f"Skipping roof story: {story_name}")
+                continue
+
             # A. Geometric Analysis (Inside vs Outside)
             outline_data = self._find_outline_for_elevation(wall_outlines, elevation)
             # outline_data = None  # Disabled
@@ -197,6 +202,51 @@ class AreaCalculationAgent:
                 category = item.get("category", "").upper()
                 dimensions = item.get("dimensions", {})
                 elem_area = float(dimensions.get("area", 0.0))
+
+                # Check for Manual Factor Override
+                manual_factor = item.get("manual_factor")
+                if manual_factor is not None:
+                    coeff = float(manual_factor)
+
+                    # Adjustment = Area * (Coeff - Height_Coeff)
+                    diff = elem_area * (coeff - height_coeff)
+                    adjustments_area += diff
+                    adjustment_details.append(
+                        f"Manual Adjustment {category} ({elem_area}m2 * {coeff})"
+                    )
+
+                    # Consume from base
+                    remaining_base_area -= elem_area
+
+                    # Add to detailed components
+                    detailed_components.append(
+                        {
+                            "category": category,
+                            "raw_area": elem_area,
+                            "coefficient": coeff,
+                            "effective_area": elem_area * coeff,
+                            "note": "Manual Factor Override",
+                        }
+                    )
+
+                    # Adjust breakdown
+                    # Remove from original bucket
+                    if height_coeff == 1.0:
+                        breakdown_1_0 -= elem_area
+                    elif height_coeff == 0.5:
+                        breakdown_0_5 -= elem_area
+                    elif height_coeff == 0.0:
+                        breakdown_excluded -= elem_area
+
+                    # Add to new bucket
+                    if coeff == 1.0:
+                        breakdown_1_0 += elem_area
+                    elif coeff == 0.5:
+                        breakdown_0_5 += elem_area
+                    elif coeff == 0.0:
+                        breakdown_excluded += elem_area
+
+                    continue
 
                 # 1. Balconies (Semantic)
                 if "BALCONY" in category:

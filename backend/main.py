@@ -228,8 +228,9 @@ async def analyze_element_logic(req: CalculationRequest):
         # calc_res = calc_agent.calculate(agent2_res, session_state["current_rules"])
 
         # 临时模拟 Agent 3 计算
-        is_balcony = agent2_res["semantic_category"] == "BALCONY"
-        factor = 0.5 if is_balcony else 1.0
+        is_balcony = agent2_res.get("semantic_category", "") == "BALCONY"
+        default_factor = 0.5 if is_balcony else 1.0
+        factor = agent2_res.get("manual_factor", default_factor)
 
         return {
             "element_id": guid,
@@ -293,6 +294,19 @@ async def update_element(req: UpdateRequest):
     semantic_data["alignment_results"][guid][
         "status"
     ] = "VERIFIED"  # Manual edit implies verification
+
+    # Update factor based on new type
+    new_type_upper = new_type.upper()
+    manual_factor = None
+    if "BALCONY" in new_type_upper:
+        manual_factor = 0.5
+    elif "EXTERIOR" in new_type_upper and "SLAB" in new_type_upper:
+        manual_factor = 0.0
+
+    if manual_factor is not None:
+        semantic_data["alignment_results"][guid]["manual_factor"] = manual_factor
+    elif "manual_factor" in semantic_data["alignment_results"][guid]:
+        del semantic_data["alignment_results"][guid]["manual_factor"]
     if req.reason:
         semantic_data["alignment_results"][guid][
             "reasoning"
@@ -338,6 +352,7 @@ def calculate_area():
                     "guid": guid,
                     "category": info.get("semantic_category"),
                     "dimensions": info.get("dimensions", {}),
+                    "manual_factor": info.get("manual_factor"),
                 }
             )
 
