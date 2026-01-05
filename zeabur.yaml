@@ -2,7 +2,6 @@
 # Documentation: https://zeabur.com/docs/references/zeabur-yaml
 
 - name: backend
-  type: worker
   build:
     dockerfile: backend/Dockerfile
     context: ./backend
@@ -13,7 +12,6 @@
     OPENAI_BASE_URL: ${OPENAI_BASE_URL}
 
 - name: frontend
-  type: worker
   build:
     dockerfile: frontend/Dockerfile
     context: ./frontend
