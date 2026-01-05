@@ -675,6 +675,10 @@ def group_walls_by_storey_objectplacement_recursive(ifc_file):
     walls.extend(ifc_file.by_type("IfcPlate"))
     walls.extend(ifc_file.by_type("IfcCovering"))
     walls.extend(ifc_file.by_type("IfcMember"))
+    walls.extend(ifc_file.by_type("IfcColumn"))
+    walls.extend(ifc_file.by_type("IfcBuildingElementProxy"))
+    walls.extend(ifc_file.by_type("IfcWindow"))
+    walls.extend(ifc_file.by_type("IfcDoor"))
 
     for wall in walls:
         root_placement = get_root_object_placement(wall)
@@ -700,6 +704,10 @@ def group_walls_by_z(ifc_file, z_tolerance=1000):
     walls.extend(ifc_file.by_type("IfcPlate"))
     walls.extend(ifc_file.by_type("IfcCovering"))
     walls.extend(ifc_file.by_type("IfcMember"))
+    walls.extend(ifc_file.by_type("IfcColumn"))
+    walls.extend(ifc_file.by_type("IfcBuildingElementProxy"))
+    walls.extend(ifc_file.by_type("IfcWindow"))
+    walls.extend(ifc_file.by_type("IfcDoor"))
     result = {}
     for wall in walls:
         placement = getattr(wall, "ObjectPlacement", None)
@@ -727,6 +735,10 @@ def group_walls_by_global_z(ifc_file, z_tolerance=1000):
     walls.extend(ifc_file.by_type("IfcPlate"))
     walls.extend(ifc_file.by_type("IfcCovering"))
     walls.extend(ifc_file.by_type("IfcMember"))
+    walls.extend(ifc_file.by_type("IfcColumn"))
+    walls.extend(ifc_file.by_type("IfcBuildingElementProxy"))
+    walls.extend(ifc_file.by_type("IfcWindow"))
+    walls.extend(ifc_file.by_type("IfcDoor"))
     # 按id去重，避免重复计数
     unique_walls = {}
     for wall in walls:
@@ -782,6 +794,10 @@ def group_walls_by_target_elevations(ifc_file, target_elevations, tolerance=None
     walls.extend(ifc_file.by_type("IfcPlate"))
     walls.extend(ifc_file.by_type("IfcCovering"))
     walls.extend(ifc_file.by_type("IfcMember"))
+    walls.extend(ifc_file.by_type("IfcColumn"))
+    walls.extend(ifc_file.by_type("IfcBuildingElementProxy"))
+    walls.extend(ifc_file.by_type("IfcWindow"))
+    walls.extend(ifc_file.by_type("IfcDoor"))
 
     # 按id去重
     unique_walls = {}
@@ -1008,6 +1024,21 @@ def get_external_wall_outline(ifc_file, wall_thickness=None, target_elevations=N
                     merged_polygon = valid_polys[0]
                 else:
                     merged_polygon = unary_union(valid_polys)
+
+            # Fill holes to get the Gross Floor Area (enclosed area) and absorb inner islands
+            if isinstance(merged_polygon, Polygon):
+                merged_polygon = Polygon(merged_polygon.exterior)
+                merged_polygon = repair_geometry(merged_polygon)
+            elif isinstance(merged_polygon, MultiPolygon):
+                # Fill each part
+                filled_polys = []
+                for p in merged_polygon.geoms:
+                    filled = Polygon(p.exterior)
+                    filled = repair_geometry(filled)
+                    if filled and filled.is_valid:
+                        filled_polys.append(filled)
+                if filled_polys:
+                    merged_polygon = unary_union(filled_polys)
 
             # 验证外轮廓
             if not validate_outline(merged_polygon):

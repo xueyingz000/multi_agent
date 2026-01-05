@@ -7,6 +7,10 @@ from typing import Dict, List, Any, Optional
 from shapely.geometry import Polygon, MultiPolygon
 import ifcopenshell
 import ifcopenshell.util.placement
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 
 # Add parent directory to path to import tools
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -25,6 +29,78 @@ logger = logging.getLogger(__name__)
 class AreaCalculationAgent:
     def __init__(self):
         self.name = "Area Calculation Agent"
+
+    def _plot_poly(
+        self, ax, poly, color, alpha=0.5, label=None, edgecolor=None, linewidth=1
+    ):
+        try:
+            if isinstance(poly, Polygon):
+                x, y = poly.exterior.xy
+                ax.fill(x, y, color=color, alpha=alpha, label=label)
+                if edgecolor:
+                    ax.plot(x, y, color=edgecolor, linewidth=linewidth)
+            elif isinstance(poly, MultiPolygon):
+                for i, geom in enumerate(poly.geoms):
+                    x, y = geom.exterior.xy
+                    lbl = label if i == 0 else None
+                    ax.fill(x, y, color=color, alpha=alpha, label=lbl)
+                    if edgecolor:
+                        ax.plot(x, y, color=edgecolor, linewidth=linewidth)
+        except Exception as e:
+            logger.error(f"Error plotting polygon: {e}")
+
+    def _save_debug_image(
+        self, story_name, slab_poly, wall_poly, diff_poly, output_dir="debug_viz"
+    ):
+        try:
+            os.makedirs(output_dir, exist_ok=True)
+            fig, ax = plt.subplots(figsize=(10, 10))
+
+            # 1. Plot Slab (Base) - Blue
+            if slab_poly:
+                self._plot_poly(
+                    ax,
+                    slab_poly,
+                    color="lightblue",
+                    alpha=0.4,
+                    label="Slab (Total)",
+                    edgecolor="blue",
+                )
+
+            # 2. Plot Wall Outline (Subtract) - Green
+            if wall_poly:
+                self._plot_poly(
+                    ax,
+                    wall_poly,
+                    color="lightgreen",
+                    alpha=0.4,
+                    label="Wall Outline",
+                    edgecolor="green",
+                    linewidth=2,
+                )
+
+            # 3. Plot Difference (Result) - Red
+            if diff_poly:
+                self._plot_poly(
+                    ax,
+                    diff_poly,
+                    color="red",
+                    alpha=0.6,
+                    label="Outside (Balcony)",
+                    edgecolor="darkred",
+                )
+
+            ax.set_title(f"Story {story_name} Area Analysis")
+            ax.axis("equal")
+            ax.grid(True, alpha=0.3)
+            ax.legend()
+
+            path = os.path.join(output_dir, f"{story_name}_slab_vs_wall.png")
+            plt.savefig(path, dpi=150)
+            plt.close(fig)
+            logger.info(f"Saved debug analysis image to: {path}")
+        except Exception as e:
+            logger.error(f"Failed to save debug image: {e}")
 
     def calculate(self, ifc_file, rules_data: Dict, alignment_data: List[Dict]) -> Dict:
         """
@@ -127,6 +203,13 @@ class AreaCalculationAgent:
                     try:
                         diff_poly = merged_slab_poly.difference(outline_poly)
                         outside_area = diff_poly.area
+
+                        # Debug Visualization if large discrepancy
+                        if outside_area > 1.0:
+                            self._save_debug_image(
+                                story_name, merged_slab_poly, outline_poly, diff_poly
+                            )
+
                     except Exception as e:
                         logger.warning(
                             f"Error calculating outside area for {story_name}: {e}"
