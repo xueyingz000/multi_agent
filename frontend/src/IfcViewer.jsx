@@ -96,6 +96,7 @@ const IfcViewer = ({ file, onLoaded, onSelect, width, height, selectedId }) => {
         const ifcLoader = new IFCLoader();
         // 指向本地的 wasm 路径
         ifcLoader.ifcManager.setWasmPath('./');
+        ifcLoader.ifcManager.useWebWorkers(false); // 强制单线程
 
         // Removed setupThreeMeshBVH call as three-mesh-bvh is not installed
         // ifcLoader.ifcManager.setupThreeMeshBVH(...);
