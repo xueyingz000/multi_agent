@@ -5,6 +5,10 @@ import ifcopenshell
 from pathlib import Path
 from shapely.geometry import Polygon, MultiPolygon, LineString, Point
 from shapely.ops import unary_union
+import matplotlib
+
+# Use Agg backend for non-interactive image saving (thread-safe)
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.path as mpath
 import matplotlib.patches as mpatches
@@ -183,6 +187,88 @@ def plot_walls_and_outline(wall_geometries, external_outline=None, external_wall
 
     # 显示图像
     plt.show()
+
+
+def save_wall_analysis_image(
+    elevation, id_to_polygon, external_wall_ids, outline_polygon, output_dir="."
+):
+    """保存墙体分析结果图片，用于调试"""
+    try:
+        plt.figure(figsize=(15, 15))
+
+        # 1. 绘制所有墙体（灰色底色）
+        for wall_id, poly in id_to_polygon.items():
+            if isinstance(poly, Polygon):
+                x, y = poly.exterior.xy
+                plt.fill(
+                    x,
+                    y,
+                    color="lightgray",
+                    alpha=0.5,
+                    label="Inner Wall" if wall_id not in external_wall_ids else "",
+                )
+                plt.plot(x, y, color="gray", linewidth=0.5)
+
+        # 2. 高亮绘制外墙（红色）
+        external_count = 0
+        for wall_id in external_wall_ids:
+            if wall_id in id_to_polygon:
+                poly = id_to_polygon[wall_id]
+                if isinstance(poly, Polygon):
+                    x, y = poly.exterior.xy
+                    plt.fill(
+                        x,
+                        y,
+                        color="red",
+                        alpha=0.6,
+                        label="Outer Wall" if external_count == 0 else "",
+                    )
+                    plt.plot(x, y, color="darkred", linewidth=1)
+
+                    # 标注ID
+                    centroid = poly.centroid
+                    plt.text(
+                        centroid.x,
+                        centroid.y,
+                        str(wall_id),
+                        fontsize=8,
+                        color="black",
+                        ha="center",
+                        va="center",
+                        weight="bold",
+                    )
+                    external_count += 1
+
+        # 3. 绘制外轮廓（绿色线条）
+        if outline_polygon:
+            if isinstance(outline_polygon, Polygon):
+                x, y = outline_polygon.exterior.xy
+                plt.plot(x, y, "g-", linewidth=2, label="Outline")
+            elif isinstance(outline_polygon, MultiPolygon):
+                for i, geom in enumerate(outline_polygon.geoms):
+                    x, y = geom.exterior.xy
+                    plt.plot(x, y, "g-", linewidth=2, label="Outline" if i == 0 else "")
+
+        plt.title(
+            f"Elevation {elevation}m Analysis: {len(external_wall_ids)} External Walls"
+        )
+        plt.axis("equal")
+        plt.grid(True, alpha=0.3)
+
+        # 去重图例
+        handles, labels = plt.gca().get_legend_handles_labels()
+        by_label = dict(zip(labels, handles))
+        # 过滤掉空标签
+        if "" in by_label:
+            del by_label[""]
+        plt.legend(by_label.values(), by_label.keys())
+
+        filename = os.path.join(output_dir, f"wall_analysis_{elevation}m.png")
+        plt.savefig(filename, dpi=150)
+        plt.close()
+        logger.info(f"已保存墙体分析图: {filename}")
+    except Exception as e:
+        logger.error(f"保存墙体分析图失败: {e}")
 
 
 def filter_curve_points(curve_points, tolerance=0.05):
@@ -906,6 +992,23 @@ def get_external_wall_outline(ifc_file, wall_thickness=None, target_elevations=N
                 merged_polygon = max(merged_polygon.geoms, key=lambda p: p.area)
             merged_polygon = merged_polygon.buffer(-buffer_distance)
 
+            # 再次检查是否分裂为多个多边形（例如负缓冲切断了细连接）
+            if isinstance(merged_polygon, MultiPolygon):
+                # 过滤掉小碎片（面积小于最大多边形10%或小于2平方米）
+                max_area = max(p.area for p in merged_polygon.geoms)
+                valid_polys = []
+                for p in merged_polygon.geoms:
+                    if p.area > 2.0 and p.area > max_area * 0.1:
+                        valid_polys.append(p)
+
+                if not valid_polys:
+                    # 如果过滤后没有剩下的，保留最大的一个
+                    merged_polygon = max(merged_polygon.geoms, key=lambda p: p.area)
+                elif len(valid_polys) == 1:
+                    merged_polygon = valid_polys[0]
+                else:
+                    merged_polygon = unary_union(valid_polys)
+
             # 验证外轮廓
             if not validate_outline(merged_polygon):
                 logger.error(f"标高 {elevation}m 的外轮廓验证失败")
@@ -925,6 +1028,11 @@ def get_external_wall_outline(ifc_file, wall_thickness=None, target_elevations=N
                     external_wall_ids.append(wall_id)
 
             logger.info(f"标高 {elevation}m 识别出 {len(external_wall_ids)} 个外墙")
+
+            # 保存分析图
+            save_wall_analysis_image(
+                elevation, id_to_polygon, external_wall_ids, merged_polygon
+            )
 
             # 存储当前楼层的结果
             results_by_elevation[elevation] = {
