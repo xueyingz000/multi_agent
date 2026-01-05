@@ -130,6 +130,9 @@ Thumbs.db
 .venv/
 venv/
 env/
+node_modules/
+backend/temp/
+dist/
 
 # Configuration files with sensitive data
 config.yaml

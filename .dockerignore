@@ -1,0 +1,10 @@
+.git
+.gitignore
+.dockerignore
+frontend/node_modules
+backend/temp
+backend/__pycache__
+backend/venv
+backend/.venv
+frontend/dist
+**/.DS_Store
