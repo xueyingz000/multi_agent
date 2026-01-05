@@ -85,7 +85,7 @@ class AreaCalculationAgent:
 
             # A. Geometric Analysis (Inside vs Outside)
             outline_data = self._find_outline_for_elevation(wall_outlines, elevation)
-            # outline_data = None  # Disabled
+            # outline_data = None  # Disabled (Re-enabled now)
             inside_area = 0.0
             outside_area = 0.0  # Balconies (Geometric)
             outline_poly = None
@@ -104,12 +104,10 @@ class AreaCalculationAgent:
                     if not merged_slab_poly.is_valid:
                         merged_slab_poly = merged_slab_poly.buffer(0)
 
-            # Temporary Logic: Treat all slab area as "Inside"
-            # if merged_slab_poly:
-            #     inside_area = merged_slab_poly.area
-            #     outline_poly = merged_slab_poly  # Use slab as the outline
+            # --- UPDATED LOGIC ---
+            # 1. Base Area = Wall Outline Area (Enclosed Area)
+            # 2. Outside Area = Slab Area - Wall Outline Area (Balconies/Terraces)
 
-            # Original Logic Disabled
             if outline_data and outline_data.get("merged_polygon"):
                 outline_poly = outline_data["merged_polygon"]
                 # Repair if invalid
@@ -117,10 +115,7 @@ class AreaCalculationAgent:
                     outline_poly = outline_poly.buffer(0)
 
                 # Base Area (Inside) is the Wall Outline
-                # Note: We assume the Wall Outline represents the "Enclosed" area.
-                # However, to be safe, we should perhaps intersect with the slab?
-                # Usually GFA is measured to the outside face of the wall, even if there is no slab (e.g. atriums might be handled by Void deduction).
-                # But if we rely on Outline for GFA:
+                # Note: This includes the wall thickness itself, which is standard for GFA.
                 inside_area = outline_poly.area
 
                 # Calculate Outside Area (Balconies)
@@ -137,11 +132,18 @@ class AreaCalculationAgent:
                             f"Error calculating outside area for {story_name}: {e}"
                         )
 
-            # If no outline found, but we have slabs, maybe it's all "Outside" (e.g. roof deck?)?
-            # Or maybe we just take the slab area?
-            # For now, if no outline, we assume it's 0 inside.
+            # Fallback: If no wall outline found but slabs exist (e.g., open roof deck or structure without walls?)
+            # Usually GFA requires enclosure. If no enclosure, area might be 0 or calculated differently.
+            # For now, if no outline, we assume it's 0 inside area.
 
-            base_area = inside_area  # This is the 1.0 area candidate
+            # However, if the user complains about "floor slab inside the green outline",
+            # they confirm that the green outline IS the boundary.
+            # So `inside_area = outline_poly.area` is correct.
+
+            # BUT, we must ensure we are using the `wall_outlines` variable which was previously disabled.
+            # (See line 54 in the original file which was commented out in my thought process but let's check the file content)
+
+            base_area = inside_area
 
             # B. Determine Base Coefficient (Height)
             height_coeff = self._determine_height_coefficient(height, height_rules)
@@ -438,6 +440,37 @@ class AreaCalculationAgent:
             "regulation_applied": rules_data.get("region", "Unknown"),
             "summary_text": f"Total Calculated Area: {round(total_area, 2)} sq.m across {len(detailed_results)} stories.",
         }
+
+        # --- LOGGING DETAILED BREAKDOWN ---
+        logger.info("\n" + "=" * 60)
+        logger.info("               AREA CALCULATION BREAKDOWN               ")
+        logger.info("=" * 60)
+
+        for story in detailed_results:
+            logger.info(
+                f"\n[Story: {story['story_name']}] (Elev: {story['elevation']}m, Height: {story['height']}m)"
+            )
+            logger.info(f"  > Base Area (Green Outline): {story['base_area']} m2")
+            logger.info(f"  > Story Height Coefficient: {story['height_coefficient']}")
+
+            if story["components"]:
+                logger.info("  > Detailed Components:")
+                for comp in story["components"]:
+                    # Format: Category: Raw * Coeff = Effective (Note)
+                    cat = comp["category"]
+                    raw = round(comp["raw_area"], 2)
+                    coeff = comp["coefficient"]
+                    eff = round(comp["effective_area"], 2)
+                    note = comp["note"]
+                    logger.info(
+                        f"    - {cat:<25}: {raw:>8} m2  x  {coeff:<3} = {eff:>8} m2  | {note}"
+                    )
+
+            logger.info(f"  > Final Calculated Area: {story['calculated_area']} m2")
+            logger.info("-" * 40)
+
+        logger.info(f"\nTOTAL BUILDING AREA: {round(total_area, 2)} m2")
+        logger.info("=" * 60 + "\n")
 
         logger.info(f"✅ [Agent 3] Calculation Complete. Total Area: {total_area}")
         return report
