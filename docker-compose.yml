@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: bim_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=sk-Dppz8ZLK62lWyZc7G3w3LtkJx7sNgmjdF65kzR7hKtQlnQDL
+      - OPENAI_BASE_URL=https://yunwu.ai/v1
+      
+    volumes:
+      - ./backend/temp:/app/temp
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: bim_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped

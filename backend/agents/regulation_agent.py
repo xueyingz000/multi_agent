@@ -54,7 +54,9 @@ class RegulationOutput(BaseModel):
 
 class RegulationAnalysisAgent:
     def __init__(self, model_name="gpt-4o"):
-        self.client = OpenAI()
+        api_key = os.getenv("OPENAI_API_KEY")
+        base_url = os.getenv("OPENAI_BASE_URL")
+        self.client = OpenAI(api_key=api_key, base_url=base_url)
         self.model = model_name
 
     def _extract_text_from_pdf(self, pdf_path: str) -> str:

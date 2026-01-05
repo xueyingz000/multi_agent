@@ -17,3 +17,13 @@ ifcopenshell>=0.7.0
 
 langchain>=0.1.0
 langchain-openai>=0.0.8
+
+# Data Analysis
+pandas>=2.0.0
+numpy>=1.24.0
+matplotlib>=3.7.0
+shapely>=2.0.0
+openpyxl>=3.1.0
+scipy>=1.10.0
+networkx>=3.0
+descartes>=1.1.0
