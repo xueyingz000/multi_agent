@@ -128,7 +128,7 @@ const BIMInterface = () => {
             formData.append("file", file);
             try {
                 console.log("📤 Uploading IFC to backend...");
-                await fetch("http://localhost:8000/upload/ifc", { method: "POST", body: formData });
+                await fetch("/upload/ifc", { method: "POST", body: formData });
             } catch (err) {
                 console.error("IFC upload failed (Check if server.py is running)", err);
             }
@@ -148,7 +148,7 @@ const BIMInterface = () => {
 
             try {
                 console.log("📤 Uploading PDF to Agent 1...");
-                const res = await fetch("http://localhost:8000/upload/regulation", {
+                const res = await fetch("/upload/regulation", {
                     method: "POST",
                     body: formData
                 });
@@ -177,7 +177,7 @@ const BIMInterface = () => {
             }
             // 2. 发送后端停止信号
             try {
-                await fetch("http://localhost:8000/analyze/stop", { method: "POST" });
+                await fetch("/analyze/stop", { method: "POST" });
                 console.log("🛑 Stop signal sent to backend.");
             } catch (err) {
                 console.error("Failed to send stop signal:", err);
@@ -205,7 +205,7 @@ const BIMInterface = () => {
 
         try {
             console.log("🚀 Starting Agent 2 Semantic Analysis...");
-            const res = await fetch("http://localhost:8000/analyze/semantic", {
+            const res = await fetch("/analyze/semantic", {
                 method: "POST",
                 signal: signal // 绑定取消信号
             });
@@ -272,7 +272,7 @@ const BIMInterface = () => {
             try {
                 console.log("🔍 Fetching analysis for:", props.GlobalId.value);
                 // 调用后端 /analyze/element
-                const res = await fetch("http://localhost:8000/analyze/element", {
+                const res = await fetch("/analyze/element", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ element_guid: props.GlobalId.value })
@@ -310,7 +310,7 @@ const BIMInterface = () => {
 
         // 获取详细分析数据
         try {
-            const res = await fetch("http://localhost:8000/analyze/element", {
+            const res = await fetch("/analyze/element", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ element_guid: item.guid })
@@ -337,7 +337,7 @@ const BIMInterface = () => {
         setIsCalculating(true);
         try {
             console.log("🚀 Starting Area Calculation...");
-            const res = await fetch("http://localhost:8000/calculate/area", { method: "POST" });
+            const res = await fetch("/calculate/area", { method: "POST" });
             const json = await res.json();
 
             if (json.status === "success") {
@@ -361,7 +361,7 @@ const BIMInterface = () => {
 
         try {
             console.log("📥 Exporting Report...");
-            const res = await fetch("http://localhost:8000/export/report");
+            const res = await fetch("/export/report");
             if (res.ok) {
                 const blob = await res.blob();
                 const url = window.URL.createObjectURL(blob);
@@ -384,7 +384,7 @@ const BIMInterface = () => {
         if (!agent2Data || !agent2Data.element_id) return;
         try {
             console.log("✅ Approving element:", agent2Data.element_id);
-            const res = await fetch("http://localhost:8000/analyze/approve", {
+            const res = await fetch("/analyze/approve", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ element_guid: agent2Data.element_id })
@@ -421,7 +421,7 @@ const BIMInterface = () => {
         if (newType && newType !== agent2Data.type) {
             try {
                 console.log("✏️ Editing element:", agent2Data.element_id, "to", newType);
-                const res = await fetch("http://localhost:8000/analyze/update", {
+                const res = await fetch("/analyze/update", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
