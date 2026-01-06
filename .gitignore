@@ -130,7 +130,7 @@ Thumbs.db
 .venv/
 venv/
 env/
-node_modules/
+frontend/node_modules/
 backend/temp/
 dist/
 
