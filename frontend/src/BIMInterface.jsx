@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import IfcViewer from './IfcViewer';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+const API_BASE_URL = process.env.BACKEND_URL || "http://localhost:8000";
 
 // --- 组件：结构树节点 (保持不变) ---
 const TreeNode = ({ node, onSelectNode, depth = 0 }) => {

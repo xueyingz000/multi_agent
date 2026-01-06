@@ -3,36 +3,18 @@ import react from '@vitejs/plugin-react'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
+  // 加载环境变量
   const env = loadEnv(mode, process.cwd(), '')
-  const target = env.BACKEND_URL || 'http://localhost:8000'
 
   return {
     plugins: [react()],
+    // 将 BACKEND_URL 暴露给前端代码
+    define: {
+      'process.env.BACKEND_URL': JSON.stringify(env.BACKEND_URL)
+    },
     server: {
       host: '0.0.0.0',
       port: 8080,
-      proxy: {
-        '/upload': {
-          target: target,
-          changeOrigin: true,
-          secure: false,
-        },
-        '/analyze': {
-          target: target,
-          changeOrigin: true,
-          secure: false,
-        },
-        '/calculate': {
-          target: target,
-          changeOrigin: true,
-          secure: false,
-        },
-        '/export': {
-          target: target,
-          changeOrigin: true,
-          secure: false,
-        },
-      }
     },
     preview: {
       host: '0.0.0.0',
