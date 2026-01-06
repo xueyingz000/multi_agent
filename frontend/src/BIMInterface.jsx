@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import IfcViewer from './IfcViewer';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+
 // --- 组件：结构树节点 (保持不变) ---
 const TreeNode = ({ node, onSelectNode, depth = 0 }) => {
     // Default expansion: Only expand the root (Building), collapse everything else (Levels)
@@ -128,7 +130,7 @@ const BIMInterface = () => {
             formData.append("file", file);
             try {
                 console.log("📤 Uploading IFC to backend...");
-                await fetch("/upload/ifc", { method: "POST", body: formData });
+                await fetch(`${API_BASE_URL}/upload/ifc`, { method: "POST", body: formData });
             } catch (err) {
                 console.error("IFC upload failed (Check if server.py is running)", err);
             }
@@ -148,7 +150,7 @@ const BIMInterface = () => {
 
             try {
                 console.log("📤 Uploading PDF to Agent 1...");
-                const res = await fetch("/upload/regulation", {
+                const res = await fetch(`${API_BASE_URL}/upload/regulation`, {
                     method: "POST",
                     body: formData
                 });
@@ -177,7 +179,7 @@ const BIMInterface = () => {
             }
             // 2. 发送后端停止信号
             try {
-                await fetch("/analyze/stop", { method: "POST" });
+                await fetch(`${API_BASE_URL}/analyze/stop`, { method: "POST" });
                 console.log("🛑 Stop signal sent to backend.");
             } catch (err) {
                 console.error("Failed to send stop signal:", err);
@@ -205,7 +207,7 @@ const BIMInterface = () => {
 
         try {
             console.log("🚀 Starting Agent 2 Semantic Analysis...");
-            const res = await fetch("/analyze/semantic", {
+            const res = await fetch(`${API_BASE_URL}/analyze/semantic`, {
                 method: "POST",
                 signal: signal // 绑定取消信号
             });
@@ -272,7 +274,7 @@ const BIMInterface = () => {
             try {
                 console.log("🔍 Fetching analysis for:", props.GlobalId.value);
                 // 调用后端 /analyze/element
-                const res = await fetch("/analyze/element", {
+                const res = await fetch(`${API_BASE_URL}/analyze/element`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ element_guid: props.GlobalId.value })
@@ -310,7 +312,7 @@ const BIMInterface = () => {
 
         // 获取详细分析数据
         try {
-            const res = await fetch("/analyze/element", {
+            const res = await fetch(`${API_BASE_URL}/analyze/element`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ element_guid: item.guid })
@@ -337,7 +339,7 @@ const BIMInterface = () => {
         setIsCalculating(true);
         try {
             console.log("🚀 Starting Area Calculation...");
-            const res = await fetch("/calculate/area", { method: "POST" });
+            const res = await fetch(`${API_BASE_URL}/calculate/area`, { method: "POST" });
             const json = await res.json();
 
             if (json.status === "success") {
@@ -361,7 +363,7 @@ const BIMInterface = () => {
 
         try {
             console.log("📥 Exporting Report...");
-            const res = await fetch("/export/report");
+            const res = await fetch(`${API_BASE_URL}/export/report`);
             if (res.ok) {
                 const blob = await res.blob();
                 const url = window.URL.createObjectURL(blob);
