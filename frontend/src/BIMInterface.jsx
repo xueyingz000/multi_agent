@@ -129,8 +129,9 @@ const BIMInterface = () => {
             const formData = new FormData();
             formData.append("file", file);
             try {
-                console.log("📤 Uploading IFC to backend...");
-                await fetch(`${API_BASE_URL}/upload/ifc`, { method: "POST", body: formData });
+                const uploadUrl = `${API_BASE_URL}/upload/ifc`;
+                console.log(`📤 Uploading IFC to backend: ${uploadUrl}`);
+                await fetch(uploadUrl, { method: "POST", body: formData });
             } catch (err) {
                 console.error("IFC upload failed (Check if server.py is running)", err);
             }
