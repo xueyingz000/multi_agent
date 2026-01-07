@@ -990,43 +990,55 @@ def get_external_wall_outline(ifc_file, wall_thickness=None, target_elevations=N
             # 2. 构件高度检查 (剔除台阶、装饰矮墙等)
             element_height = data["max_z"] - data["min_z"]
             element_type = data["element"].is_a()
+            element_name = data["element"].Name if data["element"].Name else ""
 
             # 基础阈值：非常矮的物体 (如地毯、贴图、路沿) 统统过滤
             if element_height < 0.1:
                 continue
 
-            # 针对 "装饰外墙" (非常低) 和 "台阶" 的过滤
-            # 之前的过滤 (1.2m / 50%层高) 太严格，导致部分外墙丢失
-            # 现在的策略：
+            # ---------------------------------------------------------
+            # 策略调整 (2026-01-07)
+            # 目标:
+            # 1. 剔除阳台扶手/女儿墙 (通常 < 1.5m 的 IfcWall)
+            # 2. 剔除装饰性线条/扫掠 (IfcBuildingElementProxy, "Sweep", "装饰")
+            # 3. 保留幕墙 (IfcCurtainWall) 和 结构性外墙
+            # ---------------------------------------------------------
 
-            # 1. 核心结构构件 (墙、柱、幕墙)
-            # 放宽阈值到 0.5m，以保留窗下墙 (Spandrel) 等矮墙
-            # 同时过滤掉极矮的装饰性反坎或路沿 (通常 < 0.3m)
-            if element_type in [
-                "IfcWall",
-                "IfcWallStandardCase",
-                "IfcCurtainWall",
-                "IfcColumn",
-            ]:
-                if element_height < 0.5:
+            # 1. 过滤 IfcBuildingElementProxy (装饰件/杂项)
+            if element_type == "IfcBuildingElementProxy":
+                # 关键词过滤: 装饰墙, Wall Sweep, Cornice
+                keywords = ["Sweep", "Cornice", "Molding", "装饰", "Decoration"]
+                if any(k in element_name for k in keywords):
                     continue
-
-            # 2. 易混淆构件 (板、代理、杆件、覆盖层)
-            # 这些类型常用于台阶、楼板、梁、家具等
-            # 使用较严格的阈值 (1.2m)，确保选中的是垂直挡板或高大构件
-            # 台阶通常每个 < 0.2m，整跑楼梯虽高但通常由多个小构件或作为整体Proxy
-            # 如果是整体Proxy楼梯，可能需要更高阈值，但暂定 1.2m 以平衡
-            elif element_type in [
-                "IfcPlate",
-                "IfcBuildingElementProxy",
-                "IfcCovering",
-                "IfcMember",
-            ]:
+                # 高度过滤: 如果不是明确的装饰件，但高度很低，也过滤
                 if element_height < 1.2:
                     continue
 
-            # 3. 门窗 (IfcWindow, IfcDoor)
-            # 通常保留，因为它们定义了墙体开口
+            # 2. 过滤 IfcWall / IfcWallStandardCase (实体墙)
+            elif element_type in ["IfcWall", "IfcWallStandardCase"]:
+                # 高度过滤: 剔除阳台扶手、女儿墙 (如 1.5m 高的墙)
+                # 正常层高通常 > 3m，门高 2.1m。
+                # 设定阈值为 2.0m，剔除大部分非全高墙体。
+                if element_height < 2.0:
+                    continue
+
+            # 3. 过滤 IfcColumn (柱)
+            elif element_type == "IfcColumn":
+                if element_height < 0.5:
+                    continue
+
+            # 4. 过滤 IfcCurtainWall (幕墙)
+            # 幕墙通常比较重要，且可能是分段的，保持较低阈值
+            elif element_type == "IfcCurtainWall":
+                if element_height < 0.5:
+                    continue
+
+            # 5. 其他构件 (板、覆盖层、杆件)
+            elif element_type in ["IfcPlate", "IfcCovering", "IfcMember"]:
+                if element_height < 1.2:
+                    continue
+
+            # 6. 门窗 (IfcWindow, IfcDoor) - 保留
 
             polygons.append(data["polygon"])
             id_to_polygon[data["id"]] = data["polygon"]
@@ -1061,16 +1073,50 @@ def get_external_wall_outline(ifc_file, wall_thickness=None, target_elevations=N
         try:
             merged_polygon = unary_union(polygons)
 
-            # 简单处理：缓冲去缝隙
-            buffer_size = 0.05
-            merged_polygon = merged_polygon.buffer(buffer_size).buffer(-buffer_size)
+            # 简单处理：缓冲去缝隙 (增大缓冲以确保连接)
+            # 使用较大的缓冲值 (0.3m) 来合并相邻的墙体段，消除"双线"问题
+            # 使用 join_style=2 (mitre) 避免将直角变圆角
+            buffer_size = 0.3
+            merged_polygon = merged_polygon.buffer(buffer_size, join_style=2).buffer(
+                -buffer_size, join_style=2
+            )
 
-            # 填充孔洞
-            if hasattr(merged_polygon, "geoms"):
-                filled_polys = [Polygon(p.exterior) for p in merged_polygon.geoms]
-                merged_polygon = unary_union(filled_polys)
-            elif isinstance(merged_polygon, Polygon):
-                merged_polygon = Polygon(merged_polygon.exterior)
+            # 处理 MultiPolygon 和 孔洞
+            final_polys = []
+
+            # 定义孔洞填充阈值 (m2)
+            # 小于此面积的孔洞（如房间、管井）将被填充，以获取完整的建筑外轮廓
+            # 大于此面积的孔洞（如大型中庭）将被保留
+            HOLE_THRESHOLD = 500.0
+
+            def process_polygon(p):
+                # 获取外轮廓
+                shell = Polygon(p.exterior)
+                # 获取内孔洞
+                holes = []
+                for interior in p.interiors:
+                    hole = Polygon(interior)
+                    if hole.area > HOLE_THRESHOLD:
+                        holes.append(interior)
+
+                # 重建多边形（保留大孔洞）
+                return Polygon(shell.exterior, holes)
+
+            if isinstance(merged_polygon, Polygon):
+                final_polys.append(process_polygon(merged_polygon))
+            elif isinstance(merged_polygon, MultiPolygon):
+                # 多个多边形
+                for p in merged_polygon.geoms:
+                    # 只要不是极小的噪点，都保留
+                    if p.area > 0.01:
+                        final_polys.append(process_polygon(p))
+
+            # 重新合并（通常不需要，因为已经是分离的，但为了保持格式）
+            if not final_polys:
+                logger.warning(f"标高 {elevation}m 没有生成有效的轮廓 (所有碎片过小)")
+                continue
+
+            merged_polygon = unary_union(final_polys)
 
             merged_polygon = repair_geometry(merged_polygon)
 
