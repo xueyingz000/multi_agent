@@ -845,227 +845,211 @@ def group_walls_by_target_elevations(ifc_file, target_elevations, tolerance=None
     return result
 
 
-def get_external_wall_outline(ifc_file, wall_thickness=None, target_elevations=None):
-    """使用布尔运算获取外墙轮廓，按楼层分别计算"""
-    walls_by_elevation = {}
+def extract_candidate_elements_with_geometry(ifc_file):
+    """提取所有候选构件的几何信息（垂直范围和2D投影）"""
+    from scipy.spatial import ConvexHull
 
-    # 0. 如果提供了目标标高，优先使用
-    if target_elevations:
-        logger.info(f"使用提供的目标标高分组: {target_elevations}")
-        walls_by_elevation = group_walls_by_target_elevations(
-            ifc_file, target_elevations
-        )
+    types = [
+        "IfcWall",
+        "IfcWallStandardCase",
+        "IfcCurtainWall",
+        "IfcMember",
+        "IfcPlate",
+        "IfcColumn",
+        "IfcBuildingElementProxy",
+        "IfcWindow",
+        "IfcDoor",
+        "IfcCovering",
+    ]
 
-        # 检查是否所有楼层都为空
-        if not any(walls_by_elevation.values()):
-            logger.warning("目标标高分组结果为空，尝试使用其他分组方法")
-            walls_by_elevation = {}  # 重置以便后续尝试
+    elements = []
+    seen_ids = set()
+    for t in types:
+        for e in ifc_file.by_type(t):
+            if e.id() not in seen_ids:
+                elements.append(e)
+                seen_ids.add(e.id())
 
-    if not walls_by_elevation:
-        # 1. 优先用结构分组
-        walls_by_elevation = group_walls_by_storey_objectplacement_recursive(ifc_file)
-        if len(walls_by_elevation) <= 1:
-            logger.info("结构分组只有一个楼层，自动切换为Z坐标分组")
-            z_walls = group_walls_by_z(ifc_file)
-            # 只有当z分组找到更多层时才切换，或者当前只有1层且z分组也只有1层（可能是同一层）
-            # 这里简单起见，如果结构分组只有1层，就尝试其他方法
-            if len(z_walls) >= 1:
-                walls_by_elevation = z_walls
+    logger.info(f"提取几何信息: 共 {len(elements)} 个候选构件")
 
-        if len(walls_by_elevation) <= 1:
-            logger.info("局部Z分组只有一个楼层，自动切换为全局Z坐标分组")
-            gz_walls = group_walls_by_global_z(ifc_file)
-            if len(gz_walls) >= 1:
-                walls_by_elevation = gz_walls
+    settings = ifcopenshell.geom.settings()
+    settings.set(settings.USE_WORLD_COORDS, True)
 
-    logger.info(f"墙体按标高分组: {len(walls_by_elevation)} 个楼层")
+    processed_data = []
 
-    # 计算标准墙厚度（如果未提供）
-    all_walls = []
-    for wall_list in walls_by_elevation.values():
-        all_walls.extend(wall_list)
-    if wall_thickness is None:
-        thickness_values = []
-        for wall in all_walls:
+    for element in elements:
+        try:
+            if not element.Representation:
+                continue
+
             try:
-                if not wall.Representation:
+                shape = ifcopenshell.geom.create_shape(settings, element)
+            except Exception:
+                continue
+
+            if not shape or not shape.geometry:
+                continue
+
+            verts = shape.geometry.verts
+            if not verts or len(verts) < 3:
+                continue
+
+            # 提取坐标
+            x_coords = [verts[i] for i in range(0, len(verts), 3)]
+            y_coords = [verts[i + 1] for i in range(0, len(verts), 3)]
+            z_coords = [verts[i + 2] for i in range(0, len(verts), 3)]
+
+            min_z = min(z_coords)
+            max_z = max(z_coords)
+
+            # 如果垂直高度极小（例如<1cm），可能是一个平面，保留它
+            # 但如果投影面积极小，则忽略
+
+            points = list(zip(x_coords, y_coords))
+            # 使用 ConvexHull 生成 2D 投影
+            # 注意：对于单个构件，ConvexHull 是安全的，因为构件通常是凸的或其凸包足以代表其占据的空间
+            if len(points) < 3:
+                continue
+
+            try:
+                hull = ConvexHull(points)
+                hull_points = [points[i] for i in hull.vertices]
+                poly = Polygon(hull_points)
+
+                if not poly.is_valid:
+                    poly = poly.buffer(0)
+
+                if poly.area < 0.01:  # 忽略极小的构件
                     continue
 
-                settings = ifcopenshell.geom.settings()
-                settings.set(settings.USE_WORLD_COORDS, True)
-                shape = ifcopenshell.geom.create_shape(settings, wall)
+                processed_data.append(
+                    {
+                        "id": element.id(),
+                        "min_z": min_z,
+                        "max_z": max_z,
+                        "polygon": poly,
+                        "element": element,
+                    }
+                )
+            except Exception:
+                continue
 
-                if not shape or not shape.geometry:
-                    continue
+        except Exception as e:
+            # logger.warning(f"Error processing #{element.id()}: {e}")
+            pass
 
-                verts = shape.geometry.verts
-                if not verts or len(verts) < 3:
-                    continue
+    logger.info(f"成功提取几何信息的构件数: {len(processed_data)}")
+    return processed_data
 
-                # 提取坐标范围
-                x_coords = [verts[i] for i in range(0, len(verts), 3)]
-                y_coords = [verts[i + 1] for i in range(0, len(verts), 3)]
 
-                # 计算包围盒
-                min_x = min(x_coords)
-                max_x = max(x_coords)
-                min_y = min(y_coords)
-                max_y = max(y_coords)
+def get_external_wall_outline(ifc_file, wall_thickness=None, target_elevations=None):
+    """使用垂直范围匹配获取外墙轮廓"""
 
-                # 估算厚度（取短边）
-                width = max_x - min_x
-                height = max_y - min_y
+    # 1. 提取所有构件的几何信息
+    all_element_data = extract_candidate_elements_with_geometry(ifc_file)
 
-                if width > 0 and height > 0:
-                    thickness = min(width, height)
-                    thickness_values.append(thickness)
-            except Exception as e:
-                logger.warning(f"计算墙体 #{wall.id()} 厚度时出错: {e}")
+    # 2. 如果没有提供目标标高，尝试推断（这里简化为使用默认逻辑或报错）
+    if not target_elevations:
+        logger.warning("未提供目标标高，尝试从构件分布推断...")
+        # 简单的聚类或使用 Storey 信息
+        # 这里为了保持兼容性，还是调用旧的逻辑获取标高列表，或者假设调用者总是提供
+        # 现有的调用逻辑中，run_area_calculation 总是提供 target_elevations
+        pass
 
-        # 使用中位数作为标准厚度
-        if thickness_values:
-            thickness_values.sort()
-            wall_thickness = thickness_values[len(thickness_values) // 2]
-        else:
-            wall_thickness = 0.2  # 默认厚度为20cm
-
-    logger.info(f"使用墙厚: {wall_thickness:.3f}m")
-
-    # 按楼层处理墙体
     results_by_elevation = {}
 
-    for elevation, floor_walls in walls_by_elevation.items():
-        logger.info(f"处理标高 {elevation}m 的墙体，共 {len(floor_walls)} 个")
+    # 3. 按标高处理
+    for elevation in target_elevations:
+        logger.info(f"处理标高 {elevation}m...")
 
-        # 为当前楼层的每个墙体创建多边形
+        # 筛选覆盖该标高的构件
+        # 容差：0.1m (允许标高切面稍微超出构件范围，或者构件稍微够不着)
+        # 实际上，如果构件是 0.0-4.0m，标高是 4.5m，不应该包含。
+        # 如果构件是 0.0-12.0m (幕墙)，标高 4.5m，应该包含。
+        tol = 0.1
+
         polygons = []
-        wall_ids = []
         id_to_polygon = {}
 
-        for wall in floor_walls:
-            try:
-                if not wall.Representation:
-                    continue
+        for data in all_element_data:
+            # 检查垂直重叠
+            if data["min_z"] - tol <= elevation <= data["max_z"] + tol:
+                polygons.append(data["polygon"])
+                id_to_polygon[data["id"]] = data["polygon"]
 
-                settings = ifcopenshell.geom.settings()
-                settings.set(settings.USE_WORLD_COORDS, True)
-                shape = ifcopenshell.geom.create_shape(settings, wall)
+        logger.info(f"标高 {elevation}m 匹配到 {len(polygons)} 个构件")
 
-                if not shape or not shape.geometry:
-                    continue
-
-                verts = shape.geometry.verts
-                if not verts or len(verts) < 3:
-                    continue
-
-                # 提取顶点
-                points = []
-                for i in range(0, len(verts), 3):
-                    if i + 2 < len(verts):
-                        points.append((verts[i], verts[i + 1]))
-
-                if len(points) < 3:
-                    continue
-
-                # 创建墙体多边形
-                try:
-                    from scipy.spatial import ConvexHull
-
-                    hull = ConvexHull(points)
-                    hull_points = [points[i] for i in hull.vertices]
-                    wall_polygon = Polygon(hull_points)
-
-                    # 修复和优化几何形状
-                    wall_polygon = repair_geometry(wall_polygon)
-
-                    if wall_polygon and wall_polygon.is_valid and wall_polygon.area > 0:
-                        polygons.append(wall_polygon)
-                        wall_ids.append(wall.id())
-                        id_to_polygon[wall.id()] = wall_polygon
-                    else:
-                        logger.warning(f"墙体 #{wall.id()} 创建的多边形无效或面积为0")
-                except Exception as e:
-                    logger.warning(f"创建墙体 #{wall.id()} 多边形时出错: {e}")
-            except Exception as e:
-                logger.warning(f"处理墙体 #{wall.id()} 时出错: {e}")
-
-        # 使用布尔运算合并当前楼层的多边形
         if not polygons:
-            logger.warning(f"标高 {elevation}m 没有有效的墙体多边形")
             continue
 
-        logger.info(
-            f"使用布尔运算合并标高 {elevation}m 的 {len(polygons)} 个墙体多边形..."
-        )
-
+        # Debug: Save raw polygons plot
         try:
-            # 合并所有多边形前，先做buffer填补缝隙
-            buffer_distance = 0.05  # 5厘米，实际可根据模型精度调整
-            buffered_polygons = [poly.buffer(buffer_distance) for poly in polygons]
-            merged_polygon = unary_union(buffered_polygons)
-            # 合并后再收缩
-            if isinstance(merged_polygon, MultiPolygon):
-                merged_polygon = max(merged_polygon.geoms, key=lambda p: p.area)
-            merged_polygon = merged_polygon.buffer(-buffer_distance)
+            fig, ax = plt.subplots(figsize=(10, 10))
+            for p in polygons:
+                # 转换 shapely polygon 到 matplotlib patch
+                patch = None
+                if p.geom_type == "Polygon":
+                    x, y = p.exterior.xy
+                    patch = mpatches.Polygon(
+                        list(zip(x, y)), alpha=0.3, fc="blue", ec="blue"
+                    )
+                    ax.add_patch(patch)
+            ax.set_title(f"Raw Polygons @ {elevation}m (Count: {len(polygons)})")
+            ax.autoscale()
+            plt.savefig(f"debug_viz/raw_polygons_{elevation}m.png")
+            plt.close(fig)
+        except Exception as e:
+            logger.warning(f"Failed to save raw polygons debug plot: {e}")
 
-            # 再次检查是否分裂为多个多边形（例如负缓冲切断了细连接）
-            if isinstance(merged_polygon, MultiPolygon):
-                # 过滤掉小碎片（面积小于最大多边形10%或小于2平方米）
-                max_area = max(p.area for p in merged_polygon.geoms)
-                valid_polys = []
-                for p in merged_polygon.geoms:
-                    if p.area > 2.0 and p.area > max_area * 0.1:
-                        valid_polys.append(p)
+        # 4. 合并多边形
+        try:
+            merged_polygon = unary_union(polygons)
 
-                if not valid_polys:
-                    # 如果过滤后没有剩下的，保留最大的一个
-                    merged_polygon = max(merged_polygon.geoms, key=lambda p: p.area)
-                elif len(valid_polys) == 1:
-                    merged_polygon = valid_polys[0]
-                else:
-                    merged_polygon = unary_union(valid_polys)
+            # 简单处理：缓冲去缝隙
+            buffer_size = 0.05
+            merged_polygon = merged_polygon.buffer(buffer_size).buffer(-buffer_size)
 
-            # Fill holes to get the Gross Floor Area (enclosed area) and absorb inner islands
-            if isinstance(merged_polygon, Polygon):
+            # 填充孔洞
+            if hasattr(merged_polygon, "geoms"):
+                filled_polys = [Polygon(p.exterior) for p in merged_polygon.geoms]
+                merged_polygon = unary_union(filled_polys)
+            elif isinstance(merged_polygon, Polygon):
                 merged_polygon = Polygon(merged_polygon.exterior)
-                merged_polygon = repair_geometry(merged_polygon)
-            elif isinstance(merged_polygon, MultiPolygon):
-                # Fill each part
-                filled_polys = []
-                for p in merged_polygon.geoms:
-                    filled = Polygon(p.exterior)
-                    filled = repair_geometry(filled)
-                    if filled and filled.is_valid:
-                        filled_polys.append(filled)
-                if filled_polys:
-                    merged_polygon = unary_union(filled_polys)
 
-            # 验证外轮廓
+            merged_polygon = repair_geometry(merged_polygon)
+
+            # 验证
             if not validate_outline(merged_polygon):
                 logger.error(f"标高 {elevation}m 的外轮廓验证失败")
                 continue
 
-            # 识别构成外轮廓的墙体
+            # 5. 识别外墙 (Distance based)
             external_wall_ids = []
-            outline_boundary = merged_polygon.boundary
-            intersection_threshold = 0.1  # 相交比例阈值
+            outline_boundary = None
+            if isinstance(merged_polygon, Polygon):
+                outline_boundary = merged_polygon.exterior
 
             for wall_id, wall_poly in id_to_polygon.items():
-                # 计算相交比例
-                intersection_ratio = calculate_intersection_ratio(
-                    wall_poly, outline_boundary
-                )
-                if intersection_ratio > intersection_threshold:
+                is_external = False
+                if outline_boundary:
+                    if wall_poly.distance(outline_boundary) < 0.5:
+                        is_external = True
+                elif isinstance(merged_polygon, MultiPolygon):
+                    for part in merged_polygon.geoms:
+                        if wall_poly.distance(part.exterior) < 0.5:
+                            is_external = True
+                            break
+
+                if is_external:
                     external_wall_ids.append(wall_id)
 
             logger.info(f"标高 {elevation}m 识别出 {len(external_wall_ids)} 个外墙")
 
-            # 保存分析图
+            # 保存结果
             save_wall_analysis_image(
                 elevation, id_to_polygon, external_wall_ids, merged_polygon
             )
 
-            # 存储当前楼层的结果
             results_by_elevation[elevation] = {
                 "outline": merged_polygon,
                 "external_wall_ids": external_wall_ids,
@@ -1074,10 +1058,17 @@ def get_external_wall_outline(ifc_file, wall_thickness=None, target_elevations=N
             }
 
         except Exception as e:
-            logger.error(f"标高 {elevation}m 合并多边形时出错: {e}")
+            logger.error(f"标高 {elevation}m 合并处理出错: {e}")
             continue
 
     return results_by_elevation
+
+
+def old_get_external_wall_outline(
+    ifc_file, wall_thickness=None, target_elevations=None
+):
+    """(Deprecated) 使用布尔运算获取外墙轮廓，按楼层分别计算"""
+    walls_by_elevation = {}
 
 
 def create_improved_wall_polygon(start_point, end_point, thickness, outward=False):

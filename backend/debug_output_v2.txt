@@ -1,0 +1,131 @@
+2026-01-07 16:50:06,173 - INFO - 🏗️ [Agent 3] Starting Area Calculation...
+2026-01-07 16:50:06,174 - INFO - Unit Scale to Meters: 0.001
+2026-01-07 16:50:06,177 - INFO - Story GL: Elev=-0.600m, Height=0.600m
+2026-01-07 16:50:06,177 - INFO - Story GF: Elev=0.000m, Height=4.500m
+2026-01-07 16:50:06,177 - INFO - Story 1F: Elev=4.500m, Height=3.900m
+2026-01-07 16:50:06,177 - INFO - Story 2F: Elev=8.400m, Height=3.900m
+2026-01-07 16:50:06,177 - INFO - Story RF: Elev=12.300m, Height=3.000m
+2026-01-07 16:50:06,177 - INFO - 使用提供的目标标高分组: [-0.6, 0.0, 4.5, 8.4, 12.3]
+2026-01-07 16:50:06,177 - INFO - 使用提供的目标标高分组: [-0.6, 0.0, 4.5, 8.4, 12.3]
+2026-01-07 16:50:06,803 - INFO - 墙体按标高分组: 5 个楼层
+2026-01-07 16:50:06,803 - INFO - 墙体按标高分组: 5 个楼层
+2026-01-07 16:50:11,950 - INFO - 使用墙厚: 0.150m
+2026-01-07 16:50:11,950 - INFO - 使用墙厚: 0.150m
+2026-01-07 16:50:11,950 - INFO - 处理标高 -0.6m 的墙体，共 71 个
+2026-01-07 16:50:11,950 - INFO - 处理标高 -0.6m 的墙体，共 71 个
+2026-01-07 16:50:12,463 - INFO -   Geometry Stats: {'total': 71, 'success': 70, 'failed_rep': 1, 'failed_shape': 0, 'failed_verts': 0}
+2026-01-07 16:50:12,463 - INFO -   Geometry Stats: {'total': 71, 'success': 70, 'failed_rep': 1, 'failed_shape': 0, 'failed_verts': 0}
+2026-01-07 16:50:12,463 - INFO -   Type Stats: {'IfcWallStandardCase': {'total': 21, 'success': 21}, 'IfcCurtainWall': {'total': 1, 'success': 0}, 'IfcPlate': {'total': 6, 'success': 6}, 'IfcMember': {'total': 12, 'success': 12}, 'IfcColumn': {'total': 27, 'success': 27}, 'IfcBuildingElementProxy': {'total': 3, 'success': 3}, 'IfcDoor': {'total': 1, 'success': 1}}
+2026-01-07 16:50:12,463 - INFO -   Type Stats: {'IfcWallStandardCase': {'total': 21, 'success': 21}, 'IfcCurtainWall': {'total': 1, 'success': 0}, 'IfcPlate': {'total': 6, 'success': 6}, 'IfcMember': {'total': 12, 'success': 12}, 'IfcColumn': {'total': 27, 'success': 27}, 'IfcBuildingElementProxy': {'total': 3, 'success': 3}, 'IfcDoor': {'total': 1, 'success': 1}}
+2026-01-07 16:50:12,698 - INFO - 使用布尔运算合并标高 -0.6m 的 70 个墙体多边形...
+2026-01-07 16:50:12,698 - INFO - 使用布尔运算合并标高 -0.6m 的 70 个墙体多边形...
+2026-01-07 16:50:12,720 - INFO - 标高 -0.6m 识别出 30 个外墙
+2026-01-07 16:50:12,720 - INFO - 标高 -0.6m 识别出 30 个外墙
+2026-01-07 16:50:13,272 - INFO - 已保存墙体分析图: ./wall_analysis_-0.6m.png
+2026-01-07 16:50:13,272 - INFO - 已保存墙体分析图: ./wall_analysis_-0.6m.png
+2026-01-07 16:50:13,272 - INFO - 处理标高 0.0m 的墙体，共 132 个
+2026-01-07 16:50:13,272 - INFO - 处理标高 0.0m 的墙体，共 132 个
+2026-01-07 16:50:17,517 - INFO -   Geometry Stats: {'total': 132, 'success': 130, 'failed_rep': 2, 'failed_shape': 0, 'failed_verts': 0}
+2026-01-07 16:50:17,517 - INFO -   Geometry Stats: {'total': 132, 'success': 130, 'failed_rep': 2, 'failed_shape': 0, 'failed_verts': 0}
+2026-01-07 16:50:17,517 - INFO -   Type Stats: {'IfcWallStandardCase': {'total': 15, 'success': 15}, 'IfcCurtainWall': {'total': 2, 'success': 0}, 'IfcPlate': {'total': 19, 'success': 19}, 'IfcMember': {'total': 38, 'success': 38}, 'IfcColumn': {'total': 29, 'success': 29}, 'IfcWindow': {'total': 13, 'success': 13}, 'IfcDoor': {'total': 16, 'success': 16}}
+2026-01-07 16:50:17,517 - INFO -   Type Stats: {'IfcWallStandardCase': {'total': 15, 'success': 15}, 'IfcCurtainWall': {'total': 2, 'success': 0}, 'IfcPlate': {'total': 19, 'success': 19}, 'IfcMember': {'total': 38, 'success': 38}, 'IfcColumn': {'total': 29, 'success': 29}, 'IfcWindow': {'total': 13, 'success': 13}, 'IfcDoor': {'total': 16, 'success': 16}}
+2026-01-07 16:50:17,710 - INFO - 使用布尔运算合并标高 0.0m 的 130 个墙体多边形...
+2026-01-07 16:50:17,710 - INFO - 使用布尔运算合并标高 0.0m 的 130 个墙体多边形...
+2026-01-07 16:50:17,739 - INFO - 标高 0.0m 识别出 77 个外墙
+2026-01-07 16:50:17,739 - INFO - 标高 0.0m 识别出 77 个外墙
+2026-01-07 16:50:18,542 - INFO - 已保存墙体分析图: ./wall_analysis_0.0m.png
+2026-01-07 16:50:18,542 - INFO - 已保存墙体分析图: ./wall_analysis_0.0m.png
+2026-01-07 16:50:18,543 - INFO - 处理标高 4.5m 的墙体，共 145 个
+2026-01-07 16:50:18,543 - INFO - 处理标高 4.5m 的墙体，共 145 个
+2026-01-07 16:50:18,812 - INFO -   Geometry Stats: {'total': 145, 'success': 145, 'failed_rep': 0, 'failed_shape': 0, 'failed_verts': 0}
+2026-01-07 16:50:18,812 - INFO -   Geometry Stats: {'total': 145, 'success': 145, 'failed_rep': 0, 'failed_shape': 0, 'failed_verts': 0}
+2026-01-07 16:50:18,812 - INFO -   Type Stats: {'IfcPlate': {'total': 38, 'success': 38}, 'IfcMember': {'total': 76, 'success': 76}, 'IfcColumn': {'total': 28, 'success': 28}, 'IfcWindow': {'total': 3, 'success': 3}}
+2026-01-07 16:50:18,812 - INFO -   Type Stats: {'IfcPlate': {'total': 38, 'success': 38}, 'IfcMember': {'total': 76, 'success': 76}, 'IfcColumn': {'total': 28, 'success': 28}, 'IfcWindow': {'total': 3, 'success': 3}}
+2026-01-07 16:50:19,011 - INFO - 使用布尔运算合并标高 4.5m 的 145 个墙体多边形...
+2026-01-07 16:50:19,011 - INFO - 使用布尔运算合并标高 4.5m 的 145 个墙体多边形...
+2026-01-07 16:50:19,028 - INFO - 标高 4.5m 初次合并结果不理想 (Fragmented/Small)，尝试激进合并 (Buffer 0.6m)...
+2026-01-07 16:50:19,028 - INFO - 标高 4.5m 初次合并结果不理想 (Fragmented/Small)，尝试激进合并 (Buffer 0.6m)...
+2026-01-07 16:50:19,044 - INFO - 激进合并成功，新面积: 13.45 m2
+2026-01-07 16:50:19,044 - INFO - 激进合并成功，新面积: 13.45 m2
+2026-01-07 16:50:19,048 - INFO - 标高 4.5m 识别出 53 个外墙
+2026-01-07 16:50:19,048 - INFO - 标高 4.5m 识别出 53 个外墙
+2026-01-07 16:50:19,696 - INFO - 已保存墙体分析图: ./wall_analysis_4.5m.png
+2026-01-07 16:50:19,696 - INFO - 已保存墙体分析图: ./wall_analysis_4.5m.png
+2026-01-07 16:50:19,697 - INFO - 处理标高 8.4m 的墙体，共 153 个
+2026-01-07 16:50:19,697 - INFO - 处理标高 8.4m 的墙体，共 153 个
+2026-01-07 16:50:20,063 - INFO -   Geometry Stats: {'total': 153, 'success': 153, 'failed_rep': 0, 'failed_shape': 0, 'failed_verts': 0}
+2026-01-07 16:50:20,063 - INFO -   Geometry Stats: {'total': 153, 'success': 153, 'failed_rep': 0, 'failed_shape': 0, 'failed_verts': 0}
+2026-01-07 16:50:20,063 - INFO -   Type Stats: {'IfcWallStandardCase': {'total': 35, 'success': 35}, 'IfcPlate': {'total': 25, 'success': 25}, 'IfcMember': {'total': 65, 'success': 65}, 'IfcColumn': {'total': 28, 'success': 28}}
+2026-01-07 16:50:20,063 - INFO -   Type Stats: {'IfcWallStandardCase': {'total': 35, 'success': 35}, 'IfcPlate': {'total': 25, 'success': 25}, 'IfcMember': {'total': 65, 'success': 65}, 'IfcColumn': {'total': 28, 'success': 28}}
+2026-01-07 16:50:20,270 - INFO - 使用布尔运算合并标高 8.4m 的 153 个墙体多边形...
+2026-01-07 16:50:20,270 - INFO - 使用布尔运算合并标高 8.4m 的 153 个墙体多边形...
+2026-01-07 16:50:20,288 - INFO - 标高 8.4m 识别出 16 个外墙
+2026-01-07 16:50:20,288 - INFO - 标高 8.4m 识别出 16 个外墙
+2026-01-07 16:50:20,886 - INFO - 已保存墙体分析图: ./wall_analysis_8.4m.png
+2026-01-07 16:50:20,886 - INFO - 已保存墙体分析图: ./wall_analysis_8.4m.png
+2026-01-07 16:50:20,886 - INFO - 处理标高 12.3m 的墙体，共 24 个
+2026-01-07 16:50:20,886 - INFO - 处理标高 12.3m 的墙体，共 24 个
+2026-01-07 16:50:20,923 - INFO -   Geometry Stats: {'total': 24, 'success': 24, 'failed_rep': 0, 'failed_shape': 0, 'failed_verts': 0}
+2026-01-07 16:50:20,923 - INFO -   Geometry Stats: {'total': 24, 'success': 24, 'failed_rep': 0, 'failed_shape': 0, 'failed_verts': 0}
+2026-01-07 16:50:20,924 - INFO -   Type Stats: {'IfcPlate': {'total': 6, 'success': 6}, 'IfcMember': {'total': 18, 'success': 18}}
+2026-01-07 16:50:20,924 - INFO -   Type Stats: {'IfcPlate': {'total': 6, 'success': 6}, 'IfcMember': {'total': 18, 'success': 18}}
+2026-01-07 16:50:21,158 - INFO - 使用布尔运算合并标高 12.3m 的 24 个墙体多边形...
+2026-01-07 16:50:21,158 - INFO - 使用布尔运算合并标高 12.3m 的 24 个墙体多边形...
+2026-01-07 16:50:21,161 - INFO - 标高 12.3m 初次合并结果不理想 (Fragmented/Small)，尝试激进合并 (Buffer 0.6m)...
+2026-01-07 16:50:21,161 - INFO - 标高 12.3m 初次合并结果不理想 (Fragmented/Small)，尝试激进合并 (Buffer 0.6m)...
+2026-01-07 16:50:21,163 - WARNING - 激进合并未改善结果
+2026-01-07 16:50:21,163 - WARNING - 激进合并未改善结果
+2026-01-07 16:50:21,165 - INFO - 标高 12.3m 识别出 18 个外墙
+2026-01-07 16:50:21,165 - INFO - 标高 12.3m 识别出 18 个外墙
+2026-01-07 16:50:21,623 - INFO - 已保存墙体分析图: ./wall_analysis_12.3m.png
+2026-01-07 16:50:21,623 - INFO - 已保存墙体分析图: ./wall_analysis_12.3m.png
+2026-01-07 16:50:21,950 - INFO - Saved debug analysis image to: debug_viz/GF_slab_vs_wall.png
+2026-01-07 16:50:22,251 - INFO - Saved debug analysis image to: debug_viz/1F_slab_vs_wall.png
+2026-01-07 16:50:22,304 - INFO - Skipping roof story: RF
+2026-01-07 16:50:22,304 - INFO - 
+============================================================
+2026-01-07 16:50:22,304 - INFO -                AREA CALCULATION BREAKDOWN               
+2026-01-07 16:50:22,304 - INFO - ============================================================
+2026-01-07 16:50:22,304 - INFO - 
+[Story: GL] (Elev: -0.6m, Height: 0.6m)
+2026-01-07 16:50:22,304 - INFO -   > Base Area (Green Outline): 921.67 m2
+2026-01-07 16:50:22,304 - INFO -   > Story Height Coefficient: 1.0
+2026-01-07 16:50:22,304 - INFO -   > Detailed Components:
+2026-01-07 16:50:22,304 - INFO -     - General Floor Area (Enclosed):   921.67 m2  x  1.0 =   921.67 m2  | Remaining area after specific element adjustments
+2026-01-07 16:50:22,304 - INFO -   > Final Calculated Area: 921.67 m2
+2026-01-07 16:50:22,304 - INFO - ----------------------------------------
+2026-01-07 16:50:22,304 - INFO - 
+[Story: GF] (Elev: 0.0m, Height: 4.5m)
+2026-01-07 16:50:22,304 - INFO -   > Base Area (Green Outline): 67.22 m2
+2026-01-07 16:50:22,304 - INFO -   > Story Height Coefficient: 1.0
+2026-01-07 16:50:22,304 - INFO -   > Detailed Components:
+2026-01-07 16:50:22,304 - INFO -     - General Floor Area (Enclosed):    67.22 m2  x  1.0 =    67.22 m2  | Remaining area after specific element adjustments
+2026-01-07 16:50:22,304 - INFO -     - Geometric Balcony/Outside:   835.83 m2  x  0.5 =   417.91 m2  | Derived from geometry difference (Slab - Wall Outline)
+2026-01-07 16:50:22,304 - INFO -   > Final Calculated Area: 485.14 m2
+2026-01-07 16:50:22,304 - INFO - ----------------------------------------
+2026-01-07 16:50:22,304 - INFO - 
+[Story: 1F] (Elev: 4.5m, Height: 3.9000000000000004m)
+2026-01-07 16:50:22,304 - INFO -   > Base Area (Green Outline): 2.55 m2
+2026-01-07 16:50:22,304 - INFO -   > Story Height Coefficient: 1.0
+2026-01-07 16:50:22,304 - INFO -   > Detailed Components:
+2026-01-07 16:50:22,304 - INFO -     - General Floor Area (Enclosed):     2.55 m2  x  1.0 =     2.55 m2  | Remaining area after specific element adjustments
+2026-01-07 16:50:22,304 - INFO -     - Geometric Balcony/Outside:   898.43 m2  x  0.5 =   449.21 m2  | Derived from geometry difference (Slab - Wall Outline)
+2026-01-07 16:50:22,304 - INFO -   > Final Calculated Area: 451.77 m2
+2026-01-07 16:50:22,304 - INFO - ----------------------------------------
+2026-01-07 16:50:22,304 - INFO - 
+[Story: 2F] (Elev: 8.4m, Height: 3.9000000000000004m)
+2026-01-07 16:50:22,304 - INFO -   > Base Area (Green Outline): 902.82 m2
+2026-01-07 16:50:22,304 - INFO -   > Story Height Coefficient: 1.0
+2026-01-07 16:50:22,304 - INFO -   > Detailed Components:
+2026-01-07 16:50:22,304 - INFO -     - General Floor Area (Enclosed):   902.82 m2  x  1.0 =   902.82 m2  | Remaining area after specific element adjustments
+2026-01-07 16:50:22,304 - INFO -   > Final Calculated Area: 902.82 m2
+2026-01-07 16:50:22,304 - INFO - ----------------------------------------
+2026-01-07 16:50:22,304 - INFO - 
+TOTAL BUILDING AREA: 2761.4 m2
+2026-01-07 16:50:22,304 - INFO - ============================================================
+
+2026-01-07 16:50:22,304 - INFO - ✅ [Agent 3] Calculation Complete. Total Area: 2761.3962455172605
+Loading /Users/zhuxueying/ifc/ifc_files/academic b.ifc...
+Running Area Calculation Agent...
+
+Check the 'debug_viz' folder for images.
