@@ -959,8 +959,19 @@ def get_external_wall_outline(ifc_file, wall_thickness=None, target_elevations=N
     results_by_elevation = {}
 
     # 3. 按标高处理
+    sorted_elevations = sorted(target_elevations)
     for elevation in target_elevations:
         logger.info(f"处理标高 {elevation}m...")
+
+        # 计算当前层高 (用于判断构件是否覆盖全层)
+        try:
+            idx = sorted_elevations.index(elevation)
+            if idx < len(sorted_elevations) - 1:
+                storey_height = sorted_elevations[idx + 1] - elevation
+            else:
+                storey_height = 3.5  # 顶层默认高度
+        except ValueError:
+            storey_height = 3.5
 
         # 筛选覆盖该标高的构件
         # 容差：0.1m (允许标高切面稍微超出构件范围，或者构件稍微够不着)
@@ -972,12 +983,57 @@ def get_external_wall_outline(ifc_file, wall_thickness=None, target_elevations=N
         id_to_polygon = {}
 
         for data in all_element_data:
-            # 检查垂直重叠
-            if data["min_z"] - tol <= elevation <= data["max_z"] + tol:
-                polygons.append(data["polygon"])
-                id_to_polygon[data["id"]] = data["polygon"]
+            # 1. 检查垂直重叠 (Z-overlap)
+            if not (data["min_z"] - tol <= elevation <= data["max_z"] + tol):
+                continue
 
-        logger.info(f"标高 {elevation}m 匹配到 {len(polygons)} 个构件")
+            # 2. 构件高度检查 (剔除台阶、装饰矮墙等)
+            element_height = data["max_z"] - data["min_z"]
+            element_type = data["element"].is_a()
+
+            # 基础阈值：非常矮的物体 (如地毯、贴图、路沿) 统统过滤
+            if element_height < 0.1:
+                continue
+
+            # 针对 "装饰外墙" (非常低) 和 "台阶" 的过滤
+            # 之前的过滤 (1.2m / 50%层高) 太严格，导致部分外墙丢失
+            # 现在的策略：
+
+            # 1. 核心结构构件 (墙、柱、幕墙)
+            # 放宽阈值到 0.5m，以保留窗下墙 (Spandrel) 等矮墙
+            # 同时过滤掉极矮的装饰性反坎或路沿 (通常 < 0.3m)
+            if element_type in [
+                "IfcWall",
+                "IfcWallStandardCase",
+                "IfcCurtainWall",
+                "IfcColumn",
+            ]:
+                if element_height < 0.5:
+                    continue
+
+            # 2. 易混淆构件 (板、代理、杆件、覆盖层)
+            # 这些类型常用于台阶、楼板、梁、家具等
+            # 使用较严格的阈值 (1.2m)，确保选中的是垂直挡板或高大构件
+            # 台阶通常每个 < 0.2m，整跑楼梯虽高但通常由多个小构件或作为整体Proxy
+            # 如果是整体Proxy楼梯，可能需要更高阈值，但暂定 1.2m 以平衡
+            elif element_type in [
+                "IfcPlate",
+                "IfcBuildingElementProxy",
+                "IfcCovering",
+                "IfcMember",
+            ]:
+                if element_height < 1.2:
+                    continue
+
+            # 3. 门窗 (IfcWindow, IfcDoor)
+            # 通常保留，因为它们定义了墙体开口
+
+            polygons.append(data["polygon"])
+            id_to_polygon[data["id"]] = data["polygon"]
+
+        logger.info(
+            f"标高 {elevation}m 匹配到 {len(polygons)} 个构件 (已过滤矮墙/台阶)"
+        )
 
         if not polygons:
             continue
