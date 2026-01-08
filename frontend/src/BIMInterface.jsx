@@ -387,7 +387,7 @@ const BIMInterface = () => {
         if (!agent2Data || !agent2Data.element_id) return;
         try {
             console.log("✅ Approving element:", agent2Data.element_id);
-            const res = await fetch("/analyze/approve", {
+            const res = await fetch(`${API_BASE_URL}/analyze/approve`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ element_guid: agent2Data.element_id })

@@ -159,6 +159,9 @@ class AreaCalculationAgent:
                     logger.info(f"Skipping roof story: {story_name}")
                     continue
 
+            # Get semantics for this story (Moved to top for usage in void logic)
+            story_semantics = semantic_by_story.get(story["obj"].GlobalId, [])
+
             # A. Geometric Analysis (Inside vs Outside)
             outline_data = self._find_outline_for_elevation(wall_outlines, elevation)
             # outline_data = None  # Disabled (Re-enabled now)
@@ -332,7 +335,6 @@ class AreaCalculationAgent:
                     breakdown_excluded += base_area
 
             # C. Adjustments based on Semantic Elements AND Geometric Findings
-            story_semantics = semantic_by_story.get(story["obj"].GlobalId, [])
             adjustments_area = 0.0
             adjustment_details = []
 
