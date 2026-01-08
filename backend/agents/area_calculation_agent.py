@@ -201,11 +201,88 @@ class AreaCalculationAgent:
 
                     # Difference: Slab - WallOutline
                     try:
+                        # 1. Calculate Balconies (Slab - WallOutline)
                         diff_poly = merged_slab_poly.difference(outline_poly)
                         outside_area = diff_poly.area
 
+                        # 2. Identify Voids inside the Outline (WallOutline - Slab)
+                        # This geometry represents areas within the building envelope that have NO slab.
+                        # We must distinguish if these are ATRIUMS (deduct) or SHAFTS (keep, usually).
+                        # We use Semantic Alignment Data for this distinction.
+                        voids_poly = outline_poly.difference(merged_slab_poly)
+
+                        void_deduction = 0.0
+                        if not voids_poly.is_empty:
+                            # Clean up small artifacts
+                            clean_voids = voids_poly.buffer(-0.1).buffer(0.1)
+
+                            valid_void_polys = []
+                            if isinstance(clean_voids, Polygon):
+                                if clean_voids.area > 0.5:
+                                    valid_void_polys.append(clean_voids)
+                            elif isinstance(clean_voids, MultiPolygon):
+                                for p in clean_voids.geoms:
+                                    if p.area > 0.5:
+                                        valid_void_polys.append(p)
+
+                            # Check Semantic Data for Atriums
+                            # Semantic Agent provides classification for spaces/openings.
+                            # We look for "ATRIUM" classification in this story.
+                            atrium_elements = [
+                                item
+                                for item in story_semantics
+                                if item.get("category") == "ATRIUM"
+                            ]
+
+                            # Simplified Logic:
+                            # Iterate through each geometric void.
+                            # 1. If it overlaps with a known "ATRIUM" semantic element -> DEDUCT.
+                            # 2. If it overlaps with "SHAFT/STAIR" -> KEEP (Do not deduct, counted as GFA).
+                            # 3. If unknown -> Check size. > 20m2 -> Assume Atrium -> DEDUCT. Else -> KEEP.
+
+                            has_semantic_atrium = len(atrium_elements) > 0
+
+                            for void_p in valid_void_polys:
+                                is_deductible = False
+                                void_area = void_p.area
+
+                                if has_semantic_atrium:
+                                    # Try to match by area (approximate)
+                                    for atrium in atrium_elements:
+                                        a_area = float(
+                                            atrium.get("dimensions", {}).get("area", 0)
+                                        )
+                                        if abs(a_area - void_area) < 5.0 or (
+                                            a_area > 0 and void_area / a_area > 0.8
+                                        ):
+                                            is_deductible = True
+                                            break
+
+                                # Fallback if no semantic match but very large
+                                if not is_deductible and void_area > 20.0:
+                                    is_deductible = True
+
+                                if is_deductible:
+                                    void_deduction += void_area
+
+                            if void_deduction > 0.01:
+                                inside_area -= void_deduction
+                                logger.info(
+                                    f"Story {story_name}: Deducted {void_deduction:.2f} m2 for Atrium (Matched with Semantic/Size)"
+                                )
+
+                                detailed_components.append(
+                                    {
+                                        "category": "Atrium Void Deduction",
+                                        "raw_area": -void_deduction,
+                                        "coefficient": 1.0,
+                                        "effective_area": -void_deduction,
+                                        "note": "Geometric Void confirmed as Atrium",
+                                    }
+                                )
+
                         # Debug Visualization if large discrepancy
-                        if outside_area > 1.0:
+                        if outside_area > 1.0 or void_deduction > 1.0:
                             self._save_debug_image(
                                 story_name, merged_slab_poly, outline_poly, diff_poly
                             )
