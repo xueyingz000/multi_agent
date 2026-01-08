@@ -187,6 +187,8 @@ class AreaCalculationAgent:
             # 1. Base Area = Wall Outline Area (Enclosed Area)
             # 2. Outside Area = Slab Area - Wall Outline Area (Balconies/Terraces)
 
+            diff_poly = None
+
             if outline_data and outline_data.get("merged_polygon"):
                 outline_poly = outline_data["merged_polygon"]
                 # Repair if invalid
@@ -338,51 +340,154 @@ class AreaCalculationAgent:
             adjustments_area = 0.0
             adjustment_details = []
 
+            # --- Pre-calculate Geometric Location of Semantic Elements ---
+            # We need to know if a semantic element is primarily Inside or Outside
+            # to know which bucket to subtract it from when applying overrides.
+
+            elem_geo_map = {}  # guid -> 'INSIDE' | 'OUTSIDE' | 'UNKNOWN'
+            elem_geo_poly = {}  # guid -> Polygon
+
+            for item in story_semantics:
+                guid = item.get("guid")
+                if not guid:
+                    continue
+
+                # Try to get geometry
+                try:
+                    elem = (
+                        ifc_file.by_id(guid)
+                        if len(guid) < 22
+                        else ifc_file.by_guid(guid)
+                    )
+                    if elem:
+                        geom = get_slab_geometry(ifc_file, elem)
+                        if geom and geom.get("top_polygon"):
+                            poly = geom["top_polygon"]
+                            if not poly.is_valid:
+                                poly = poly.buffer(0)
+                            elem_geo_poly[guid] = poly
+
+                            # Check intersection
+                            inside_int = 0.0
+                            outside_int = 0.0
+
+                            if outline_poly:
+                                inside_int = poly.intersection(outline_poly).area
+
+                            if diff_poly:
+                                outside_int = poly.intersection(diff_poly).area
+
+                            # Classification (Simple majority)
+                            total_int = inside_int + outside_int
+                            if total_int > 0.01:
+                                if outside_int > inside_int:
+                                    elem_geo_map[guid] = "OUTSIDE"
+                                else:
+                                    elem_geo_map[guid] = "INSIDE"
+                            else:
+                                elem_geo_map[guid] = "UNKNOWN"
+                except Exception as e:
+                    # logger.warning(f"Failed to get geometry for semantic element {guid}: {e}")
+                    pass
+
             # 1. Add Geometric Balconies (Outside Area)
+            # Before adding, we must SUBTRACT the area of any semantic elements that are classified as OUTSIDE
+            # and have a manual override (or specific handling).
+            # Why? Because otherwise we double count: Once as generic 'Geometric Balcony' and again as 'Manual Override'.
+
+            deducted_from_outside = 0.0
+
+            for item in story_semantics:
+                guid = item.get("guid")
+                manual_factor = item.get("manual_factor")
+
+                # Only deduct if it has a manual factor OR is specific category we handle manually
+                # AND it is geometrically OUTSIDE
+                if guid in elem_geo_map and elem_geo_map[guid] == "OUTSIDE":
+                    if manual_factor is not None:
+                        # Calculate the actual overlap area to deduct accurately
+                        poly = elem_geo_poly.get(guid)
+                        if poly and diff_poly:
+                            overlap = poly.intersection(diff_poly).area
+                            deducted_from_outside += overlap
+
+            effective_outside_area = max(0.0, outside_area - deducted_from_outside)
             outside_coeff = 0.5
-            if outside_area > 0.01:  # Tolerance
-                added_outside = outside_area * outside_coeff
+
+            if effective_outside_area > 0.01:  # Tolerance
+                added_outside = effective_outside_area * outside_coeff
                 adjustments_area += added_outside
                 adjustment_details.append(
-                    f"Geometric Balcony/Outside ({round(outside_area, 2)}m2 * {outside_coeff})"
+                    f"Geometric Balcony/Outside ({round(effective_outside_area, 2)}m2 * {outside_coeff})"
                 )
 
                 # Add to detailed components
                 detailed_components.append(
                     {
                         "category": "Geometric Balcony/Outside",
-                        "raw_area": outside_area,
+                        "raw_area": effective_outside_area,
                         "coefficient": outside_coeff,
                         "effective_area": added_outside,
-                        "note": "Derived from geometry difference (Slab - Wall Outline)",
+                        "note": "Derived from geometry difference (Slab - Wall Outline) minus overridden elements",
                     }
                 )
 
                 # Add to breakdown
                 if outside_coeff == 0.5:
-                    breakdown_0_5 += outside_area
+                    breakdown_0_5 += effective_outside_area
                 elif outside_coeff == 1.0:
-                    breakdown_1_0 += outside_area
+                    breakdown_1_0 += effective_outside_area
 
+            # Now process semantic elements
             for item in story_semantics:
                 category = item.get("category", "").upper()
                 dimensions = item.get("dimensions", {})
                 elem_area = float(dimensions.get("area", 0.0))
+                guid = item.get("guid")
+
+                # Use geometric area if available and elem_area is suspiciously 0
+                if elem_area < 0.01 and guid in elem_geo_poly:
+                    elem_area = elem_geo_poly[guid].area
 
                 # Check for Manual Factor Override
                 manual_factor = item.get("manual_factor")
                 if manual_factor is not None:
                     coeff = float(manual_factor)
 
-                    # Adjustment = Area * (Coeff - Height_Coeff)
-                    diff = elem_area * (coeff - height_coeff)
-                    adjustments_area += diff
-                    adjustment_details.append(
-                        f"Manual Adjustment {category} ({elem_area}m2 * {coeff})"
-                    )
+                    geo_status = elem_geo_map.get(
+                        guid, "INSIDE"
+                    )  # Default to INSIDE if unknown
 
-                    # Consume from base
-                    remaining_base_area -= elem_area
+                    if geo_status == "OUTSIDE":
+                        # If it was outside, we already deducted it from the "Geometric Balcony" bucket above.
+                        # So we just ADD it as a new component with its manual factor.
+                        # We do NOT subtract from base_area (because it wasn't in base_area).
+
+                        adjustments_area += elem_area * coeff
+                        adjustment_details.append(
+                            f"Manual Adjustment {category} (OUTSIDE) ({elem_area}m2 * {coeff})"
+                        )
+                        # No consumption from remaining_base_area
+
+                    else:
+                        # If it is INSIDE, it is currently part of base_area * height_coeff.
+                        # We subtract it from base_area and add it back with new coeff.
+                        # Or simply: Adjustment = Area * (Coeff - Height_Coeff)
+
+                        diff = elem_area * (coeff - height_coeff)
+                        adjustments_area += diff
+                        adjustment_details.append(
+                            f"Manual Adjustment {category} (INSIDE) ({elem_area}m2 * {coeff})"
+                        )
+                        remaining_base_area -= elem_area
+
+                        # Adjust breakdown for INSIDE removal
+                        if height_coeff == 1.0:
+                            breakdown_1_0 -= elem_area
+                        elif height_coeff == 0.5:
+                            breakdown_0_5 -= elem_area
+                        elif height_coeff == 0.0:
+                            breakdown_excluded -= elem_area
 
                     # Add to detailed components
                     detailed_components.append(
@@ -391,20 +496,11 @@ class AreaCalculationAgent:
                             "raw_area": elem_area,
                             "coefficient": coeff,
                             "effective_area": elem_area * coeff,
-                            "note": "Manual Factor Override",
+                            "note": f"Manual Factor Override ({geo_status})",
                         }
                     )
 
-                    # Adjust breakdown
-                    # Remove from original bucket
-                    if height_coeff == 1.0:
-                        breakdown_1_0 -= elem_area
-                    elif height_coeff == 0.5:
-                        breakdown_0_5 -= elem_area
-                    elif height_coeff == 0.0:
-                        breakdown_excluded -= elem_area
-
-                    # Add to new bucket
+                    # Add to new bucket (for both Inside and Outside)
                     if coeff == 1.0:
                         breakdown_1_0 += elem_area
                     elif coeff == 0.5:
@@ -418,6 +514,27 @@ class AreaCalculationAgent:
                 if "BALCONY" in category:
                     # Previously handled by Geometric Analysis (Outside Area)
                     # Now handled here since we use Slab as Base Area (which includes Balcony)
+
+                    # Wait, if we use Geometric Analysis for Balconies (Outside Area),
+                    # do we still process semantic balconies?
+
+                    # If the semantic balcony is classified as OUTSIDE, it is already covered by "Geometric Balcony/Outside"
+                    # UNLESS we want to apply a specific coefficient different from the default 0.5 used for geometric.
+
+                    # However, "Geometric Balcony" covers ALL outside area.
+                    # If we add semantic balcony here again, we double count.
+
+                    # So, if a semantic balcony is OUTSIDE, we should skip it here (it's covered by geometric).
+                    # If it is INSIDE (e.g. enclosed balcony), we treat it as adjustment to base area.
+
+                    geo_status = elem_geo_map.get(guid, "INSIDE")
+
+                    if geo_status == "OUTSIDE":
+                        # Already covered by Geometric Outside Area (which uses default 0.5)
+                        # TODO: If semantic rules dictate a different factor for this specific balcony,
+                        # we should handle it like manual override: deduct from geometric, add specific.
+                        # For now, assume 0.5 is consistent.
+                        continue
 
                     # Find coefficient from enclosure rules or default to 0.5
                     coeff = 0.5
@@ -444,7 +561,7 @@ class AreaCalculationAgent:
                             "raw_area": elem_area,
                             "coefficient": coeff,
                             "effective_area": elem_area * coeff,
-                            "note": "Semantic Balcony Adjustment",
+                            "note": "Semantic Balcony Adjustment (Inside)",
                         }
                     )
 

@@ -241,6 +241,7 @@ class ApproveRequest(BaseModel):
 class UpdateRequest(BaseModel):
     element_guid: str
     new_type: str
+    factor: Optional[float] = None
     reason: Optional[str] = None
 
 
@@ -347,11 +348,13 @@ async def update_element(req: UpdateRequest):
 
     # Update factor based on new type
     new_type_upper = new_type.upper()
-    manual_factor = None
-    if "BALCONY" in new_type_upper:
-        manual_factor = 0.5
-    elif "EXTERIOR" in new_type_upper and "SLAB" in new_type_upper:
-        manual_factor = 0.0
+    manual_factor = req.factor
+
+    if manual_factor is None:
+        if "BALCONY" in new_type_upper:
+            manual_factor = 0.5
+        elif "EXTERIOR" in new_type_upper and "SLAB" in new_type_upper:
+            manual_factor = 0.0
 
     if manual_factor is not None:
         semantic_data["alignment_results"][guid]["manual_factor"] = manual_factor
