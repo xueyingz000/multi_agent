@@ -424,7 +424,7 @@ const BIMInterface = () => {
         if (newType && newType !== agent2Data.type) {
             try {
                 console.log("✏️ Editing element:", agent2Data.element_id, "to", newType);
-                const res = await fetch("/analyze/update", {
+                const res = await fetch(`${API_BASE_URL}/analyze/update`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
